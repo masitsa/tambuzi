@@ -112,9 +112,6 @@
             KASClient.UI.clearElement(header);
             header.className = "header";
             header.innerText = _strings["strMiniAppTitle"];
-            header.backAction = function () {
-                KASClient.App.dismissCurrentScreen();
-            };
         }
 
         //Gets the div where the image will be placed
@@ -159,7 +156,7 @@
             profileImage = document.getElementById("profileImage").value;
 
             //Checks if all fields have been filled
-            if ((employeeId == null || employeeId == "") || (preferredName == null || preferredName == "") || (employeeBio == null || employeeBio == "") || (profileImage == null || profileImage == "")) {
+            if ((employeeId == null || employeeId == "") || (preferredName == null || preferredName == "") || (employeeBio == null || employeeBio == "")) {
                 KASClient.App.showNativeErrorMessage("Kindly fill in all the fields");
             }
             else {

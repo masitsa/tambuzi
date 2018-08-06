@@ -40,6 +40,7 @@ input,input:focus{
     font-size : 15pt;
     font-weight: bold;
     opacity : 0.9;
+    outline:none;
 
 }
 
