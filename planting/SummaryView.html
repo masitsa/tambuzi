@@ -1,0 +1,109 @@
+<html> 
+
+  <head> 
+      <title></title> 
+      <script type="text/javascript" src="KASClient.js"></script>
+      <link rel="stylesheet" href="bootstrap.min.css"> 
+      <style>
+               
+        .container card {
+            margin: 2px;
+        }
+
+        .card {
+            padding:7px;
+            background-color:#FFFFFF;
+        }
+      
+      </style>
+      <script type="text/javascript"> 
+          // Globals 
+          var _form; // type: KASForm 
+          var _myFormResponses; // type: KASFormResponse[]
+          var _formSummary; // type: KASFormFlatSummary 
+          var _users; // type: Dictionary<UserId: KASUser>
+
+          // Below will be called on onload of SummaryView.html 
+          function onSummaryPageLoad() {            
+              KASClient.Form.getFormAsync(function (form, error) {                
+                 if (error != null) {                    
+                    KASClient.App.showNativeErrorMessage("Error:getFormAsync:" + error);                    
+                    return;                
+                 }                
+                 _form = form;
+                 KASClient.App.showProgressBar("Fetching summary");
+                   // Update the title in the form
+                                 
+                KASClient.Form.getMyFormResponsesAsync(function(response, error){
+                    if (error != null) {
+                          KASClient.App.showNativeErrorMessage("Error fetching response - " + error);
+                          return;
+                       }
+                    //Fetching the feedback from the questin to answer map
+                    var plantNumber = response[0].questionToAnswerMap[0];
+                    var blockNumber = response[0].questionToAnswerMap[1];
+                    var flowerType = response[0].questionToAnswerMap[2];
+                    var bedNumber = response[0].questionToAnswerMap[3];
+                    var name = response[0].questionToAnswerMap[4];
+                    var phoneNumber = response[0].questionToAnswerMap[5];
+
+                    
+                     // Display the answer on the UI
+                    var card = '';
+                    var startCard = '<div class="card card-block mb-3 card-header"><div class="container-fluid"><div class="row no-gutters"><div class="col py-3">';
+                    var endCard = '</div> </div> </div> </div>';
+                    card += startCard + '<p class="card-title"> Plant Number : ' + plantNumber + '</p>' + endCard;
+
+                    var card1 = '';
+                    var startcard1 = '<div class="card card-block mb-3 card-header"><div class="container-fluid"><div class="row no-gutters"><div class="col py-3">';
+                    var endcard1 = '</div> </div> </div> </div>';
+                    card1 += startcard1 + '<p class="card-text"> Block Number: ' + blockNumber + '</p>' + endcard1;
+
+                    var card2 = '';
+                    var startcard2 = '<div class="card card-block mb-3 card-header"><div class="container-fluid"><div class="row no-gutters"><div class="col py-3">';
+                    var endcard2 = '</div> </div> </div> </div>';
+                    card2 += startcard2 + '<p class="card-text">Flower Type: ' + flowerType + '</p>' + endcard2;
+
+                    var card3 = '';
+                    var startcard3 = '<div class="card card-block mb-3 card-header"><div class="container-fluid"><div class="row no-gutters"><div class="col py-3">';
+                    var endcard3 = '</div> </div> </div> </div>';
+                    card3 += startcard3 + '<p class="card-text"> Bed Number: ' + bedNumber + '</p>' + endcard3;
+
+                    var card4 = '';
+                    var startcard4 = '<div class="card card-block mb-3 card-header"><div class="container-fluid"><div class="row no-gutters"><div class="col py-3">';
+                    var endcard4 = '</div> </div> </div> </div>';
+                    card4 += startcard4 + '<p class="card-text"> Registered Name: ' + name + '</p>' + endcard4;
+
+                    var card5 = '';
+                    var startcard5 = '<div class="card card-block mb-3 card-header"><div class="container-fluid"><div class="row no-gutters"><div class="col py-3">';
+                    var endcard5 = '</div> </div> </div> </div>';
+                    card5 += startcard5 + '<p class="card-text"> Phone Number: ' + phoneNumber + '</p>' + endcard5;
+                    
+                    
+                    document.getElementById("plantNumber").innerHTML = card;
+                    document.getElementById("blockNumber").innerHTML = card1;
+                    document.getElementById("flowerType").innerHTML = card2;
+                    document.getElementById("bedNumber").innerHTML = card3;
+                    document.getElementById("name").innerHTML = card4;
+                    document.getElementById("phoneNumber").innerHTML = card5;
+                    })
+              });
+           }
+
+
+           
+      </script> 
+  </head> 
+
+  <body onload="onSummaryPageLoad()"> 
+    <div class="container card" id="contents">
+        <div id="plantNumber"></div>
+        <div id="blockNumber"></div>
+        <div id="flowerType"></div>
+        <div id="bedNumber"></div>
+        <div id="name"></div>
+        <div id="phoneNumber"></div>
+    </div>
+  </body> 
+
+  </html>

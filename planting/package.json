@@ -1,0 +1,37 @@
+{ 
+    "id": "mawinguann.w.ticketing", 
+    "schemaVersion": 1, 
+    "version": "4",
+    "minorVersion":5,
+    "providerName": "NanyukiAf", 
+    "displayName": "Planting", 
+    "description": "Custom action to collect Planting Details.", 
+    "icon": "planting.png", 
+    "appModel": "AppModel.json",
+    "actionScope": "Group",
+    "views": {
+        "CreationView": {
+            "labelHeader": "Feedback requested",
+            "sourceLocation": "ResponseView.html",
+            "showNativeToolbar": true,
+            "backDialogTitle": "Confirmation",
+            "backDialogDescription": "Are you sure you want to discard?"
+        },
+        "ChatCanvasCardView": {
+            "showHeader": true,
+            "labelResponseSending": "Submitting your planting details",
+            "labelResponded": "You have provided your planting details",
+            "labelResponseFailed": "Planting Details submission failed",
+            "labelRespondToForm": "CONFIRM PLANTING DETAILS",
+            "isResponseEditable": false,
+            "showLikes":false,
+            "show Comments":false
+            
+        },
+        "ResponseResultsView": {
+            "labelPageHeader": "Feedback summary",
+            "sourceLocation": "SummaryView.html",
+            "showNativeToolbar": true
+        }
+    }
+}

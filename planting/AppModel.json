@@ -1,0 +1,33 @@
+{
+    "questions": [
+        
+        {
+            "title": "PlantNumber",
+            "type": "Text"
+        },
+        {
+            "title": "BlockNumber",
+            "type": "Text"
+        },
+        {
+            "title": "FlowerType",
+            "type": "Text"
+        },
+        {
+            "title": "BedNumber",
+            "type": "Numeric"
+        },
+        {
+            "title": "Name",
+            "type": "Text"
+        },
+        {
+            "title": "PhoneNumber",
+            "type": "Text"
+        }
+    ],
+    "title": "Planting Details",
+    "visibility": "All",
+    "isAnonymous": false,
+    "isResponseAppended": false
+}
