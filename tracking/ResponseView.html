@@ -1,0 +1,246 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+
+	<script type="text/javascript">
+		var _form; // type: KASForm
+		var _name = "";
+        var _phoneNumber = "";
+		var _questionToAnswerMap = {};
+		var _currentUserInfo = null;
+        var _currentLocation = {};
+		// Below will be called on onload of CreationView.html
+		function onCreatePageLoad() {
+			KASClient.App.registerHardwareBackPressCallback(function () {
+				KASClient.App.dismissCurrentScreen();
+			});
+			KASClient.App.getCurrentUserIdAsync(function(userId, error) {
+                        if (error != null) {
+                            handleError(error);
+                            return;
+                        }
+                        KASClient.App.getCurrentDeviceLocationAsync(function(location, error) {
+                        if (error != null) {
+                            _isLocationRefreshing = false;
+                            inflateLocationView();
+                            return;
+                        }
+
+                        _currentLocation = JSON.parse(location);
+                    });
+                        KASClient.App.getUsersDetailsAsync([userId], function(users, error) {
+                            if (error != null) {
+                                handleError(error);
+                                return;
+                            }
+
+                            //asign them to global variables
+                            _currentUserInfo = users[userId];
+                            _name = _currentUserInfo.originalName;
+                            _phoneNumber = _currentUserInfo.phoneNumber;
+                            inflateDetailsView();
+                        });
+                    });
+		}
+
+		        function inflateDetailsView() {
+            // 3rd Page
+
+            var detailsViewDiv = document.getElementById("detailsViewDiv");
+            KASClient.UI.clearElement(detailsViewDiv);
+
+            // show details view
+            var showDetailsView = KASClient.UI.getElement("div", {
+                "display": "block"
+            });
+
+            var showDetailsViewName = KASClient.UI.getElement("div");
+            showDetailsViewName.className = "section";
+
+            var showDetailsViewNameHeader = KASClient.UI.getElement("p");
+            showDetailsViewNameHeader.className = "comment-header";
+            showDetailsViewNameHeader.innerText = "Name";
+
+            var showDetailsViewNameInput = KASClient.UI.getElement("input");
+            showDetailsViewNameInput.type = "text";
+            showDetailsViewNameInput.className = "comment-input";
+            if (KASClient.getPlatform() == KASClient.Platform.iOS) {
+                KASClient.UI.addCSS(showDetailsViewNameInput, {
+                    "padding-left": "13pt"
+                });
+            }
+            showDetailsViewNameInput.placeholder = "Name";
+            //value of the placeholder with  Name
+            showDetailsViewNameInput.value = _name;
+            showDetailsViewNameInput.addEventListener("input", function(event) {
+                _name = event.target.value;
+                invalidateFooter();
+            });
+
+            KASClient.UI.addElement(showDetailsViewNameHeader, showDetailsViewName);
+            KASClient.UI.addElement(showDetailsViewNameInput, showDetailsViewName);
+			KASClient.UI.addElement(showDetailsViewName, showDetailsView);
+			KASClient.UI.addElement(showDetailsView, detailsViewDiv);
+
+            var showDetailsViewPhone = KASClient.UI.getElement("div", {
+                "border-bottom": "none"
+            });
+			 // show phone Number
+			var phoneViewDiv = document.getElementById("phoneViewDiv");
+            KASClient.UI.clearElement(phoneViewDiv);
+
+            // show details view
+            var showDetailsViewPhone = KASClient.UI.getElement("div", {
+                "display": "block"
+            });
+            showDetailsViewPhone.className = "section";
+
+            var showDetailsViewPhoneHeader = KASClient.UI.getElement("p");
+            showDetailsViewPhoneHeader.className = "comment-header";
+            showDetailsViewPhoneHeader.innerText = "Phone Number"
+
+            var showDetailsViewPhoneInput = KASClient.UI.getElement("input", {
+                "border-bottom": "none"
+            });
+            showDetailsViewPhoneInput.type = "tel";
+            showDetailsViewPhoneInput.className = "comment-input";
+            if (KASClient.getPlatform() == KASClient.Platform.iOS) {
+                KASClient.UI.addCSS(showDetailsViewPhoneInput, {
+                    "padding-left": "13pt"
+                });
+            }
+            showDetailsViewPhoneInput.placeholder = _phoneNumber;
+            showDetailsViewPhoneInput.readOnly = true;
+            showDetailsViewPhoneInput.addEventListener("input", function(event) {
+                _phoneNumber = event.target.value;
+                invalidateFooter();
+            });
+            //put the phone in it'sown element 
+            KASClient.UI.addElement(showDetailsViewPhoneHeader, showDetailsViewPhone);
+            KASClient.UI.addElement(showDetailsViewPhoneInput, showDetailsViewPhone);
+            //then the phone element in the div
+            
+            KASClient.UI.addElement(showDetailsViewPhone, showDetailsView);
+
+            KASClient.UI.addElement(showDetailsView, phoneViewDiv);
+
+            // show Location
+			var locationViewDiv = document.getElementById("locationViewDiv");
+            KASClient.UI.clearElement(locationViewDiv);
+
+            // show details view
+            var showDetailsViewLocation = KASClient.UI.getElement("div", {
+                "display": "block"
+            });
+            showDetailsViewLocation.className = "section";
+
+            var showDetailsViewLocationHeader = KASClient.UI.getElement("p");
+            showDetailsViewLocationHeader.className = "comment-header";
+            showDetailsViewLocationHeader.innerText = "Phone Number"
+
+            var showDetailsViewLocationInput = KASClient.UI.getElement("input", {
+                "border-bottom": "none"
+            });
+            showDetailsViewLocationInput.type = "tel";
+            showDetailsViewLocationInput.className = "comment-input";
+            if (KASClient.getPlatform() == KASClient.Platform.iOS) {
+                KASClient.UI.addCSS(showDetailsViewLocationInput, {
+                    "padding-left": "13pt"
+                });
+            }
+            showDetailsViewLocationInput.placeholder = _currentLocation;
+            showDetailsViewLocationInput.readOnly = true;
+            showDetailsViewLocationInput.addEventListener("input", function(event) {
+                _currentLocation = event.target.value;
+                invalidateFooter();
+            });
+            //put the phone in it'sown element 
+            KASClient.UI.addElement(showDetailsViewLocationHeader, showDetailsViewLocation);
+            KASClient.UI.addElement(showDetailsViewLocationInput, showDetailsViewLocation);
+            //then the phone element in the div
+            
+            KASClient.UI.addElement(showDetailsViewLocation, showDetailsView);
+
+            KASClient.UI.addElement(showDetailsView, locationViewDiv);
+        }
+
+
+		// For submitting response a question-answer 
+		// map is required, lets create that!
+		function submitData() {
+			
+			var boxNumber = document.getElementById("boxNumber").value;
+			var placeName = document.getElementById("placeName").value;
+			// var name = document.getElementById("detailsViewDiv").value;
+			// var phone = document.getElementById("phoneViewDiv").value;
+			
+			// alert();
+			
+			if(boxNumber == null || boxNumber ==""){
+				KASClient.App.showNativeErrorMessage("Please fill Box Number");
+			}else if(placeName == null || placeName ==""){
+				KASClient.App.showNativeErrorMessage("Please fill Box Number");
+			} else{
+			var responseId = null;
+			var isEditingPreviousResponse = false; 
+
+			var questionToAnswerMap = JSON.parse("{}"); 
+
+				questionToAnswerMap[0] = boxNumber;
+				questionToAnswerMap[1] = placeName;
+				questionToAnswerMap[2] = _name;
+				questionToAnswerMap[3] = _phoneNumber;
+                questionToAnswerMap[4] = JSON.stringify(_currentLocation);
+				
+				// alert(_name+ " , " + _phoneNumber);
+				KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true, false/* showInChatCanvas */);
+				// alert(questionToAnswerMap);
+			}
+			// KASClient.Form.sumbitFormResponse(_questionToAnswerMap);
+		}
+
+
+
+
+
+		//document.getElementById("issueFill").addEventListener("submit", submitData);
+		//alert("okay");
+	</script>
+</head>
+<!-- Create the Form Structure -->
+<body onload="onCreatePageLoad()">
+    <div id = "header">
+        <p style="text-align:center;" class="text-info">Tracking Details</p>
+    </div>
+	<div id="issueFillDiv" class="body-container">
+		<div style="margin:5%;">
+            <label>Box Number</label>
+            <input type="text" name="boxNumber" id="boxNumber" style="border-color:rgb;">
+        </div>
+
+
+        <div style="margin:5%;">
+            <label>Place Name</label>
+            <input type="text" name="placeName" id="placeName" style="border-color:rgb;">
+        </div>
+        <div>
+            <input type="text" name="detailsView" id="detailsViewDiv" style="border-color:rgb;" hidden>
+        </div>
+        <div>
+            <input type="text" name="phoneView" id="phoneViewDiv" style="border-color:rgb;" hidden>
+        </div>
+        <div>
+            <input type="text" name="locationView" id="locationViewDiv" style="border-color:rgb;" hidden>
+        </div>
+        <div style="margin:5%;">
+            <button type="submit" name="submit" value="Submit" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+        </div>
+        
+    </div>
+		
+	</div>
+</body>
+
+</html>
