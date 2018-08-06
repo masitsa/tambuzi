@@ -1,0 +1,65 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body onload="onCreatePageLoad()">
+    <div id="header">
+        <br/>
+        <br/>
+        <div class="body-container">
+            <p>Please Fill in the Details Below</p>
+            <br/>
+            <br/>
+            <div style="margin:5%;">
+                <input type="number" name="boxId" id="Id" placeholder="Enter the Box ID below" value="">
+            </div>
+            <div style="margin:5%;">
+                <input type="text" name="boxedBy" id="name" placeholder="Who packed the Box?" value="">
+            </div>
+        </div>
+        <br/>
+        <br/>
+        <div>
+            <input type="submit" name="submit" value="Submit" onclick="submitData()">
+        </div>
+
+        <script type="text/javascript"> 
+            var _form; // type: KASForm
+
+            // Below will be called on onload of CreationView.html 
+            function onCreatePageLoad() {
+                KASClient.Form.initFormAsync(function (form, error) {
+                    if (error != null) {
+                        showAlert("Error:initFormAsync:" + error);
+                        return;
+                    }
+                    _form = form;
+                });
+            }
+
+            function submitData() {
+               
+                var boxId = document.getElementById("Id").value;
+                var boxedBy = document.getElementById("name").value;
+
+                if (boxId == null || boxId == "" && (boxedBy == null || boxedBy == "")) {
+                    KASClient.App.showNativeErrorMessage("Please enter the details that are missing.");
+                } else {
+                    // Set the boxId and boxedBy to form title 
+                    _form.title = boxId;
+                    _form.title = boxedBy;
+
+                    // Finally send the request 
+                    KASClient.Form.submitFormRequest(_form);
+                }
+            }
+
+        </script>
+</body>
+
+</html>

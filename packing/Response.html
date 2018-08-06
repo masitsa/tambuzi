@@ -1,0 +1,66 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body onload="onCreatePageLoad()">
+    <div id="header">
+        <br/>
+        <br/>
+        <div class="body-container">
+            <p>Please Fill in the Details Below</p>
+            <br/>
+            <br/>
+            <div style="margin:5%;">
+                <input type="number" name="packId" id="packingId" placeholder="Enter the Packing ID." value="">
+            </div>
+            <div style="margin:5%;">
+                <input type="text" name="pickId" id="pickingid" placeholder="Enter the Picking ID." value="">
+            </div>
+        </div>
+        <br/>
+        <br/>
+        <div>
+            <input type="submit" name="submit" value="Submit" onclick="submitData()">
+        </div>
+
+        <script type="text/javascript"> 
+            var _form; // type: KASForm
+            var packing;
+
+            // Below will be called on onload of CreationView.html 
+            function onCreatePageLoad() {
+                KASClient.Form.initFormAsync(function (form, error) {
+                    if (error != null) {
+                        showAlert("Error:initFormAsync:" + error);
+                        return;
+                    }
+                    _form = form;
+                });
+            }
+
+            function submitData() {
+               
+                var packId = document.getElementById("packingId").value;
+                var pickId = document.getElementById("pickingid").value;
+
+                if (packId == null || packId == "" && (pickId == null || pickId == "")) {
+                    KASClient.App.showNativeErrorMessage("Please enter the details that are missing.");
+                } else {
+                    // Set the packId and pickId to form title 
+                    _form.title = packId;
+                    // _form.title = pickId;
+
+                    // Finally send the request 
+                    KASClient.Form.submitFormRequest(_form);
+                }
+            }
+
+        </script>
+</body>
+
+</html>
