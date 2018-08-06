@@ -1,0 +1,187 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <!-- <link rel="stylesheet" href="bootstrap.min.css"> -->
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body onload="onCreatePageLoad()">
+    <div id="header"></div>
+    <div class="body-container">
+        <div style="margin:5%;">
+            <input type="text" id="bedNumber" placeholder="Bed Number" style="border-color:rgb;">
+        </div>
+        <div style="margin:5%;">
+            <input type="text" id="pickNumber" placeholder="Pick Number" style="border-color:rgb;">
+        </div>
+        <div style="margin:5%;">
+            <input type="datetime-local" id="pickDate" placeholder="Pick Date" style="border-color:rgb;">
+        </div>
+        <div id="imgFlower" style="margin:5%;">
+        </div>
+        <div style="margin:5%;">
+            <button type="submit" name="submit" value="Submit" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Declarations
+        var _form; // type: KASForm
+        var _myFormResponses; // type: KASFormResponse
+
+        var bedNumber = "";
+        var pickNumber = "";
+        var pickDate = "";
+        var imageDiv;
+        var _packImage = "";
+        var _name = "";
+        var _phoneNumber = "";
+        // var _currentLocation = {};
+
+        var _currentUserInfo = null;
+        var _strings = null;
+        var noConnectionMessage = "No internet connection.";
+
+        // Question index
+        var BED_NUMBER = 0;
+        var PICK_NUMBER = 1;
+        var PICK_DATE = 2;
+        var PACK_IMAGE = 3;
+        var NAME = 4;
+        var PHONE_NUMBER = 5;
+        // var LOCATION = 6;
+        // var TIME = 7;
+
+        //checks for internet connectivity
+        function checkInternetConnection() {
+            var isOnLine = navigator.onLine;
+            if (isOnLine) {
+
+            } else {
+                KASClient.App.showNativeErrorMessage(noConnectionMessage);
+            }
+        }
+
+        //populate the header section
+        function inflateHeader() {
+            var header = document.getElementById("header");
+            KASClient.UI.clearElement(header);
+            header.className = "header";
+            header.innerText = _strings["strMiniAppTitle"];
+            var close = KASClient.UI.getElement("div");
+            close.backAsset = "close.png";
+            header.backAction = function() {
+                KASClient.App.dismissCurrentScreen();
+            };
+            KASClient.UI.addElement(close, header);
+        }
+
+        //get image and set it to a div
+        imageDiv = document.getElementById("imgFlower");
+        KASClient.UI.clearElement(imageDiv);
+        //put an image tag icon
+        var img = KASClient.UI.getElement("img", {
+            "width": "60%",
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            "border-radius": "90%",
+        });
+        img.setAttribute("src", "AttachmentIcon.png");
+        //set an event for when the tag is clicked
+        img.onclick = function() {
+            KASClient.App.showImagePickerAsync(function(selectedImagePath, error) {
+                if (error != null) {
+                    return;
+                }
+                _packImage = selectedImagePath;
+                img.setAttribute("src", selectedImagePath);
+            });
+        };
+        //adds image element to the imageDiv
+        KASClient.UI.addElement(img, imageDiv);
+
+        //submit user's response
+        function sumbitFormResponse() {
+            var questionToAnswerMap = JSON.parse("{}");
+            questionToAnswerMap[BED_NUMBER] = bedNumber;
+            questionToAnswerMap[PICK_NUMBER] = pickNumber;
+            questionToAnswerMap[PICK_DATE] = pickDate;
+            questionToAnswerMap[PACK_IMAGE] = _packImage;
+            questionToAnswerMap[NAME] = _name;
+            questionToAnswerMap[PHONE_NUMBER] = _phoneNumber;
+            // questionToAnswerMap[LOCATION] = JSON.stringify(_currentLocation);
+            // questionToAnswerMap[TIME] = (new Date()).getTime();
+
+            // Finally submit the details
+            KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true /* showInChatCanvas */ );
+            alert("successful");
+        }
+
+        // Below will be called on onload of CreationView.html
+        function onCreatePageLoad() {
+            KASClient.App.registerHardwareBackPressCallback(function() {
+                KASClient.App.dismissCurrentScreen();
+            });
+
+            KASClient.App.getLocalizedStringsAsync(function(strings, error) {
+                if (error != null) {
+                    showAlert("Error:GetFormAsync:" + error);
+                    return;
+                }
+                _strings = strings;
+                // alert(_strings);
+                KASClient.Form.getFormAsync(function(form, error) {
+                    if (error != null) {
+                        showAlert("Error:GetFormAsync:" + error);
+                        return;
+                    }
+                    _form = form;
+                    inflateHeader();
+                    // alert(JSON.stringify(_form))
+
+                    KASClient.App.getCurrentUserIdAsync(function(userId, error) {
+                        if (error != null) {
+                            handleError(error);
+                            return;
+                        }
+                        KASClient.App.getUsersDetailsAsync([userId], function(users, error) {
+                            if (error != null) {
+                                handleError(error);
+                                return;
+                            }
+                            _currentUserInfo = users[userId];
+                            _name = _currentUserInfo.originalName;
+                            _phoneNumber = _currentUserInfo.phoneNumber;
+                        });
+                    });
+                });
+            });
+
+        }
+
+        // For submitting response a question-answer mapping
+        function submitData() {
+            bedNumber = document.getElementById("bedNumber").value;
+            pickNumber = document.getElementById("pickNumber").value;
+            pickDate = document.getElementById("pickDate").value;
+            //var imgFlower = document.getElementById("imgFlower").value;
+
+            if ((bedNumber == null || bedNumber == "") || (pickNumber == null || pickNumber == "") || (pickDate == null || pickDate == "")) {
+                KASClient.App.showNativeErrorMessage("Please fill all the details!");
+            } else {
+                alert(1);
+                sumbitFormResponse();
+            }
+
+        }
+
+        // function contact() {
+        //     KASClient.App.showContactPickerAsync();
+        // }
+    </script>
+
+</body>
+
+</html>
