@@ -1,0 +1,35 @@
+{
+    "title": "Picking Details",
+    "visibility": "All",
+    "expiry": 0,
+    "isAnonymous": false,
+    "isResponseAppended": true,
+    "isLocationRequested": false,
+    "questions": [{
+            "title": "Bed Number",
+            "type": "Text"
+        },
+        {
+            "title": "Pick Number",
+            "type": "Text"
+        },
+        {
+            "title": "Pick Date",
+            "type": "Datetime"
+        },
+        {
+            "title": "Flower Pack Image",
+            "type": "Image"
+        },
+        {
+            "title": "Name",
+            "type": "Text"
+        },
+        {
+            "title": "Phone",
+            "type": "Text"
+        }
+
+    ]
+
+}
