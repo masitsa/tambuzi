@@ -160,7 +160,8 @@
         header.className = "header";
         header.innerText = _strings["strMiniAppTitle"];
       }
-      function showProfileImage() {
+  
+      function getSummary(){
         var profileImage = document.getElementById("profileImage");
         KASClient.UI.clearElement(profileImage);
 
@@ -175,9 +176,9 @@
         imgQuestion.src = _myFormResponses.questionToAnswerMap[PROFILE_IMAGE];
 
         KASClient.UI.addElement(imgQuestion, profileImage);
+        // end of Profile image 
 
-      }
-      function showEmployeeId() {
+        //start of employee id
         var employeeIdHeader = document.getElementById("employeeIdHeader");
         KASClient.UI.clearElement(employeeIdHeader);
 
@@ -186,8 +187,9 @@
 
         employeeIdHeader.innerText = _strings[_form.questions[EMPLOYEE_ID].title];
         employeeId.innerHTML = _myFormResponses.questionToAnswerMap[EMPLOYEE_ID];
-      }
-      function showPreferredName() {
+        //end of employee id
+
+        //start of preferred name
         var preferredNameHeader = document.getElementById("preferredNameHeader");
         KASClient.UI.clearElement(preferredNameHeader);
 
@@ -196,8 +198,9 @@
 
         preferredNameHeader.innerText = _strings[_form.questions[PREFERRED_NAME].title];
         preferredName.innerHTML = _myFormResponses.questionToAnswerMap[PREFERRED_NAME];
-      }
-      function showEmployeeBio() {
+        //end of preferred name
+
+        //start of employeebio
         var employeeBioHeader = document.getElementById("employeeBioHeader");
         KASClient.UI.clearElement(employeeBioHeader);
 
@@ -206,10 +209,10 @@
 
         employeeBioHeader.innerText = _strings[_form.questions[EMPLOYEE_BIO].title];
         employeeBio.innerHTML = _myFormResponses.questionToAnswerMap[EMPLOYEE_BIO];
-      }
-      function showUserDetails() {
-        //name title
-        var userName = document.getElementById("userName");
+        //end of employeebio
+
+         //name title
+         var userName = document.getElementById("userName");
         KASClient.UI.clearElement(userName);
         userName.innerText = _strings[_form.questions[NAME].title];
 
@@ -225,13 +228,6 @@
         var phoneNumber = document.getElementById("phoneNumber");
         KASClient.UI.clearElement(phoneNumber);
         phoneNumber.innerHTML = _myFormResponses.questionToAnswerMap[PHONE_NO];
-      }
-      function getSummary() {
-        showProfileImage();
-        showEmployeeId();
-        showPreferredName();
-        showEmployeeBio();
-        showUserDetails();
       }
       function dismissCurrentScreen() {
         KASClient.App.dismissCurrentScreen();
