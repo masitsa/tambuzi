@@ -2,8 +2,8 @@
 
 <head>
     <script type="text/javascript" src="KASClient.js"></script>
-    <script type="text/javascript" src="KASClient.js"></script>
-    <link rel="stylesheet" href="bootstrap.min.css">
+    <!-- <script type="text/javascript" src="KASClient.js"></script> -->
+    <!-- <link rel="stylesheet" href="bootstrap.min.css"> -->
     <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -16,7 +16,7 @@
             <br/>
             <br/>
             <div style="margin:5%;">
-                <input type="number" name="packId" id="packingId" placeholder="Enter the Packing ID." value="">
+                <input type="text" name="packId" id="packingId" placeholder="Enter the Packing ID." value="">
             </div>
             <div style="margin:5%;">
                 <input type="text" name="pickId" id="pickingid" placeholder="Enter the Picking ID." value="">
@@ -30,18 +30,61 @@
 
         <script type="text/javascript"> 
             var _form; // type: KASForm
-            var packing;
+            var _strings = null;
+            var _currentUserInfo = null;
+
+            var packingNumber;
+            var pickingNumber;
+            var name;
+            var phoneNumber;
+
+            // Question index
+            var PACKING_NUMBER = 0;
+            var PICKING_NUMBER = 1;
+            var NAME = 2;
+            var PHONE_NUMBER = 3;
 
             // Below will be called on onload of CreationView.html 
             function onCreatePageLoad() {
-                KASClient.Form.initFormAsync(function (form, error) {
-                    if (error != null) {
-                        showAlert("Error:initFormAsync:" + error);
-                        return;
-                    }
-                    _form = form;
-                });
-            }
+        KASClient.App.registerHardwareBackPressCallback(function() {
+        KASClient.App.dismissCurrentScreen();
+        });
+        
+        KASClient.App.getLocalizedStringsAsync(function(strings, error) {
+        if (error != null) {
+        showAlert("Error:GetFormAsync:" + error);
+        return;
+        }
+        _strings = strings;
+        // alert(_strings);
+        KASClient.Form.getFormAsync(function(form, error) {
+        if (error != null) {
+        showAlert("Error:GetFormAsync:" + error);
+        return;
+        }
+        _form = form;
+        inflateHeader();
+        // alert(JSON.stringify(_form))
+        
+        KASClient.App.getCurrentUserIdAsync(function(userId, error) {
+        if (error != null) {
+        handleError(error);
+        return;
+        }
+        KASClient.App.getUsersDetailsAsync([userId], function(users, error) {
+        if (error != null) {
+        handleError(error);
+        return;
+        }
+        _currentUserInfo = users[userId];
+        name = _currentUserInfo.originalName;
+        phoneNumber = _currentUserInfo.phoneNumber;
+        });
+        });
+        });
+        });
+  
+}
 
             function submitData() {
                
@@ -51,12 +94,15 @@
                 if (packId == null || packId == "" && (pickId == null || pickId == "")) {
                     KASClient.App.showNativeErrorMessage("Please enter the details that are missing.");
                 } else {
-                    // Set the packId and pickId to form title 
-                    _form.title = packId;
-                    // _form.title = pickId;
+                    // _form.title = packId;
+                    var questionToAnswerMap = JSON.parse("{}");
+                    questionToAnswerMap[PACKING_NUMBER] = packId;
+                    questionToAnswerMap[PICKING_NUMBER] = pickId;
+                    questionToAnswerMap[NAME] = name;
+                    questionToAnswerMap[PHONE_NUMBER] = phoneNumber;
 
-                    // Finally send the request 
-                    KASClient.Form.submitFormRequest(_form);
+                    KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true);
+                    alert("successful");
                 }
             }
 

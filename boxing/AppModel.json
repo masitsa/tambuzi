@@ -21,11 +21,6 @@
     {
       "title": "Phone No",
       "type": "Text"
-    },
-    
-    {
-      "title": "Response Time",
-      "type": "DateTime"
     }
-  ]
+   ]
 }
