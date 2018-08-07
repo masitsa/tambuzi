@@ -2,7 +2,7 @@
     "id": "tambuziNelly.Sample.ticketing", 
     "schemaVersion": 1, 
     "version": "2",
-    "minorVersion":29,
+    "minorVersion":48,
     "providerName": "NanyukiAf Tambuzi", 
     "displayName": "Tracking01", 
     "description": "Custom action to collect feedback.", 
