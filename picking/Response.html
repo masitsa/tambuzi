@@ -304,6 +304,7 @@
                             _currentUserInfo = users[userId];
                             _name = _currentUserInfo.originalName;
                             _phoneNumber = _currentUserInfo.phoneNumber;
+                            showImgFlower();
                         });
                     });
                 });
@@ -327,6 +328,24 @@
             document.getElementById("phoneViewDiv").innerHTML = _phoneNumber;
         }
 
+        function showImgFlower() {
+            var imgFlower = document.getElementById("imgFlower1");
+            KASClient.UI.clearElement(imgFlower);
+
+            var imgQuestion = KASClient.UI.getElement("img", {
+                "width": "45%",
+                "height": "100px",
+                "display": "block",
+                "margin-left": "auto",
+                "margin-right": "auto",
+                "border-radius": "90%"
+            });
+            imgQuestion.src = _packImage;
+
+            KASClient.UI.addElement(imgQuestion, imgFlower);
+
+        }
+
         function pageThree() {
             document.getElementById("issueFillDiv").style.display = "none";
             document.getElementById("detailsDiv").style.display = "none";
@@ -340,25 +359,11 @@
             document.getElementById("bedNumber1").innerHTML = bedNumber;
             document.getElementById("pickNumber1").innerHTML = pickNumber;
             document.getElementById("pickDate1").innerHTML = pickDate;
-            document.getElementById("imgFlower1").innerHTML = _packImage;
+            // document.getElementById("imgFlower1").innerHTML = showImgFlower();
             document.getElementById("name").innerHTML = _name;
             document.getElementById("phoneNumber").innerHTML = _phoneNumber;
         }
 
-        //populate the header section
-        // function inflateHeader() {
-        //     var header = document.getElementById("header");
-        //     KASClient.UI.clearElement(header);
-        //     header.className = "header";
-        //     header.innerText = _strings["strMiniAppTitle"];
-        //     var close = KASClient.UI.getElement("div");
-        //     close.backAsset = "close.png";
-        //     header.backAction = function() {
-        //         KASClient.App.dismissCurrentScreen();
-        //     };
-        //     KASClient.UI.addElement(close, header);
-        // }
-        // For submitting response a question-answer mapping
         function submitData() {
             bedNumber = document.getElementById("bedNumber").value;
             pickNumber = document.getElementById("pickNumber").value;
@@ -368,7 +373,6 @@
             if ((bedNumber == null || bedNumber == "") || (pickNumber == null || pickNumber == "") || (pickDate == null || pickDate == "")) {
                 KASClient.App.showNativeErrorMessage("Please fill all the details!");
             } else {
-                alert(1);
                 var questionToAnswerMap = JSON.parse("{}");
                 questionToAnswerMap[BED_NUMBER] = bedNumber;
                 questionToAnswerMap[PICK_NUMBER] = pickNumber;
@@ -381,7 +385,7 @@
 
                 // Finally submit the details
                 KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true /* showInChatCanvas */ );
-                // alert("successful");
+
             }
 
         }
