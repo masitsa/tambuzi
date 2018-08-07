@@ -1,26 +1,25 @@
 {
-  "title": "Boxing Details",
-  "visibility": "All",
-  "expiry": 0,
-  "isAnonymous": false,
-  "isResponseAppended": true,
-  "isLocationRequested": false,
-  "questions": [{
-      "title": "Box Number",
-      "type": "Text"
-    },
-    {
-      "title": "Boxed By",
-      "type": "Text"
-    },
-    
-    {
-      "title": "Name",
-      "type": "Text"
-    },
-    {
-      "title": "Phone No",
-      "type": "Text"
-    }
-   ]
+    "questions": [
+        
+        {
+            "title": "Box Number",
+            "type": "Text"
+        },
+        {
+            "title": "Boxed By",
+            "type": "Text"
+        },
+        {
+            "title": "Name",
+            "type": "Text"
+        },
+        {
+            "title": "Phone",
+            "type": "Text"
+        }
+    ],
+    "title": "Ask for response",
+    "visibility": "All",
+    "isAnonymous": false,
+    "isResponseAppended": false
 }

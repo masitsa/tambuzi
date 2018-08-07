@@ -1,35 +1,36 @@
-{
-	"id": "com.ivali.boxing", 
-	"schemaVersion": 1, 
-	"version": "5",
-	"minorVersion": 5,
-	"providerName": "mutia",
-	"displayName": "Boxing",
-	"description": "Update your flower boxing details", 
-  "icon": "boxing.png",
-  "appModel": "AppModel.json",
-  "dials": {
-    "isLocalised": false,
-    "isPinned": false
-  },
-  "actionScope": "Group",
-  "views": {
-    "ChatCanvasCardView": {
-      "showReceipts": false,
-      "showLikes": false,
-      "showComments": false,
-      "labelResponseSending": "Updating your boxing details",
-      "labelResponseFailed": "Failed to update your boxing details",
-      "labelResponded": "Boxing details updated",
-      "isResponseEditable": false
-    },
-    "CreationView": {
-      "sourceLocation": "Response.html",
-      "showNativeToolbar": false
-    },
-    "ResponseResultsView": {
-      "sourceLocation": "ResponseSummary.html",
-      "showNativeToolbar": false
+{ 
+    "id": "com.Willis.Boxing", 
+    "schemaVersion": 1, 
+    "version": "1",
+    "minorVersion":1,
+    "providerName": "NanyukiAf Tambuzi", 
+    "displayName": "Boxing Details", 
+    "description": "Custom action to collect boxing details.", 
+    "icon": "icon.png", 
+    "appModel": "AppModel.json",
+    "actionScope": "Group",
+    "views": {
+        "CreationView": {
+            "labelHeader": "Boxing Details Requested",
+            "sourceLocation": "ResponseView.html",
+            "showNativeToolbar": true,
+            "backDialogTitle": "Confirmation",
+            "backDialogDescription": "Are you sure you want to discard?"
+        },
+        "ChatCanvasCardView": {
+            "showHeader": true,
+            "labelResponseSending": "Submitting your response",
+            "labelResponded": "You have provided your response. Thank you!",
+            "labelResponseFailed": "Response submission failed",
+            "labelRespondToForm": "CONFIRM RESPONSE",
+            "isResponseEditable": false,
+			"showLikes" : false,
+			"showComments": false
+        },
+        "ResponseResultsView": {
+            "labelPageHeader": "Response summary",
+            "sourceLocation": "SummaryView.html",
+            "showNativeToolbar": true
+        }
     }
-  }
 }
