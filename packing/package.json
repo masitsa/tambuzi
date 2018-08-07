@@ -2,7 +2,7 @@
   "id": "com.Willis.packing", 
 	"schemaVersion": 1, 
 	"version": "1",
-	"minorVersion": 2,
+	"minorVersion": 3,
 	"providerName": "Mutia",
 	"displayName": "Packing Details",
 	"description": "Update your flower packing details", 
