@@ -157,9 +157,33 @@
       }
       function inflateHeader() {
         var header = document.getElementById("header");
-        KASClient.UI.clearElement(header);
-        header.className = "header";
-        header.innerText = _strings["strMiniAppTitle"];
+            KASClient.UI.clearElement(header);
+
+            var navigationBar = new KASClient.UI.KASFormPageNavigationBar();
+            navigationBar.backAsset = "close.png";
+            var myAttr = {
+                "background-color": "#2d8280",
+                "align-items": "center",
+                
+            }
+            navigationBar.attributes = myAttr;
+            var mainText = KASClient.UI.getElement("div", {
+                "font-size": "12pt",
+                "color": "white",
+                "max-width": "300pt",
+                "font-weight": "350",
+                "font-size" : "15pt"
+
+            });
+            mainText.innerText = _strings["strMiniAppTitle"];
+
+            navigationBar.title = mainText.outerHTML;
+
+            navigationBar.backAction = function () {
+                KASClient.App.dismissCurrentScreen();
+            };
+
+            KASClient.UI.addElement(navigationBar.getView(), header);
       }
   
       function getSummary(){

@@ -30,10 +30,9 @@
                 <input type="text" id="employeeBio" placeholder="My Information" style="border-color:rgb;" onfocus="this.placeholder=''">
             </div>
             <div class="footer">
-                <button onclick="prevPage()" id="btnPrev"  class="btns">Previous</button>
+                <button class="btns" disabled>Previous</button>
                 <button class="btns"><span id="page">page:</span></button>
                 <button onclick="nextPage()" id="btnNext"  class="btns">Next</button>
-                <button type="submit" name="submit" value="Submit" onclick="submitData()"id="btnSubmit" class="btns">SUBMIT</button>
             </div>
             
         </div>
@@ -94,8 +93,8 @@
                 <!-- End of user Details -->
                 <div class="footer">
                     <button onclick="prevPage()" id="btnPrev"  class="btns">Previous</button>
-                    <button class="btns"><span id="page">page:</span></button>
-                    <button type="submit" name="submit" value="Submit" onclick="submitData()"id="btnSubmit" class="btns">SUBMIT</button>
+                    <button class="btns"><span id="pages">page:</span></button>
+                    <button type="submit" name="submit" value="Submit" onclick="submitData()"id="btnSubmit" class="btns">Submit</button>
                 </div>
             </div>
         </div>
@@ -203,17 +202,17 @@
             navigationBar.backAsset = "close.png";
             var myAttr = {
                 "background-color": "#2d8280",
-                "color": "white",
                 "align-items": "center",
-                "padding-left": "30%",
-                "font-size" : "20pt"
+                
             }
             navigationBar.attributes = myAttr;
             var mainText = KASClient.UI.getElement("div", {
                 "font-size": "12pt",
-                "color": "#32495f",
+                "color": "white",
                 "max-width": "300pt",
-                "font-weight": "500"
+                "font-weight": "350",
+                "font-size" : "15pt"
+
             });
             mainText.innerText = _strings["strMiniAppTitle"];
 
@@ -359,6 +358,8 @@
             var page1 = document.getElementById("page1");
             var page2 = document.getElementById("page2");
             var page_span = document.getElementById("page");
+            var page_spans = document.getElementById("pages");
+
 
             // Validate page
             if (page < 2) {
@@ -366,16 +367,12 @@
                 page1.style.display = "block";
                 page2.style.display = "none";
                 page_span.innerHTML = page + "/" + 2;
-                // document.getElementById("btnSubmit").style.display = "none";
-                // document.getElementById("btnNext").style.display = "block";
             }
             if (page > 1) {
                 page = 2;
                 page2.style.display = "block";
                 page1.style.display = "none";
-                page_span.innerHTML = page + "/" + 2;
-                // document.getElementById("btnSubmit").style.display = "block";
-                // document.getElementById("btnNext").style.display = "none";
+                page_spans.innerHTML = page + "/" + 2;
                 showSummary();
             }
         }
