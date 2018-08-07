@@ -29,6 +29,13 @@
             <div style="margin:5%;">
                 <input type="text" id="employeeBio" placeholder="My Information" style="border-color:rgb;" onfocus="this.placeholder=''">
             </div>
+            <div class="footer">
+                <button onclick="prevPage()" id="btnPrev"  class="btns">Previous</button>
+                <button class="btns"><span id="page">page:</span></button>
+                <button onclick="nextPage()" id="btnNext"  class="btns">Next</button>
+                <button type="submit" name="submit" value="Submit" onclick="submitData()"id="btnSubmit" class="btns">SUBMIT</button>
+            </div>
+            
         </div>
         <div id="page2">
             <div id="details" style="padding-top: 50pt">
@@ -85,19 +92,23 @@
                     </div>
                 </div>
                 <!-- End of user Details -->
-                <!-- The user submits their responses by clicking this button -->
-                <div style="margin:5%;">
-                    <button type="submit" name="submit" value="Submit" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+                <div class="footer">
+                    <button onclick="prevPage()" id="btnPrev"  class="btns">Previous</button>
+                    <button class="btns"><span id="page">page:</span></button>
+                    <button type="submit" name="submit" value="Submit" onclick="submitData()"id="btnSubmit" class="btns">SUBMIT</button>
                 </div>
             </div>
         </div>
-        <a href="javascript:prevPage()" id="btn_prev">Previous</a>
+        <!-- The user submits their responses by clicking this button -->
+        
+
+        <!-- <a href="javascript:prevPage()" id="btnPrev">Previous</a>
         <br>
         <br>
-        <a href="javascript:nextPage()" id="btn_next">Next</a>
+        <a href="javascript:nextPage()" id="btnNext">Next</a>
         <p>page:
             <span id="page"></span>
-        </p>
+        </p> -->
         <!-- end of body container -->
     </div>
 
@@ -192,9 +203,10 @@
             navigationBar.backAsset = "close.png";
             var myAttr = {
                 "background-color": "#2d8280",
-                "text-color": "white",
+                "color": "white",
                 "align-items": "center",
-                "padding-left": "41%"
+                "padding-left": "30%",
+                "font-size" : "20pt"
             }
             navigationBar.attributes = myAttr;
             var mainText = KASClient.UI.getElement("div", {
@@ -337,14 +349,13 @@
             if (current_page < 2) {
                 current_page++;
                 changePage(current_page);
-                alert("yeey");
 
             }
         }
 
         function changePage(page) {
-            var btn_next = document.getElementById("btn_next");
-            var btn_prev = document.getElementById("btn_prev");
+            var btnNext = document.getElementById("btnNext");
+            var btnPrev = document.getElementById("btnPrev");
             var page1 = document.getElementById("page1");
             var page2 = document.getElementById("page2");
             var page_span = document.getElementById("page");
@@ -355,12 +366,16 @@
                 page1.style.display = "block";
                 page2.style.display = "none";
                 page_span.innerHTML = page + "/" + 2;
+                // document.getElementById("btnSubmit").style.display = "none";
+                // document.getElementById("btnNext").style.display = "block";
             }
             if (page > 1) {
                 page = 2;
                 page2.style.display = "block";
                 page1.style.display = "none";
                 page_span.innerHTML = page + "/" + 2;
+                // document.getElementById("btnSubmit").style.display = "block";
+                // document.getElementById("btnNext").style.display = "none";
                 showSummary();
             }
         }
