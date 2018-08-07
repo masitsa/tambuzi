@@ -7,11 +7,11 @@
   "isLocationRequested": false,
   "questions": [
     {
-      "title": "Packing Number",
+      "title": "Packing ID",
       "type": "Text"
     },
     {
-      "title": "Picking Number",
+      "title": "Picking ID",
       "type": "Text"
     },
     {
