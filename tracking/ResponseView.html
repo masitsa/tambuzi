@@ -10,9 +10,16 @@
         var _phoneNumber = "";
 		var _questionToAnswerMap = {};
 		var _currentUserInfo = null;
-        var _currentLocation = {};
+        var _currentLocation = {};     
+        var boxNumber;
+        var placeName;
+        var name;
+        var phone;
 		// Below will be called on onload of CreationView.html
 		function onCreatePageLoad() {
+            document.getElementById("issueFillDiv").style.display = "block";
+            document.getElementById("detailsDiv").style.display = "none";
+            document.getElementById("contents").style.display = "none";
 			KASClient.App.registerHardwareBackPressCallback(function () {
 				KASClient.App.dismissCurrentScreen();
 			});
@@ -40,141 +47,80 @@
                             _currentUserInfo = users[userId];
                             _name = _currentUserInfo.originalName;
                             _phoneNumber = _currentUserInfo.phoneNumber;
-                            inflateDetailsView();
+                            // inflateDetailsView();
                         });
                     });
 		}
 
-		        function inflateDetailsView() {
-            // 3rd Page
+        function pageOne(){
+        //e.preventDefault();
+        document.getElementById("issueFillDiv").style.display = "block";
+        document.getElementById("detailsDiv").style.display = "none";
+        document.getElementById("contents").style.display = "none";
 
-            var detailsViewDiv = document.getElementById("detailsViewDiv");
-            KASClient.UI.clearElement(detailsViewDiv);
+        boxNumber = document.getElementById("boxNumber").value;
+        placeName = document.getElementById("placeName").value;
+        
+        // alert(boxNumber);
+        document.getElementById("boxNumber").innerHTML = boxNumber;
+        document.getElementById("placeName").innerHTML = placeName;
+         }    
 
-            // show details view
-            var showDetailsView = KASClient.UI.getElement("div", {
-                "display": "block"
-            });
+        function pageTwo(){
+            //e.preventDefault();
+            document.getElementById("issueFillDiv").style.display = "none";
+            document.getElementById("detailsDiv").style.display = "block";
+            document.getElementById("contents").style.display = "none";
+            // document.getElementById("detailsViewDiv").innerHTML = "_name";
+            // document.getElementById("phoneViewDiv").innerHTML = "_phoneNumber";
+            document.getElementById("detailsViewDiv").innerHTML = _name;
+            document.getElementById("phoneViewDiv").innerHTML = _phoneNumber;
 
-            var showDetailsViewName = KASClient.UI.getElement("div");
-            showDetailsViewName.className = "section";
-
-            var showDetailsViewNameHeader = KASClient.UI.getElement("p");
-            showDetailsViewNameHeader.className = "comment-header";
-            showDetailsViewNameHeader.innerText = "Name";
-
-            var showDetailsViewNameInput = KASClient.UI.getElement("input");
-            showDetailsViewNameInput.type = "text";
-            showDetailsViewNameInput.className = "comment-input";
-            if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-                KASClient.UI.addCSS(showDetailsViewNameInput, {
-                    "padding-left": "13pt"
-                });
-            }
-            showDetailsViewNameInput.placeholder = "Name";
-            //value of the placeholder with  Name
-            showDetailsViewNameInput.value = _name;
-            showDetailsViewNameInput.addEventListener("input", function(event) {
-                _name = event.target.value;
-                invalidateFooter();
-            });
-
-            KASClient.UI.addElement(showDetailsViewNameHeader, showDetailsViewName);
-            KASClient.UI.addElement(showDetailsViewNameInput, showDetailsViewName);
-			KASClient.UI.addElement(showDetailsViewName, showDetailsView);
-			KASClient.UI.addElement(showDetailsView, detailsViewDiv);
-
-            var showDetailsViewPhone = KASClient.UI.getElement("div", {
-                "border-bottom": "none"
-            });
-			 // show phone Number
-			var phoneViewDiv = document.getElementById("phoneViewDiv");
-            KASClient.UI.clearElement(phoneViewDiv);
-
-            // show details view
-            var showDetailsViewPhone = KASClient.UI.getElement("div", {
-                "display": "block"
-            });
-            showDetailsViewPhone.className = "section";
-
-            var showDetailsViewPhoneHeader = KASClient.UI.getElement("p");
-            showDetailsViewPhoneHeader.className = "comment-header";
-            showDetailsViewPhoneHeader.innerText = "Phone Number"
-
-            var showDetailsViewPhoneInput = KASClient.UI.getElement("input", {
-                "border-bottom": "none"
-            });
-            showDetailsViewPhoneInput.type = "tel";
-            showDetailsViewPhoneInput.className = "comment-input";
-            if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-                KASClient.UI.addCSS(showDetailsViewPhoneInput, {
-                    "padding-left": "13pt"
-                });
-            }
-            showDetailsViewPhoneInput.placeholder = _phoneNumber;
-            showDetailsViewPhoneInput.readOnly = true;
-            showDetailsViewPhoneInput.addEventListener("input", function(event) {
-                _phoneNumber = event.target.value;
-                invalidateFooter();
-            });
-            //put the phone in it'sown element 
-            KASClient.UI.addElement(showDetailsViewPhoneHeader, showDetailsViewPhone);
-            KASClient.UI.addElement(showDetailsViewPhoneInput, showDetailsViewPhone);
-            //then the phone element in the div
-            
-            KASClient.UI.addElement(showDetailsViewPhone, showDetailsView);
-
-            KASClient.UI.addElement(showDetailsView, phoneViewDiv);
-
-            // show Location
-			var locationViewDiv = document.getElementById("locationViewDiv");
-            KASClient.UI.clearElement(locationViewDiv);
-
-            // show details view
-            var showDetailsViewLocation = KASClient.UI.getElement("div", {
-                "display": "block"
-            });
-            showDetailsViewLocation.className = "section";
-
-            var showDetailsViewLocationHeader = KASClient.UI.getElement("p");
-            showDetailsViewLocationHeader.className = "comment-header";
-            showDetailsViewLocationHeader.innerText = "Phone Number"
-
-            var showDetailsViewLocationInput = KASClient.UI.getElement("input", {
-                "border-bottom": "none"
-            });
-            showDetailsViewLocationInput.type = "tel";
-            showDetailsViewLocationInput.className = "comment-input";
-            if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-                KASClient.UI.addCSS(showDetailsViewLocationInput, {
-                    "padding-left": "13pt"
-                });
-            }
-            showDetailsViewLocationInput.placeholder = _currentLocation;
-            showDetailsViewLocationInput.readOnly = true;
-            showDetailsViewLocationInput.addEventListener("input", function(event) {
-                _currentLocation = event.target.value;
-                invalidateFooter();
-            });
-            //put the phone in it'sown element 
-            KASClient.UI.addElement(showDetailsViewLocationHeader, showDetailsViewLocation);
-            KASClient.UI.addElement(showDetailsViewLocationInput, showDetailsViewLocation);
-            //then the phone element in the div
-            
-            KASClient.UI.addElement(showDetailsViewLocation, showDetailsView);
-
-            KASClient.UI.addElement(showDetailsView, locationViewDiv);
         }
 
+          function pageTwoTwo(){
+            //e.preventDefault();
+            document.getElementById("issueFillDiv").style.display = "none";
+            document.getElementById("detailsDiv").style.display = "block";
+            document.getElementById("contents").style.display = "none";
+// <!-- 
+//             // _name = document.getElementById("detailsViewDiv").value;
+//             // _phoneNumber = document.getElementById("phoneViewDiv").value; -->
+            document.getElementById("detailsViewDiv").innerHTML = _name;
+            document.getElementById("phoneViewDiv").innerHTML = _phoneNumber;
+
+        }
+        
+        function pageThree(){
+            // e.preventDefault();
+            document.getElementById("issueFillDiv").style.display = "none";
+            document.getElementById("detailsDiv").style.display = "none";
+            document.getElementById("contents").style.display = "block";
+            
+            boxNumber = document.getElementById("boxNumber").value;
+		    placeName = document.getElementById("placeName").value;
+            
+            // alert(boxNumber);
+            document.getElementById("boxNumber1").innerHTML = boxNumber;
+            document.getElementById("placeName1").innerHTML = placeName;
+            document.getElementById("name").innerHTML = _name;
+            document.getElementById("phoneNumber").innerHTML = _phoneNumber;
+           
+            // document.forms["summaryDiv"]["boxNumberDiv"].value = boxNumber;
+            // document.forms["summaryDiv"]["placeNameDiv"].value = placeName;
+            // document.forms["summaryDiv"]["nameDiv"].value = _name;
+            // document.forms["summaryDiv"]["phoneNumberDiv"].value = _phoneNumber;
+            console.log(placeName);
+        }
 
 		// For submitting response a question-answer 
 		// map is required, lets create that!
 		function submitData() {
 			
-			var boxNumber = document.getElementById("boxNumber").value;
-			var placeName = document.getElementById("placeName").value;
-			// var name = document.getElementById("detailsViewDiv").value;
-			// var phone = document.getElementById("phoneViewDiv").value;
+		     boxNumber = document.getElementById("boxNumber").value;
+		     placeName = document.getElementById("placeName").value;
+		     name = document.getElementById("detailsViewDiv").value;
+		     phone = document.getElementById("phoneViewDiv").value;
 			
 			// alert();
 			
@@ -204,43 +150,223 @@
 
 
 
-
-		//document.getElementById("issueFill").addEventListener("submit", submitData);
+        // document.getElementById("submitForm").addEventListener("submit", submitData);
 		//alert("okay");
 	</script>
 </head>
 <!-- Create the Form Structure -->
 <body onload="onCreatePageLoad()">
-    <div id = "header">
-        <p style="text-align:center;" class="text-info">Tracking Details</p>
+    <div>
+        <!-- <form name="fillAllDetails"> -->
+            
+            <div id="issueFillDiv" class="body-container">
+                <div id = "header">
+                    <p style="text-align:center;" class="text-info">TRACKING DETAILS</p>
+                </div>
+                <div style="margin:5%;">
+                    <label>Box Number</label>
+                    <input class="inputForm" type="text" name="boxNumber" id="boxNumber" style="border-color:rgb;"/>
+                </div>
+
+
+                <div style="margin:5%;">
+                    <label>Place Name</label>
+                    <input class="inputForm" type="text" name="placeName" id="placeName" style="border-color:rgb;"/>
+                </div>
+                <footer class="footer">
+                    <table style="width: 100%">
+                        <tr>
+                            <!-- <div style="width: 30%;"> -->
+                            <td style="width: 30%">
+                                <input type="submit" name="submit" value="" class="prev1" id="btn" disabled/>
+                            </td>
+                            <td style="width: 30%">
+                                <div class="progressDiv">
+                                    <div class="progressInnerDiv">
+                                        <div class="progressText">
+                                            <label>1 of 3</label>
+                                        </div>
+                                        <div class="progressBarOuterDiv">
+                                            <div class="progressBarInnerDiv">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="width: 30%">
+                                <input type="submit" name="submit" value="" onclick="pageTwo()" class="next1" id="btn2"/>
+                            </td>
+                        </tr>
+                    </table>
+                </footer>
+            </div>
+        <!-- </form> -->
+            
     </div>
-	<div id="issueFillDiv" class="body-container">
-		<div style="margin:5%;">
-            <label>Box Number</label>
-            <input type="text" name="boxNumber" id="boxNumber" style="border-color:rgb;">
-        </div>
+
+    <!-- <form name="detailsForm"> -->
+        <div id="detailsDiv">
+            <div id = "header">
+                <p style="text-align:center;" class="text-info">YOUR DETAILS</p>
+            </div>
+            <div style="display: block;">
+                <div class="detailsSection">
+                    <p class="detailscomment-header">Name</p>
+                    <div>
+                        <p class="detailscomment-input" name="detailsView" id="detailsViewDiv" style="border-color:rgb;"></p>
+                    </div>
+                </div>
 
 
-        <div style="margin:5%;">
-            <label>Place Name</label>
-            <input type="text" name="placeName" id="placeName" style="border-color:rgb;">
-        </div>
-        <div>
-            <input type="text" name="detailsView" id="detailsViewDiv" style="border-color:rgb;" hidden>
-        </div>
-        <div>
-            <input type="text" name="phoneView" id="phoneViewDiv" style="border-color:rgb;" hidden>
-        </div>
-        <div>
-            <input type="text" name="locationView" id="locationViewDiv" style="border-color:rgb;" hidden>
-        </div>
-        <div style="margin:5%;">
-            <button type="submit" name="submit" value="Submit" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
-        </div>
+                <div class="detailsSection">
+                    <p class="detailscomment-header">Phone Number </p>
+                    <div>
+                        <p class="detailscomment-input" name="phoneView" id="phoneViewDiv" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                <footer class="footer">
+                    <table style="width: 100%">
+                            <tr>
+                                <!-- <div style="width: 30%;"> -->
+                                <td style="width: 30%">
+                                    <input type="submit" name="submit" value="" class="prev1" onclick="pageOne()" id="btn"/>
+                                </td>
+                                <td style="width: 30%">
+                                    <div class="progressDiv">
+                                        <div class="progressInnerDiv">
+                                            <div class="progressText">
+                                                <label>2 of 3</label>
+                                            </div>
+                                            <div class="progressBarOuterDiv">
+                                                <div class="progressBarInnerDiv2">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="width: 30%">
+                                    <input type="submit" name="submit" value="" onclick="pageThree()" class="next1" id="btn2"/>
+                                </td>
+                            </tr>
+                        </table>
+                
+                </footer>
+            </div>
+       
         
     </div>
-		
-	</div>
+<!-- </form> -->
+
+    <div id="contents" id="submitForm1" style="width: 100%; padding-top: 8px">
+        <!-- <form name="summaryDiv" id="submitForm"> -->
+            <div id = "header">
+                <p style="text-align:center;" class="text-info">SUMMARY DETAILS</p>
+            </div>
+            <div class="divAttributes">
+                <div class= "comment_header" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Box Number</label>
+                </div>
+                <div class="customerNameDetailsView" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="boxNumberDiv" id="boxNumber1" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="divAttributes">
+                <div class= "customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Place Name</label>
+                </div>
+                <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="placeNameDiv" id="placeName1" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="divAttributes">
+                <div class= "customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Name</label>
+                </div>
+                <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="nameDiv" id="name" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="divAttributes">
+                <div class= "customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Phone Number</label>
+                </div>
+                <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="phoneNumberDiv" id="phoneNumber" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                <footer class="footer">
+                        <table style="width: 100%">
+                                <tr>
+                                    <!-- <div style="width: 30%;"> -->
+                                    <td style="width: 30%">
+                                        <input type="submit" name="submit2" value="" class="prev1" onclick="pageTwoTwo()" id="btn2"/>
+                                    </td>
+                                    <td style="width: 30%">
+                                        <div class="progressDiv">
+                                            <div class="progressInnerDiv">
+                                                <div class="progressText">
+                                                    <label>3 of 3</label>
+                                                </div>
+                                                <div class="progressBarOuterDiv">
+                                                    <div class="progressBarInnerDiv3">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 30%">
+                                        <input type="submit" name="submit" value="SUBMIT" onclick="submitData()" class="next2" id="btn2"/>
+                                    </td>
+                                </tr>
+                            </table>
+                    
+                    </footer>
+                <!-- <div style="margin:5%;">
+                    <button type="submit" name="submit" value="SUBMIT" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+                </div> -->
+                
+            </div>
+        <!-- </form> -->
+    </div>
 </body>
 
-</html>
+</html>       
+       
+
+
+
+            <!-- <form name="summaryDiv" id="submitForm">
+                <div>
+                    <label>Box Number</label>
+                    <input type="text" name="boxNumberDiv" id="boxNumber" style="border-color:rgb;"/>
+                </div>
+                <div>
+                    <label>Place Name</label>
+                    <input type="text" name="placeNameDiv" id="placeName" style="border-color:rgb;"/>
+                </div>
+                <div>
+                    <label>Name</label>
+                    <input type="text" name="nameDiv" id="name" style="border-color:rgb;"/>
+                </div>
+                <div>
+                    <label>Phone Number</label>
+                    <input type="text" name="phoneNumberDiv" id="phoneNumber" style="border-color:rgb;"/>
+                </div>
+                <div style="margin:5%;">
+                    <button type="submit" name="submit" value="SUBMIT" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+                </div>
+            </form> 
+    </div> -->
+   		
+	

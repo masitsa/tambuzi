@@ -5,16 +5,13 @@
   "isAnonymous": false,
   "isResponseAppended": true,
   "isLocationRequested": false,
-  "questions": [{
-      "title": "Packing Date",
-      "type": "Datetime"
-    },
+  "questions": [
     {
-      "title": "Packing Number",
+      "title": "Packing ID",
       "type": "Text"
     },
     {
-      "title": "Picking Number",
+      "title": "Picking ID",
       "type": "Text"
     },
     {
@@ -24,14 +21,6 @@
     {
       "title": "Phone No",
       "type": "Text"
-    },
-    {
-      "title": "Location",
-      "type": "Location"
-    },
-    {
-      "title": "Response Time",
-      "type": "DateTime"
     }
   ]
 }

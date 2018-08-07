@@ -1,10 +1,10 @@
 {
-  "id": "com.ivali.packing", 
+  "id": "com.Willis.packing", 
 	"schemaVersion": 1, 
 	"version": "1",
-	"minorVersion": 37,
+	"minorVersion": 3,
 	"providerName": "Mutia",
-	"displayName": "Packing",
+	"displayName": "Packing Details",
 	"description": "Update your flower packing details", 
   "icon": "packing.png",
   "appModel": "AppModel.json",

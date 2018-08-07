@@ -1,10 +1,10 @@
 {
-    "id": "com.adam.picking",
+    "id": "com.maleon.pickingtest",
     "schemaVersion": 1,
-    "version": "6",
-    "minorVersion": 17,
-    "providerName": "TambuziApp",
-    "displayName": "Tambuzi Picking",
+    "version": "1",
+    "minorVersion": 20,
+    "providerName": "Tambuzi",
+    "displayName": "picking",
     "description": "Custom action to collect feedback.",
     "icon": "picking.png",
     "appModel": "AppModel.json",
@@ -15,8 +15,11 @@
     "actionScope": "Group",
     "views": {
         "CreationView": {
+            "labelHeader": "Feedback requested",
             "sourceLocation": "Response.html",
-            "showNativeToolbar": false
+            "showNativeToolbar": true,
+            "backDialogTitle": "Confirmation",
+            "backDialogDescription": "Are you sure you want to discard?"
         },
         "ChatCanvasCardView": {
             "showReceipts": false,
@@ -28,8 +31,9 @@
             "isResponseEditable": false
         },
         "ResponseResultsView": {
+            "labelPageHeader": "Feedback summary",
             "sourceLocation": "ResponseSummary.html",
-            "showNativeToolbar": false
+            "showNativeToolbar": true
         }
     }
 }

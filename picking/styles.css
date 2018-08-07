@@ -17,14 +17,19 @@ body {
     margin-bottom: 10%;
 }
 
+.section {
+    border-bottom: 1pt solid #d4d8db;
+    display: flex;
+    flex-direction: column;
+}
+
 input,
 input:focus {
     border: 2px solid #2d8280;
-    border-radius: 12pt;
     padding: 8pt;
     width: 95%;
-    height: 60px;
-    font-size: 15pt;
+    height: 50px;
+    font-size: 12pt;
     font-weight: bold;
     opacity: 0.9;
     outline: none;
@@ -112,4 +117,141 @@ input:focus {
 .allDetails {
     padding: 14px;
     padding-top: 5pt;
+}
+
+
+/* .footer {
+    background-image: url('footer_bg.png');
+} */
+
+.footer {
+    background-image: url('footer_bg.png');
+}
+
+.progressDiv {
+    display: flex;
+    align-items: center;
+}
+
+.progressInnerDiv {
+    width: 100%;
+}
+
+.progressText {
+    width: 100%;
+    text-align: center;
+    padding-bottom: 3pt;
+    font-size: 11pt;
+    color: black;
+    font-weight: 500;
+}
+
+.progressBarOuterDiv {
+    width: 80%;
+    height: 2pt;
+    background-color: rgba(152, 163, 175, .25);
+    margin-left: 10%;
+}
+
+.progressBarInnerDiv {
+    width: 33.3%;
+    height: 100%;
+    background-color: rgb(253, 158, 40);
+}
+
+.progressBarInnerDiv2 {
+    width: 66.6%;
+    height: 100%;
+    background-color: rgb(253, 158, 40);
+}
+
+.progressBarInnerDiv3 {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(253, 158, 40);
+}
+
+.detailsSection {
+    border-bottom: 1pt solid #d4d8db;
+    display: flex;
+    flex-direction: column;
+}
+
+.detailscomment-header {
+    padding: 15pt;
+    padding-top: 0pt;
+    padding-bottom: 0pt;
+    font-size: 9pt;
+    font-weight: normal;
+    color: #6f7e8f;
+}
+
+.detailscomment-header {
+    padding-top: 0pt;
+    padding-bottom: 15pt;
+    padding-left: 15pt;
+    padding-right: 15pt;
+    font-size: 12pt;
+    font-weight: normal;
+    color: #32485f;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    width: calc(100%-30pt);
+    font-family: -apple-system, sans-serif;
+}
+
+.comment_header {
+    padding: 15pt;
+    padding-top: 0pt;
+    padding-bottom: 0pt;
+    font-size: 9pt;
+    font-weight: normal;
+    color: #6f7e8f;
+}
+
+.customerNameDiv {
+    color: #32485f;
+    font-size: 12pt;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word
+}
+
+.prev1 {
+    border: 1px solid rgba(227, 230, 233, 0.5);
+    margin-bottom: 0pt;
+    height: 33pt;
+    width: 30%;
+    color: rgb(0, 111, 241);
+    background-color: white;
+    border-radius: 2px;
+    font-size: 12pt;
+    font-weight: normal;
+    float: left;
+    -webkit-appearance: none;
+    border: 1px solid rgba(111, 126, 143, 0.5);
+    background-image: url("previous.png");
+    background-position: center;
+    background-size: 19pt 8pt;
+    background-repeat: no-repeat;
+}
+
+.next1 {
+    background-color: #00a1ff;
+    margin-bottom: 0pt;
+    height: 33pt;
+    width: 30%;
+    color: rgb(0, 111, 241);
+    /* background-color: white; */
+    border-radius: 2px;
+    font-size: 12pt;
+    font-weight: normal;
+    float: left;
+    -webkit-appearance: none;
+    border: 1px solid rgba(111, 126, 143, 0.5);
+    background-image: url("next.png");
+    background-position: center;
+    background-size: 19pt 8pt;
+    background-repeat: no-repeat;
 }

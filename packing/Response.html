@@ -2,65 +2,273 @@
 
 <head>
     <script type="text/javascript" src="KASClient.js"></script>
-    <script type="text/javascript" src="KASClient.js"></script>
-    <link rel="stylesheet" href="bootstrap.min.css">
     <link rel="stylesheet" href="styles.css" />
+
+    <script type="text/javascript">
+    // these are global variables that are used thoughout the code
+		var _form; // type: KASForm
+		var _name = "";
+        var _phoneNumber = "";
+		var _questionToAnswerMap = {};
+		var _currentUserInfo = null; 
+        var packingId;
+        var pickingId;
+        var name;
+        var phone;
+		// this  will be called when the form loads
+		function onCreatePageLoad() {
+            document.getElementById("issueFillDiv").style.display = "block";
+            document.getElementById("detailsDiv").style.display = "none";
+            document.getElementById("contents").style.display = "none";
+			KASClient.App.registerHardwareBackPressCallback(function () {
+				KASClient.App.dismissCurrentScreen();
+			});
+			KASClient.App.getCurrentUserIdAsync(function(userId, error) {
+                        if (error != null) {
+                            handleError(error);
+                            return;
+                        }
+                        KASClient.App.getCurrentDeviceLocationAsync(function(location, error) {
+                        if (error != null) {
+                            _isLocationRefreshing = false;
+                            inflateLocationView();
+                            return;
+                        }
+
+                        _currentLocation = JSON.parse(location);
+                    });
+                        KASClient.App.getUsersDetailsAsync([userId], function(users, error) {
+                            if (error != null) {
+                                handleError(error);
+                                return;
+                            }
+
+                            _currentUserInfo = users[userId];
+                            _name = _currentUserInfo.originalName;
+                            _phoneNumber = _currentUserInfo.phoneNumber;
+                            
+                        });
+                    });
+		}
+                // a function to call the second page
+        function pageTwo(){
+            //e.preventDefault();
+            document.getElementById("issueFillDiv").style.display = "none";
+            document.getElementById("detailsDiv").style.display = "block";
+            document.getElementById("contents").style.display = "none";
+            document.getElementById("detailsViewDiv").innerHTML = "Willis Ivali";
+            document.getElementById("phoneViewDiv").innerHTML = "+254776622791";
+            
+        }
+
+          // a function to call the second page
+        
+        function pageThree(){
+            // e.preventDefault();
+            document.getElementById("issueFillDiv").style.display = "none";
+            document.getElementById("detailsDiv").style.display = "none";
+            document.getElementById("contents").style.display = "block";
+            
+            packingId = document.getElementById("packingId").value;
+		    pickingId = document.getElementById("pickingId").value;
+            
+          
+            document.getElementById("packingId1").innerHTML = packingId;
+            document.getElementById("pickingId1").innerHTML = pickingId;
+            document.getElementById("name").innerHTML = _name;
+            document.getElementById("phoneNumber").innerHTML = _phoneNumber;
+           
+        
+        }
+
+		
+		function submitData() {
+			
+		     packingId = document.getElementById("packingId").value;
+		     pickingId = document.getElementById("pickingId").value;
+		     name = document.getElementById("detailsViewDiv").value;
+		     phone = document.getElementById("phoneViewDiv").value;
+			
+		
+			
+			if(packingId == null || packingId ==""){
+				KASClient.App.showNativeErrorMessage("You are required to fill this");
+			}else if(pickingId == null || pickingId ==""){
+				KASClient.App.showNativeErrorMessage("Please fill this before you can continue");
+			} else{
+			var responseId = null;
+			var isEditingPreviousResponse = false; 
+
+			var questionToAnswerMap = JSON.parse("{}"); 
+
+				questionToAnswerMap[0] = packingId;
+				questionToAnswerMap[1] = pickingId;
+				questionToAnswerMap[2] = _name;
+				questionToAnswerMap[3] = _phoneNumber;
+                questionToAnswerMap[4] = JSON.stringify(_currentLocation);
+				
+				KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true, false/* showInChatCanvas */);
+			
+			}
+			
+		}
+
+	</script>
 </head>
-
+<!-- This will be the form -->
 <body onload="onCreatePageLoad()">
-    <div id="header">
-        <br/>
-        <br/>
-        <div class="body-container">
-            <p>Please Fill in the Details Below</p>
-            <br/>
-            <br/>
-            <div style="margin:5%;">
-                <input type="number" name="packId" id="packingId" placeholder="Enter the Packing ID." value="">
+    <div>
+        
+            <div id = "header">
+                <p style="text-align:center;" class="text-info">Packing Details</p>
             </div>
-            <div style="margin:5%;">
-                <input type="text" name="pickId" id="pickingid" placeholder="Enter the Picking ID." value="">
+            <div id="issueFillDiv" class="body-container">
+                <div style="margin:5%;">
+                    <label>Packing ID</label>
+                    <input class="inputForm" type="text" name="packingId" id="packingId" style="border-color:rgb;"/>
+                </div>
+
+
+                <div style="margin:5%;">
+                    <label>Picking ID</label>
+                    <input class="inputForm" type="text" name="pickingId" id="pickingId" style="border-color:rgb;"/>
+                </div>
+                <footer class="footer">
+                    <table style="width: 100%">
+                        <tr>
+                            
+                            <td style="width: 30%">
+                                <input type="submit" name="submit" value="" class="prev1" id="btn" disabled/>
+                            </td>
+                            <td style="width: 30%">
+                                <div class="progressDiv">
+                                    <div class="progressInnerDiv">
+                                        <div class="progressText">
+                                            <label>1 of 3</label>
+                                        </div>
+                                        <div class="progressBarOuterDiv">
+                                            <div class="progressBarInnerDiv">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="width: 30%">
+                                <input type="submit" name="submit" value="" onclick="pageTwo()" class="next1" id="btn2"/>
+                            </td>
+                        </tr>
+                    </table>
+                </footer>
             </div>
-        </div>
-        <br/>
-        <br/>
-        <div>
-            <input type="submit" name="submit" value="Submit" onclick="submitData()">
-        </div>
+        
+            
+    </div>
 
-        <script type="text/javascript"> 
-            var _form; // type: KASForm
-            var packing;
+  
+        <div id="detailsDiv">
+        
+            <div style="display: block;">
+                <div class="detailsSection">
+                    <p class="detailscomment-header">Name</p>
+                    <div>
+                        <p class="detailscomment-input" name="detailsView" id="detailsViewDiv" style="border-color:rgb;"></p>
+                    </div>
+                </div>
 
-            // Below will be called on onload of CreationView.html 
-            function onCreatePageLoad() {
-                KASClient.Form.initFormAsync(function (form, error) {
-                    if (error != null) {
-                        showAlert("Error:initFormAsync:" + error);
-                        return;
-                    }
-                    _form = form;
-                });
-            }
 
-            function submitData() {
-               
-                var packId = document.getElementById("packingId").value;
-                var pickId = document.getElementById("pickingid").value;
+                <div class="detailsSection">
+                    <p class="detailscomment-header">Phone Number </p>
+                    <div>
+                        <p class="detailscomment-input" name="phoneView" id="phoneViewDiv" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                <footer class="footer">
+                        <table style="width: 100%">
+                                <tr>
+                                    
+                                    <td style="width: 30%">
+                                        <input type="submit" name="submit" value="" class="prev1" id="btn" disabled/>
+                                    </td>
+                                    <td style="width: 30%">
+                                        <div class="progressDiv">
+                                            <div class="progressInnerDiv">
+                                                <div class="progressText">
+                                                    <label>2 of 3</label>
+                                                </div>
+                                                <div class="progressBarOuterDiv">
+                                                    <div class="progressBarInnerDiv2">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 30%">
+                                        <input type="submit" name="submit" value="" onclick="pageThree()" class="next1" id="btn2"/>
+                                    </td>
+                                </tr>
+                            </table>
+                
+                </footer>
+            </div>
+       
+        
+    </div>
 
-                if (packId == null || packId == "" && (pickId == null || pickId == "")) {
-                    KASClient.App.showNativeErrorMessage("Please enter the details that are missing.");
-                } else {
-                    // Set the packId and pickId to form title 
-                    _form.title = packId;
-                    // _form.title = pickId;
 
-                    // Finally send the request 
-                    KASClient.Form.submitFormRequest(_form);
-                }
-            }
-
-        </script>
+    <div id="contents" id="submitForm1" style="width: 100%; padding-top: 8px">
+        <form name="summaryDiv" id="submitForm">
+            <div class="divAttributes">
+                <div class= "comment_header" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Packing ID</label>
+                </div>
+                <div class="customerNameDetailsView" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="packingIdDiv" id="packingId1" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="divAttributes">
+                <div class= "customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Picking ID</label>
+                </div>
+                <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="pickingIdDiv" id="pickingId1" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="divAttributes">
+                <div class= "customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Name</label>
+                </div>
+                <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="nameDiv" id="name" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="divAttributes">
+                <div class= "customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                    <label>Phone Number</label>
+                </div>
+                <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                    <div class="customerNameDiv">
+                        <p name="phoneNumberDiv" id="phoneNumber" style="border-color:rgb;"></p>
+                    </div>
+                </div>
+                <div style="margin:5%;">
+                    <button type="submit" name="submit" value="SUBMIT" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+                </div>
+                
+            </div>
+        </form>
+    </div>
 </body>
 
-</html>
+</html>       
+     
+	
