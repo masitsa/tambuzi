@@ -6,7 +6,7 @@
     "providerName": "NanyukiAf Tambuzi", 
     "displayName": "Boxing Details", 
     "description": "Custom action to collect boxing details.", 
-    "icon": "icon.png", 
+    "icon": "boxing.png", 
     "appModel": "AppModel.json",
     "actionScope": "Group",
     "views": {
