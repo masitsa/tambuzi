@@ -1,10 +1,10 @@
 {
-    "id": "com.maleon.pickingtest",
+    "id": "com.tambuzi.pickingdetails",
     "schemaVersion": 1,
     "version": "1",
-    "minorVersion": 20,
+    "minorVersion": 4,
     "providerName": "Tambuzi",
-    "displayName": "picking",
+    "displayName": "Picking Details",
     "description": "Custom action to collect feedback.",
     "icon": "picking.png",
     "appModel": "AppModel.json",
