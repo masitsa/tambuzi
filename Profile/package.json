@@ -1,0 +1,35 @@
+{
+	"id": "com.tambuzi.profileCarolineT", 
+	"schemaVersion": 1, 
+	"version": "2",
+	"minorVersion": 65,
+	"providerName": "TambuziApp",
+	"displayName": "Tambuzi Profile",
+	"description": "Enter your company details", 
+  "icon": "profile.png",
+  "appModel": "AppModel.json",
+  "dials": {
+    "isLocalised": false,
+    "isPinned": false
+  },
+  "actionScope": "Group",
+  "views": {
+    "ChatCanvasCardView": {
+      "showReceipts": false,
+      "showLikes": false,
+      "showComments": false,
+      "labelResponseSending": "Updating your profile",
+      "labelResponseFailed": "Failed to update your profile",
+      "labelResponded": "Profile updated",
+      "isResponseEditable": false
+    },
+    "CreationView": {
+      "sourceLocation": "ResponseView.html",
+      "showNativeToolbar": false
+    },
+    "ResponseResultsView": {
+      "sourceLocation": "ResponseSummary.html",
+      "showNativeToolbar": false
+    }
+  }
+}

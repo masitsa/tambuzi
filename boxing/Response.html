@@ -1,0 +1,111 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="KASClient.js"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body onload="onCreatePageLoad()">
+    <div id="header">
+        <br/>
+        <br/>
+        <div class="body-container">
+            <p>Please Fill in the Details Below</p>
+            <br/>
+            <br/>
+            <div style="margin:5%;">
+                <input type="text" name="boxId" id="boxingId" placeholder="Enter the Boxing ID." value="">
+            </div>
+            <div style="margin:5%;">
+                <input type="text" name="boxedBy" id="boxedBy" placeholder="Who did this?" value="">
+            </div>
+        </div>
+        <br/>
+        <br/>
+        <div>
+            <input type="submit" name="submit" value="Submit" onclick="submitData()">
+        </div>
+
+        <script type="text/javascript"> 
+            var _form; // type: KASForm
+            var _strings = null;
+            var _currentUserInfo = null;
+
+            var boxNumber;
+            var boxedBy;
+            var name;
+            var phoneNumber;
+
+            // Question index
+            var BOXED_ID = 0;
+            var BOXED_BY = 1;
+            var NAME = 2;
+            var PHONE_NUMBER = 3;
+
+            // Below will be called on onload of CreationView.html 
+            function onCreatePageLoad() {
+                KASClient.App.registerHardwareBackPressCallback(function () {
+                    KASClient.App.dismissCurrentScreen();
+                });
+
+                KASClient.App.getLocalizedStringsAsync(function (strings, error) {
+                    if (error != null) {
+                        showAlert("Error:GetFormAsync:" + error);
+                        return;
+                    }
+                    _strings = strings;
+                    // alert(_strings);
+                    KASClient.Form.getFormAsync(function (form, error) {
+                        if (error != null) {
+                            showAlert("Error:GetFormAsync:" + error);
+                            return;
+                        }
+                        _form = form;
+                        inflateHeader();
+                        // alert(JSON.stringify(_form))
+
+                        KASClient.App.getCurrentUserIdAsync(function (userId, error) {
+                            if (error != null) {
+                                handleError(error);
+                                return;
+                            }
+                            KASClient.App.getUsersDetailsAsync([userId], function (users, error) {
+                                if (error != null) {
+                                    handleError(error);
+                                    return;
+                                }
+                                _currentUserInfo = users[userId];
+                                name = _currentUserInfo.originalName;
+                                phoneNumber = _currentUserInfo.phoneNumber;
+                            });
+                        });
+                    });
+                });
+
+            }
+
+            function submitData() {
+
+                var boxId = document.getElementById("boxingId").value;
+                var boxedBy = document.getElementById("boxedBy").value;
+
+                if (boxId == null || boxId == "" && (boxedBy == null || boxedBy == "")) {
+                    KASClient.App.showNativeErrorMessage("Please enter the details that are missing.");
+                } else {
+                    // _form.title = boxId;
+                    var questionToAnswerMap = JSON.parse("{}");
+                    questionToAnswerMap[BOXED_ID] = boxId;
+                    questionToAnswerMap[BOXED_BY] = boxedBy;
+                    questionToAnswerMap[NAME] = name;
+                    questionToAnswerMap[PHONE_NUMBER] = phoneNumber;
+
+                    KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true);
+                    alert("successful");
+                }
+            }
+
+        </script>
+</body>
+
+</html>

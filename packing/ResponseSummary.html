@@ -1,0 +1,213 @@
+<html>
+
+<head>
+    <title></title>
+    <script type="text/javascript" src="KASClient.js"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+
+</head>
+
+<body onload="onSummaryPageLoad()">
+    <div id="header">
+    </div>
+    <div class="section">
+        <div class="body-container">
+            <div id="details" style="padding-top: 50pt">
+                <!-- box number -->
+                <div class="divAttributes">
+                    <div id="packingNumberHeader" class="employeeHeader"></div>
+                    <div id="packingNumberDetails" class="allDetails">
+                        <div id="packingNumber" class="Boxed">
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- pick number -->
+                <div class="divAttributes">
+                    <div id="pickingNumberHeader" class="employeeHeader"></div>
+                    <div id="pickingNumberDetails" class="allDetails">
+                        <div id="pickingNumber" class="Boxed">
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+                <!-- user details -->
+                <div class="divAttributes">
+                    <div id="userName" class="employeeHeader allHeaders"></div>
+                    <div id="userDetails" class="allDetails">
+                        <div id="name" class="Boxed">
+
+                        </div>
+                    </div>
+                    <div id="userPhone" class="employeeHeader allHeaders"></div>
+                    <div id="userDetails" class="allDetails">
+                        <div id="phoneNumber" class="Boxed">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        // // Globals 
+        var _form; // type: KASForm
+        var _myFormResponses;
+        var _creatorInfo; // type: KASUser
+        var _conversationName; // type: string
+        var _currentUserId; // type: string
+        var _pageNavigator = null; // type: KASFormPageNavigator
+        var _strings = null;
+        // var _location;
+
+        // Question index
+        var PACK_ID = 0;
+        var PICK_ID = 1;
+        var NAME = 2;
+        var PHONE_NUMBER = 3;
+
+
+        // Below will be called on onload of SummaryView.html 
+        function onSummaryPageLoad() {
+            alert("success");
+            //1. Show progress bar
+            KASClient.App.showProgressBar("Fetching Results");
+
+            KASClient.App.registerHardwareBackPressCallback(function () {
+                KASClient.App.dismissCurrentScreen();
+            });
+            window.onerror = function (msg, url, line, col, error) {
+                // col & error are new to the HTML 5, so handling for them
+                var extra = (!col && col !== undefined) ? "" : "#column:" + col;
+                extra += (!error && error !== undefined) ? "" : "#error:" + error.stack;
+                var error = "Error:" + msg + "#url:" + url + "#line:" + line + extra;
+                KASClient.App.logError(error);
+            };
+
+            // Remove any existing pages, if any
+            if (_pageNavigator) {
+                _pageNavigator.popAllPages();
+                _pageNavigator = null;
+            }
+            KASClient.App.getLocalizedStringsAsync(function (strings, error) {
+                if (error != null) {
+                    showAlert("Error:GetFormAsync:" + error);
+                    return;
+                }
+                _strings = strings;
+                KASClient.Form.getFormAsync(function (form, error) {
+                    if (error != null) {
+                        handleError(error);
+                        return;
+                    }
+                    _form = form;
+                    inflateHeader();
+                    KASClient.App.getCurrentUserIdAsync(function (userId, error) {
+                        if (error != null) {
+                            handleError(error);
+                            return;
+                        }
+                        _currentUserId = userId;
+                        KASClient.Form.getMyFormResponsesAsync(function (responses, error) {
+                            if (error != null) {
+                                handleError(error);
+                                return;
+                            }
+                            _myFormResponses = responses[0];
+
+                            KASClient.App.getUsersDetailsAsync([_currentUserId],
+                                function (users, error) {
+                                    if (error != null) {
+                                        handleError(error);
+                                        return;
+                                    }
+                                    _creatorInfo = users[_currentUserId];
+                                    KASClient.App.getConversationNameAsync(function (
+                                        name, error) {
+                                        if (error != null) {
+                                            handleError(error);
+                                            return;
+                                        }
+                                        _conversationName = name;
+                                        getSummary();
+                                    });
+                                });
+                        });
+                    });
+                });
+            });
+            KASClient.App.hideProgressBar();
+        }
+
+        function inflateHeader() {
+            var header = document.getElementById("header");
+            KASClient.UI.clearElement(header);
+            header.className = "header";
+            header.innerText = _strings["strMiniAppTitle"];
+        }
+
+        function displaypackingNumber() {
+            var packingNumberHeader = document.getElementById("packingNumberHeader");
+            KASClient.UI.clearElement(packingNumberHeader);
+
+            var packingNumber = document.getElementById("packingNumber");
+            KASClient.UI.clearElement(packingNumber);
+
+            packingNumberHeader.innerText = _strings[_form.questions[PACK_ID].title];
+            packingNumber.innerHTML = _myFormResponses.questionToAnswerMap[PACK_ID];
+        }
+
+        function displaypickingNumber() {
+            var pickingNumberHeader = document.getElementById("pickingNumberHeader");
+            KASClient.UI.clearElement(pickingNumberHeader);
+
+            var pickingNumber = document.getElementById("pickingNumber");
+            KASClient.UI.clearElement(pickingNumber);
+
+            pickingNumberHeader.innerText = _strings[_form.questions[PICK_ID].title];
+            pickingNumber.innerHTML = _myFormResponses.questionToAnswerMap[PICK_ID];
+        }
+
+
+        function showUserDetails() {
+            //name title
+            var userName = document.getElementById("userName");
+            KASClient.UI.clearElement(userName);
+            userName.innerText = _strings[_form.questions[NAME].title];
+
+            var name = document.getElementById("name");
+            KASClient.UI.clearElement(name);
+            name.innerHTML = _myFormResponses.questionToAnswerMap[NAME];
+
+            //phonenumber title
+            var userPhone = document.getElementById("userPhone");
+            KASClient.UI.clearElement(userPhone);
+            userPhone.innerText = _strings[_form.questions[PHONE_NUMBER].title];
+
+            var phoneNumber = document.getElementById("phoneNumber");
+            KASClient.UI.clearElement(phoneNumber);
+            phoneNumber.innerHTML = _myFormResponses.questionToAnswerMap[PHONE_NUMBER];
+        }
+
+        function getSummary() {
+            displaypackingNumber();
+            displaypickingNumber();
+            showUserDetails();
+        }
+
+        function dismissCurrentScreen() {
+            KASClient.App.dismissCurrentScreen();
+        };
+    </script>
+</body>
+
+</html>
