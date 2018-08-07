@@ -66,6 +66,7 @@
           </div>
           <!-- End of user Details -->
         </div>
+      <!-- end of bodycontainer -->
       </div>
     </div>
     <script type="text/javascript"> 
@@ -228,7 +229,7 @@
         var phoneNumber = document.getElementById("phoneNumber");
         KASClient.UI.clearElement(phoneNumber);
         phoneNumber.innerHTML = _myFormResponses.questionToAnswerMap[PHONE_NO];
-      }
+      }//end of getSummary function
       function dismissCurrentScreen() {
         KASClient.App.dismissCurrentScreen();
       };

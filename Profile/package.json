@@ -2,7 +2,7 @@
 	"id": "com.tambuzi.profileCarolineT", 
 	"schemaVersion": 1, 
 	"version": "2",
-	"minorVersion": 20,
+	"minorVersion": 65,
 	"providerName": "TambuziApp",
 	"displayName": "Tambuzi Profile",
 	"description": "Enter your company details", 
