@@ -30,19 +30,6 @@ input,input:focus{
     margin-right:2%;
 
 }
-.btn1{
-    border : 2px solid #2d8280;
-    border-radius : 10pt;
-    padding-top: 8pt;
-    margin-left:27%;
-    width : 45%;
-    height : 55px;
-    font-size : 15pt;
-    font-weight: bold;
-    opacity : 0.9;
-    outline:none;
-
-}
 .btns{
     border : 2px solid #2d8280;
     padding: 10px 34px;
