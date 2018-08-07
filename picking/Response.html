@@ -7,22 +7,199 @@
 </head>
 
 <body onload="onCreatePageLoad()">
-    <div id="header"></div>
-    <div class="body-container">
-        <div style="margin:5%;">
+    <!--The description section-->
+    <!-- <div id="header"></div> -->
+    <!-- page1 -->
+    <div id="header">
+        <p style="text-align:center;" class="text-info">Picking Details</p>
+    </div>
+    <div id="issueFillDiv" class="body-container">
+        <div style="margin:5%">
             <input type="text" id="bedNumber" placeholder="Bed Number" style="border-color:rgb;">
         </div>
-        <div style="margin:5%;">
+        <div style="margin:5%">
             <input type="text" id="pickNumber" placeholder="Pick Number" style="border-color:rgb;">
         </div>
-        <div style="margin:5%;">
+        <div style="margin:5%">
             <input type="datetime-local" id="pickDate" placeholder="Pick Date" style="border-color:rgb;">
         </div>
-        <div id="imgFlower" style="margin:5%;">
+        <div id="imgFlower" style="margin:5%; border-bottom: none">
         </div>
-        <div style="margin:5%;">
-            <button type="submit" name="submit" value="Submit" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+        <footer class="footer">
+            <table style="width: 100%">
+                <tr>
+                    <!-- <div style="width: 30%;"> -->
+                    <td style="width: 30%">
+                        <input type="submit" name="submit" value="" class="prev1" id="btn" disabled/>
+                    </td>
+                    <td style="width: 30%">
+                        <div class="progressDiv">
+                            <div class="progressInnerDiv">
+                                <div class="progressText">
+                                    <label>1 of 3</label>
+                                </div>
+                                <div class="progressBarOuterDiv">
+                                    <div class="progressBarInnerDiv">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width: 30%">
+                        <input type="submit" name="submit" value="" onclick="pageTwo()" class="next1" id="btn2" />
+                    </td>
+                </tr>
+            </table>
+        </footer>
+    </div>
+
+    <!-- page2 -->
+    <div id="detailsDiv">
+        <div style="display: block;">
+            <div class="detailsSection">
+                <p class="detailscomment-header">Name</p>
+                <div>
+                    <p class="detailscomment-input" name="detailsView" id="detailsViewDiv" style="border-color:rgb;"></p>
+                </div>
+            </div>
+
+
+            <div class="detailsSection">
+                <p class="detailscomment-header">Phone Number </p>
+                <div>
+                    <p class="detailscomment-input" name="phoneView" id="phoneViewDiv" style="border-color:rgb;"></p>
+                </div>
+            </div>
+            <footer class="footer">
+                <table style="width: 100%">
+                    <tr>
+                        <!-- <div style="width: 30%;"> -->
+                        <td style="width: 30%">
+                            <input type="submit" name="submit" value="" onclick="pageOne()" class="prev1" id="btn" />
+                        </td>
+                        <td style="width: 30%">
+                            <div class="progressDiv">
+                                <div class="progressInnerDiv">
+                                    <div class="progressText">
+                                        <label>2 of 3</label>
+                                    </div>
+                                    <div class="progressBarOuterDiv">
+                                        <div class="progressBarInnerDiv2">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="width: 30%">
+                            <input type="submit" name="submit" value="" onclick="pageThree()" class="next1" id="btn2" />
+                        </td>
+                    </tr>
+                </table>
+
+            </footer>
         </div>
+    </div>
+
+    <!-- page3 -->
+    <div id="contents" id="submitForm1" style="width: 100%; padding-top: 8px">
+        <div class="divAttributes">
+            <div class="comment_header" style="padding: 14px; padding-bottom: 0pt;">
+                <label>Bed Number</label>
+            </div>
+            <div class="customerNameDetailsView" style="padding: 14px;padding-top: 5pt;">
+                <div class="customerNameDiv">
+                    <p name="bedNumberDiv" id="bedNumber1" style="border-color:rgb;"></p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="divAttributes">
+            <div class="customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                <label>Pick Number</label>
+            </div>
+            <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                <div class="customerNameDiv">
+                    <p name="pickNumberDiv" id="pickNumber1" style="border-color:rgb;"></p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="divAttributes">
+            <div class="customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                <label>Pick Date</label>
+            </div>
+            <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                <div class="customerNameDiv">
+                    <p name="pickDateDiv" id="pickDate1" style="border-color:rgb;"></p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="divAttributes">
+            <div class="customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                <label>Flower Image</label>
+            </div>
+            <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                <div class="customerNameDiv">
+                    <p name="imgFlowerDiv" id="imgFlower1" style="border-color:rgb;"></p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="divAttributes">
+            <div class="customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                <label>Name</label>
+            </div>
+            <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                <div class="customerNameDiv">
+                    <p name="nameDiv" id="name" style="border-color:rgb;"></p>
+                </div>
+            </div>
+
+        </div>
+        <div class="divAttributes">
+            <div class="customerPhoneDetailsHeader" style="padding: 14px; padding-bottom: 0pt;">
+                <label>Phone Number</label>
+            </div>
+            <div class="comment_header" style="padding: 14px;padding-top: 5pt;">
+                <div class="customerNameDiv">
+                    <p name="phoneNumberDiv" id="phoneNumber" style="border-color:rgb;"></p>
+                </div>
+            </div>
+            <!-- <div style="margin:5%;">
+                    <button type="submit" name="submit" value="SUBMIT" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
+                </div> -->
+        </div>
+        <footer class="footer">
+            <table style="width: 100%">
+                <tr>
+                    <!-- <div style="width: 30%;"> -->
+                    <td style="width: 30%">
+                        <input type="submit" name="submit2" value="" class="prev1" onclick="pageTwo()" id="btn2" />
+                    </td>
+                    <td style="width: 30%">
+                        <div class="progressDiv">
+                            <div class="progressInnerDiv">
+                                <div class="progressText">
+                                    <label>3 of 3</label>
+                                </div>
+                                <div class="progressBarOuterDiv">
+                                    <div class="progressBarInnerDiv3">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width: 30%">
+                        <input type="submit" name="submit" value="SUBMIT" onclick="submitData()" class="next2" id="btn2" />
+                    </td>
+                </tr>
+            </table>
+        </footer>
     </div>
 
     <script type="text/javascript">
@@ -63,30 +240,16 @@
             }
         }
 
-        //populate the header section
-        function inflateHeader() {
-            var header = document.getElementById("header");
-            KASClient.UI.clearElement(header);
-            header.className = "header";
-            header.innerText = _strings["strMiniAppTitle"];
-            var close = KASClient.UI.getElement("div");
-            close.backAsset = "close.png";
-            header.backAction = function() {
-                KASClient.App.dismissCurrentScreen();
-            };
-            KASClient.UI.addElement(close, header);
-        }
-
         //get image and set it to a div
         imageDiv = document.getElementById("imgFlower");
         KASClient.UI.clearElement(imageDiv);
         //put an image tag icon
         var img = KASClient.UI.getElement("img", {
-            "width": "60%",
+            "width": "40",
+            "height": "40",
             "display": "block",
             "margin-left": "auto",
-            "margin-right": "auto",
-            "border-radius": "90%",
+            "margin-right": "auto"
         });
         img.setAttribute("src", "AttachmentIcon.png");
         //set an event for when the tag is clicked
@@ -102,25 +265,12 @@
         //adds image element to the imageDiv
         KASClient.UI.addElement(img, imageDiv);
 
-        //submit user's response
-        function sumbitFormResponse() {
-            var questionToAnswerMap = JSON.parse("{}");
-            questionToAnswerMap[BED_NUMBER] = bedNumber;
-            questionToAnswerMap[PICK_NUMBER] = pickNumber;
-            questionToAnswerMap[PICK_DATE] = pickDate;
-            questionToAnswerMap[PACK_IMAGE] = _packImage;
-            questionToAnswerMap[NAME] = _name;
-            questionToAnswerMap[PHONE_NUMBER] = _phoneNumber;
-            // questionToAnswerMap[LOCATION] = JSON.stringify(_currentLocation);
-            // questionToAnswerMap[TIME] = (new Date()).getTime();
-
-            // Finally submit the details
-            KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true /* showInChatCanvas */ );
-            alert("successful");
-        }
-
         // Below will be called on onload of CreationView.html
         function onCreatePageLoad() {
+            document.getElementById("issueFillDiv").style.display = "block";
+            document.getElementById("detailsDiv").style.display = "none";
+            document.getElementById("contents").style.display = "none";
+
             KASClient.App.registerHardwareBackPressCallback(function() {
                 KASClient.App.dismissCurrentScreen();
             });
@@ -138,7 +288,7 @@
                         return;
                     }
                     _form = form;
-                    inflateHeader();
+                    // inflateHeader();
                     // alert(JSON.stringify(_form))
 
                     KASClient.App.getCurrentUserIdAsync(function(userId, error) {
@@ -161,6 +311,53 @@
 
         }
 
+        // page1
+        function pageOne() {
+            document.getElementById("issueFillDiv").style.display = "block";
+            document.getElementById("detailsDiv").style.display = "none";
+            document.getElementById("contents").style.display = "none";
+        }
+
+        // page2
+        function pageTwo() {
+            document.getElementById("issueFillDiv").style.display = "none";
+            document.getElementById("detailsDiv").style.display = "block";
+            document.getElementById("contents").style.display = "none";
+            document.getElementById("detailsViewDiv").innerHTML = _name;
+            document.getElementById("phoneViewDiv").innerHTML = _phoneNumber;
+        }
+
+        function pageThree() {
+            document.getElementById("issueFillDiv").style.display = "none";
+            document.getElementById("detailsDiv").style.display = "none";
+            document.getElementById("contents").style.display = "block";
+
+            bedNumber = document.getElementById("bedNumber").value;
+            pickNumber = document.getElementById("pickNumber").value;
+            pickDate = document.getElementById("pickDate").value;
+            _packImage = document.getElementById("imgFlower").value;
+
+            document.getElementById("bedNumber1").innerHTML = bedNumber;
+            document.getElementById("pickNumber1").innerHTML = pickNumber;
+            document.getElementById("pickDate1").innerHTML = pickDate;
+            document.getElementById("imgFlower1").innerHTML = _packImage;
+            document.getElementById("name").innerHTML = _name;
+            document.getElementById("phoneNumber").innerHTML = _phoneNumber;
+        }
+
+        //populate the header section
+        // function inflateHeader() {
+        //     var header = document.getElementById("header");
+        //     KASClient.UI.clearElement(header);
+        //     header.className = "header";
+        //     header.innerText = _strings["strMiniAppTitle"];
+        //     var close = KASClient.UI.getElement("div");
+        //     close.backAsset = "close.png";
+        //     header.backAction = function() {
+        //         KASClient.App.dismissCurrentScreen();
+        //     };
+        //     KASClient.UI.addElement(close, header);
+        // }
         // For submitting response a question-answer mapping
         function submitData() {
             bedNumber = document.getElementById("bedNumber").value;
@@ -172,14 +369,22 @@
                 KASClient.App.showNativeErrorMessage("Please fill all the details!");
             } else {
                 alert(1);
-                sumbitFormResponse();
+                var questionToAnswerMap = JSON.parse("{}");
+                questionToAnswerMap[BED_NUMBER] = bedNumber;
+                questionToAnswerMap[PICK_NUMBER] = pickNumber;
+                questionToAnswerMap[PICK_DATE] = pickDate;
+                questionToAnswerMap[PACK_IMAGE] = _packImage;
+                questionToAnswerMap[NAME] = _name;
+                questionToAnswerMap[PHONE_NUMBER] = _phoneNumber;
+                // questionToAnswerMap[LOCATION] = JSON.stringify(_currentLocation);
+                // questionToAnswerMap[TIME] = (new Date()).getTime();
+
+                // Finally submit the details
+                KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true /* showInChatCanvas */ );
+                // alert("successful");
             }
 
         }
-
-        // function contact() {
-        //     KASClient.App.showContactPickerAsync();
-        // }
     </script>
 
 </body>

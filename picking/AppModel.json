@@ -1,5 +1,5 @@
 {
-    "title": "Picking Details",
+    "title": "Picking Test",
     "visibility": "All",
     "expiry": 0,
     "isAnonymous": false,
@@ -26,7 +26,7 @@
             "type": "Text"
         },
         {
-            "title": "Phone",
+            "title": "Phone No",
             "type": "Text"
         }
 
