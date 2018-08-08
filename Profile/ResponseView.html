@@ -28,78 +28,93 @@
             <!-- Employee's bio is displayed here -->
             <div style="margin:5%;">
                 <input type="text" id="employeeBio" placeholder="My Information" style="border-color:rgb;" onfocus="this.placeholder=''">
+                <br><br>
+                <button class="btns disabled" disabled>Previous</button>
+                <button class="btn">
+                    <span id="page">page:</span>
+                </button>
+                <button onclick="nextPage()" id="btnNext" class="btns">Next</button>
             </div>
-            <div class="footer">
+            <!-- <div class="footer" style="margin:7%;">
                 <button class="btns" disabled>Previous</button>
-                <button class="btns"><span id="page">page:</span></button>
-                <button onclick="nextPage()" id="btnNext"  class="btns">Next</button>
-            </div>
-            
+                <button class="btns">
+                    <span id="page">page:</span>
+                </button>
+                <button onclick="nextPage()" id="btnNext" class="btns">Next</button>
+            </div> -->
         </div>
         <div id="page2">
-            <div id="details" style="padding-top: 50pt">
-                <!-- div containing profileImage -->
-                <div id="profileImages">
+            <!-- div containing profileImage -->
+            <div id="profileImages" style="margin:7%;">
 
-                </div>
-                <!-- Start of employeeIdDetails -->
-                <div class="divAttributes">
-                    <div id="employeeIdHeaders" class="employeeHeader allHeaders">Employee Number</div>
-                    <div id="employeeIdDetails" class="allDetails">
-                        <div id="employeeIds" class="worker">
-                            <p id="employeeIds1"></p>
-                        </div>
+            </div>
+            <!-- Start of employeeIdDetails -->
+            <div class="divAttributes">
+                <div id="employeeIdHeaders" class="employeeHeader allHeaders">Employee Number</div>
+                <div id="employeeIdDetails" class="allDetails">
+                    <div id="employeeIds" class="worker">
+                        <p id="employeeIds1"></p>
                     </div>
-                </div>
-                <!-- End of employeeIdDetails -->
-
-                <!-- Start of PreferredName Details -->
-                <div class="divAttributes">
-                    <div id="preferredNameHeaders" class="employeeHeader allHeaders">Preferred Name</div>
-                    <div id="preferredNameDetails" class="allDetails">
-                        <div id="preferredNames" class="worker">
-
-                        </div>
-                    </div>
-                </div>
-                <!-- End of PreferredName Details -->
-
-                <!-- Start of employeeBio  Details -->
-                <div class="divAttributes">
-                    <div id="employeeBioHeaders" class="employeeHeader allHeaders">My Information</div>
-                    <div id="employeeBioDetails" class="allDetails">
-                        <div id="employeeBios" class="worker">
-
-                        </div>
-                    </div>
-                </div>
-                <!-- End of employeeBio Details -->
-
-                <!-- Start of user  Details -->
-                <div class="divAttributes">
-                    <div id="userNames" class="employeeHeader allHeaders">Name</div>
-                    <div id="userDetails" class="allDetails">
-                        <div id="names" class="worker">
-
-                        </div>
-                    </div>
-                    <div id="userPhones" class="employeeHeader allHeaders">Phone No</div>
-                    <div id="userDetails" class="allDetails">
-                        <div id="phoneNumbers" class="worker">
-
-                        </div>
-                    </div>
-                </div>
-                <!-- End of user Details -->
-                <div class="footer">
-                    <button onclick="prevPage()" id="btnPrev"  class="btns">Previous</button>
-                    <button class="btns"><span id="pages">page:</span></button>
-                    <button type="submit" name="submit" value="Submit" onclick="submitData()"id="btnSubmit" class="btns">Submit</button>
                 </div>
             </div>
+            <!-- End of employeeIdDetails -->
+
+            <!-- Start of PreferredName Details -->
+            <div class="divAttributes">
+                <div id="preferredNameHeaders" class="employeeHeader allHeaders">Preferred Name</div>
+                <div id="preferredNameDetails" class="allDetails">
+                    <div id="preferredNames" class="worker">
+
+                    </div>
+                </div>
+            </div>
+            <!-- End of PreferredName Details -->
+
+            <!-- Start of employeeBio  Details -->
+            <div class="divAttributes">
+                <div id="employeeBioHeaders" class="employeeHeader allHeaders">My Information</div>
+                <div id="employeeBioDetails" class="allDetails">
+                    <div id="employeeBios" class="worker">
+
+                    </div>
+                </div>
+            </div>
+            <!-- End of employeeBio Details -->
+
+            <!-- Start of user  Details -->
+            <div class="divAttributes">
+                <div id="userNames" class="employeeHeader allHeaders">Name</div>
+                <div id="userDetails" class="allDetails">
+                    <div id="names" class="worker">
+
+                    </div>
+                </div>
+                <div id="userPhones" class="employeeHeader allHeaders">Phone No</div>
+                <div id="userDetails" class="allDetails">
+                    <div id="phoneNumbers" class="worker">
+
+                    </div>
+                </div>
+
+            </div>
+            <br>
+                <button onclick="prevPage()" id="btnPrev" class="btns">Previous</button>
+                <button class="btn">
+                    <span id="pages">page:</span>
+                </button>
+                <button type="submit" name="submit" value="Submit" onclick="submitData()" id="btnSubmit" class="btns">Submit</button>
+
+            <!-- End of user Details -->
+            <!-- <div class="footer" style="margin:7%;">
+                <button onclick="prevPage()" id="btnPrev" class="btns">Previous</button>
+                <button class="btns">
+                    <span id="pages">page:</span>
+                </button>
+                <button type="submit" name="submit" value="Submit" onclick="submitData()" id="btnSubmit" class="btns">Submit</button>
+            </div> -->
         </div>
         <!-- The user submits their responses by clicking this button -->
-        
+
 
         <!-- <a href="javascript:prevPage()" id="btnPrev">Previous</a>
         <br>
@@ -203,7 +218,7 @@
             var myAttr = {
                 "background-color": "#2d8280",
                 "align-items": "center",
-                
+
             }
             navigationBar.attributes = myAttr;
             var mainText = KASClient.UI.getElement("div", {
@@ -211,7 +226,7 @@
                 "color": "white",
                 "max-width": "300pt",
                 "font-weight": "350",
-                "font-size" : "15pt"
+                "font-size": "15pt"
 
             });
             mainText.innerText = _strings["strMiniAppTitle"];
