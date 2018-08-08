@@ -11,9 +11,8 @@
     </div>
     <div class="section">
       <div class="body-container">
-        <div id="details" style="padding-top: 50pt">
           <!-- div containing profileImage -->
-          <div id="profileImage">
+          <div id="profileImage" style="margin:7%;">
 
           </div>
           <!-- Start of employeeIdDetails -->
@@ -65,7 +64,7 @@
             </div>
           </div>
           <!-- End of user Details -->
-        </div>
+      <!-- end of bodycontainer -->
       </div>
     </div>
     <script type="text/javascript"> 
@@ -156,9 +155,33 @@
       }
       function inflateHeader() {
         var header = document.getElementById("header");
-        KASClient.UI.clearElement(header);
-        header.className = "header";
-        header.innerText = _strings["strMiniAppTitle"];
+            KASClient.UI.clearElement(header);
+
+            var navigationBar = new KASClient.UI.KASFormPageNavigationBar();
+            navigationBar.backAsset = "close.png";
+            var myAttr = {
+                "background-color": "#2d8280",
+                "align-items": "center",
+                
+            }
+            navigationBar.attributes = myAttr;
+            var mainText = KASClient.UI.getElement("div", {
+                "font-size": "12pt",
+                "color": "white",
+                "max-width": "300pt",
+                "font-weight": "350",
+                "font-size" : "15pt"
+
+            });
+            mainText.innerText = _strings["strMiniAppTitle"];
+
+            navigationBar.title = mainText.outerHTML;
+
+            navigationBar.backAction = function () {
+                KASClient.App.dismissCurrentScreen();
+            };
+
+            KASClient.UI.addElement(navigationBar.getView(), header);
       }
   
       function getSummary(){
@@ -228,7 +251,7 @@
         var phoneNumber = document.getElementById("phoneNumber");
         KASClient.UI.clearElement(phoneNumber);
         phoneNumber.innerHTML = _myFormResponses.questionToAnswerMap[PHONE_NO];
-      }
+      }//end of getSummary function
       function dismissCurrentScreen() {
         KASClient.App.dismissCurrentScreen();
       };

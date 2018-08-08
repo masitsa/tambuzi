@@ -37,8 +37,8 @@
                 <!-- pick date -->
                 <div class="divAttributes">
                     <div id="pickDateHeader" class="employeeHeader"></div>
-                    <div id="pickDateDetails">
-                        <div id="pickDate">
+                    <div id="pickDateDetails" class="allDetails">
+                        <div id="pickDate" class="picking">
 
                         </div>
                     </div>
@@ -91,7 +91,7 @@
 
         // Below will be called on onload of SummaryView.html 
         function onSummaryPageLoad() {
-            alert("success");
+            // alert("success");
             //1. Show progress bar
             KASClient.App.showProgressBar("Fetching Results");
 
@@ -123,7 +123,7 @@
                         return;
                     }
                     _form = form;
-                    inflateHeader();
+                    // inflateHeader();
                     KASClient.App.getCurrentUserIdAsync(function(userId, error) {
                         if (error != null) {
                             handleError(error);
@@ -161,12 +161,12 @@
             KASClient.App.hideProgressBar();
         }
 
-        function inflateHeader() {
-            var header = document.getElementById("header");
-            KASClient.UI.clearElement(header);
-            header.className = "header";
-            header.innerText = _strings["strMiniAppTitle"];
-        }
+        // function inflateHeader() {
+        //     var header = document.getElementById("header");
+        //     KASClient.UI.clearElement(header);
+        //     header.className = "header";
+        //     header.innerText = _strings["strMiniAppTitle"];
+        // }
 
         function showBedNumber() {
             var bedNumberHeader = document.getElementById("bedNumberHeader");
