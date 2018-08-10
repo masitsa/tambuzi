@@ -1,33 +1,41 @@
 {
-    "questions": [
-        
-        {
-            "title": "PlantNumber",
+    "title": "Planting",
+    "visibility": "All",
+    "expiry": 0,
+    "isAnonymous": false,
+    "isResponseAppended": true,
+    "isLocationRequested": false,
+    "questions": [{
+            "title": "Planting Number",
             "type": "Text"
         },
         {
-            "title": "BlockNumber",
+            "title": "Block Number",
             "type": "Text"
         },
         {
-            "title": "FlowerType",
+            "title": "Flower Type",
             "type": "Text"
         },
         {
-            "title": "BedNumber",
-            "type": "Numeric"
+            "title": "Bed Number",
+            "type": "Text"
         },
         {
             "title": "Name",
             "type": "Text"
         },
         {
-            "title": "PhoneNumber",
+            "title": "Phone",
             "type": "Text"
+        },
+        {
+            "title": "Location",
+            "type": "Location"
+        },
+        {
+            "title": "Response Time",
+            "type": "DateTime"
         }
-    ],
-    "title": "Planting Details",
-    "visibility": "All",
-    "isAnonymous": false,
-    "isResponseAppended": false
+    ]
 }

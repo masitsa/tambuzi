@@ -1,37 +1,35 @@
-{ 
-    "id": "mawinguann.w.ticketing", 
-    "schemaVersion": 1, 
-    "version": "4",
-    "minorVersion":5,
-    "providerName": "NanyukiAf", 
-    "displayName": "Planting", 
-    "description": "Custom action to collect Planting Details.", 
-    "icon": "planting.png", 
+{
+    "id": "com.nanyukicustomers.planting",
+    "schemaVersion": 1,
+    "version": "6",
+    "minorVersion": 2,
+    "providerName": "NanyukiAF",
+    "displayName": "Planting",
+    "description": "Planting Details",
+    "icon": "planting.png",
     "appModel": "AppModel.json",
+    "dials": {
+        "isLocalised": false,
+        "isPinned": false
+    },
     "actionScope": "Group",
     "views": {
         "CreationView": {
-            "labelHeader": "Feedback requested",
-            "sourceLocation": "ResponseView.html",
-            "showNativeToolbar": true,
-            "backDialogTitle": "Confirmation",
-            "backDialogDescription": "Are you sure you want to discard?"
+            "sourceLocation": "Response.html",
+            "showNativeToolbar": false
         },
         "ChatCanvasCardView": {
-            "showHeader": true,
-            "labelResponseSending": "Submitting your planting details",
-            "labelResponded": "You have provided your planting details",
-            "labelResponseFailed": "Planting Details submission failed",
-            "labelRespondToForm": "CONFIRM PLANTING DETAILS",
-            "isResponseEditable": false,
-            "showLikes":false,
-            "show Comments":false
-            
+            "showReceipts": false,
+            "showLikes": false,
+            "showComments": false,
+            "labelResponseSending": "Submitting your details",
+            "labelResponded": "Livestock alert provided",
+            "labelResponseFailed": "Livestock alert submission failed",
+            "isResponseEditable": false
         },
         "ResponseResultsView": {
-            "labelPageHeader": "Feedback summary",
-            "sourceLocation": "SummaryView.html",
-            "showNativeToolbar": true
+            "sourceLocation": "ResponseSummary.html",
+            "showNativeToolbar": false
         }
     }
 }

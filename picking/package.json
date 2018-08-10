@@ -2,7 +2,7 @@
     "id": "com.tambuzi.pickingdetails",
     "schemaVersion": 1,
     "version": "1",
-    "minorVersion": 4,
+    "minorVersion": 9,
     "providerName": "Tambuzi",
     "displayName": "Picking Details",
     "description": "Custom action to collect feedback.",
