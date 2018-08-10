@@ -6,6 +6,7 @@
     "isResponseAppended": true,
     "isLocationRequested": false,
     "questions": [
+<<<<<<< HEAD
         {
             "title": "Livestock Number",
             "type": "Text"
@@ -21,6 +22,15 @@
         {
             "title": "Measures Taken",
             "type": "Text"
+=======
+        {
+            "title": "Pick Number",
+            "type": "Number"
+        },
+        {
+            "title": "Bed Number",
+            "type": "Number"
+>>>>>>> 087912b52ae05840a92c19808e4de3efec1921e3
         },
         {
             "title": "Livestock Image",

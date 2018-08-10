@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "id": "com.nanyukiaf.livestock.alert",
     "schemaVersion": 1,
     "version": "5",
@@ -7,6 +8,16 @@
     "displayName": "Livestock Alert",
     "description": "Livestock Alert",
     "icon": "livestock.png",
+=======
+    "id": "com.tambuzi.picking.alert",
+    "schemaVersion": 1,
+    "version": "4",
+    "minorVersion": 1,
+    "providerName": "NanyukiAF",
+    "displayName": "Picking Details",
+    "description": "add picking details",
+    "icon": "picking.png",
+>>>>>>> 087912b52ae05840a92c19808e4de3efec1921e3
     "appModel": "AppModel.json",
     "dials": {
         "isLocalised": false,
