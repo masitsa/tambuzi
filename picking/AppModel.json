@@ -1,21 +1,18 @@
 {
-    "title": "Picking Details",
+    "title": "Livestock Alert",
     "visibility": "All",
     "expiry": 0,
     "isAnonymous": false,
     "isResponseAppended": true,
     "isLocationRequested": false,
-    "questions": [{
-            "title": "Bed Number",
-            "type": "Text"
-        },
+    "questions": [
         {
             "title": "Pick Number",
-            "type": "Text"
+            "type": "Number"
         },
         {
-            "title": "Pick Date",
-            "type": "Datetime"
+            "title": "Bed Number",
+            "type": "Number"
         },
         {
             "title": "Flower Pack Image",
@@ -28,8 +25,14 @@
         {
             "title": "Phone",
             "type": "Text"
+        },
+        {
+          "title": "Location",
+          "type": "Location"
+        },
+        {
+          "title": "Response Time",
+          "type": "DateTime"
         }
-
     ]
-
 }

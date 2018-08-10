@@ -1,11 +1,11 @@
 {
-    "id": "com.adam.picking",
+    "id": "com.tambuzi.picking.alert",
     "schemaVersion": 1,
-    "version": "6",
-    "minorVersion": 17,
-    "providerName": "TambuziApp",
-    "displayName": "Tambuzi Picking",
-    "description": "Custom action to collect feedback.",
+    "version": "4",
+    "minorVersion": 1,
+    "providerName": "NanyukiAF",
+    "displayName": "Picking Details",
+    "description": "add picking details",
     "icon": "picking.png",
     "appModel": "AppModel.json",
     "dials": {
@@ -23,8 +23,8 @@
             "showLikes": false,
             "showComments": false,
             "labelResponseSending": "Submitting your details",
-            "labelResponded": "Picking details provided",
-            "labelResponseFailed": "Feedback submission failed",
+            "labelResponded": "Livestock alert provided",
+            "labelResponseFailed": "Livestock alert submission failed",
             "isResponseEditable": false
         },
         "ResponseResultsView": {
