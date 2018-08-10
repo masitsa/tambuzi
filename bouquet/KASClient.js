@@ -186,13 +186,26 @@ var KASClient;
          */
         function downloadAttachmentAsync(attachment, callback) {
             KASClient.downloadAttachment(attachment.toJSON(), function (downloadedAttachmentJSON, error) {
-                var downloadedAttachment = KASClient.KASAttachment.fromJSON(downloadedAttachmentJSON);
+                var downloadedAttachment = KASClient.KASAttachmentFactory.fromJSON(downloadedAttachmentJSON);
                 if (callback) {
                     callback(downloadedAttachment, error);
                 }
             });
         }
         App.downloadAttachmentAsync = downloadAttachmentAsync;
+        /**
+        * Download the attachment specified
+        * @param attachment attachment with a valid server path to download
+        * @param callback callback on download completion
+        */
+        function isAttachmentDownloadingAsync(attachment, callback) {
+            KASClient.isAttachmentDownloading(attachment.toJSON(), function (isAttachmentDownloadingOrDownLoaded, error) {
+                if (callback) {
+                    callback(isAttachmentDownloadingOrDownLoaded, error);
+                }
+            });
+        }
+        App.isAttachmentDownloadingAsync = isAttachmentDownloadingAsync;
         /**
          * Cancel a download operation queued for an attachment
          * @param attachment
@@ -270,10 +283,6 @@ var KASClient;
             KASClient.generateUUID(callback);
         }
         App.generateUUIDAsync = generateUUIDAsync;
-        function getUrlContentAsync(url, callback) {
-            KASClient.getUrlContent(url, callback);
-        }
-        App.getUrlContentAsync = getUrlContentAsync;
         /**
         * Gets the current device location
         * @param {Callback} callback with below parameters:
@@ -359,6 +368,27 @@ var KASClient;
         }
         App.getConversationNameAsync = getConversationNameAsync;
         /**
+        * Gets the current conversation type
+        * @param {Callback} callback with below parameters:
+        * * * * @param {number} conversationType can be null in case of error
+        * * * * @param {string} error message in case of error, null otherwise
+        */
+        function getConversationTypeAsync(callback) {
+            //////////// MOCK ////////////
+            if (KASClient.shouldMockData()) {
+                if (callback) {
+                    callback(0, null);
+                }
+                return;
+            }
+            KASClient.getConversationType(function (conversationType, error) {
+                if (callback) {
+                    callback(parseInt(conversationType), error);
+                }
+            });
+        }
+        App.getConversationTypeAsync = getConversationTypeAsync;
+        /**
         * Dismiss the current screen (Creation, Response, or Summary)
         */
         function dismissCurrentScreen() {
@@ -404,6 +434,14 @@ var KASClient;
             KASClient.getCurrentUserId(callback);
         }
         App.getCurrentUserIdAsync = getCurrentUserIdAsync;
+        /**
+        * Sets few properties when using native toolbar
+        * @param {KASNativeToolbarProperties} properties
+        */
+        function setNativeToolbarProperties(properties) {
+            KASClient.customizeNativeToolbar(properties.toJSON());
+        }
+        App.setNativeToolbarProperties = setNativeToolbarProperties;
         /**
         * Gets the package properties (user given)
         * @param {Callback} callback with below parameters:
@@ -494,6 +532,17 @@ var KASClient;
         }
         App.logToReport = logToReport;
         /**
+        * Recording event for load and error telemetry
+        * @param {string} eventName string
+        * @param {string} eventType string
+        * @param {string} props JSON
+        */
+        function recordEvent(eventName, eventType, props) {
+            if (props === void 0) { props = JSON.parse("{}"); }
+            KASClient.recordEventNative(eventName, eventType, props);
+        }
+        App.recordEvent = recordEvent;
+        /**
         * Checks if the current user an O365 subscriber
         * @param {Callback} callback with below parameters:
         * * * * @param {boolean} subscribed true if subscribed, false otherwise
@@ -506,6 +555,30 @@ var KASClient;
             });
         }
         App.isCurrentUserO365SubscribedAsync = isCurrentUserO365SubscribedAsync;
+        /**
+        * Gets details of current logged-in O365 user
+        * @param {Callback} callback with below parameters:
+        * * * * @param {Json} returns the UserDetails in Json structure
+        */
+        function getO365UserDetailsAsync(callback) {
+            KASClient.getO365UserDetails(function (userDetails, error) {
+                var userInfo = KASClient.KASO365User.fromJSON(userDetails);
+                if (callback) {
+                    callback(userInfo, error);
+                }
+            });
+        }
+        App.getO365UserDetailsAsync = getO365UserDetailsAsync;
+        /**
+        * Gets the client details
+        * @param {Callback} callback with below parameters:
+        * * * * @param {JSON} properties can be null in case of error
+        * * * * @param {string} error message in case of error, null otherwise
+        */
+        function getClientDetailsAsync(callback) {
+            KASClient.getClientDetails(callback);
+        }
+        App.getClientDetailsAsync = getClientDetailsAsync;
         /**
         * Registers a callback to be executed on hardware back button press (for Android)
         * @param {Callback} callback to be executed
@@ -579,6 +652,14 @@ var KASClient;
         }
         App.getString = getString;
         /**
+           * shows a particular location as mentioned in KASLocation
+           * @param {KASLocation} location
+         */
+        function showLocationOnMap(location) {
+            KASClient.showLocationMap(JSON.stringify(location.toJSON()));
+        }
+        App.showLocationOnMap = showLocationOnMap;
+        /**
         * Returns a string.
         * @param {string} string denotes the formatted string. Specifier should be mentioned like {0},{1},{2}.....
         * @param {string[]} args array of arguments.
@@ -602,6 +683,38 @@ var KASClient;
         }
         App.getCurrentLocale = getCurrentLocale;
     })(App = KASClient.App || (KASClient.App = {}));
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var Constants = (function () {
+        function Constants() {
+        }
+        ////////////// Telemetry event names ////////////////////////
+        // event name to track immersive page load time or error
+        Constants.TELEMETRY_EVENT_IMMERSIVE_PAGE_LOAD = "ACTION_IMMERSIVE_PAGE_LOAD";
+        // event name to track Insights page load time or error
+        Constants.TELEMETRY_EVENT_INSIGHTS_LOAD = "ACTION_INSIGHTS_LOAD";
+        // event name to track All Responses page load time or error
+        Constants.TELEMETRY_EVENT_ALL_RESPONSES_LOAD = "ACTION_ALL_RESPONSES_LOAD";
+        ////////////// Telemetry event types ////////////////////////
+        // this type indicates start of the event, tracking for the event starts when this type is received
+        Constants.TELEMETRY_EVENT_TYPE_START = "START";
+        // this type indicates end of the event, tracking for the event stops when this type is received
+        // and the event is logged in telemetry, if corresponding start was recorded earlier.
+        // If no START was recorded earlier, this END type would be ignored
+        Constants.TELEMETRY_EVENT_TYPE_END = "END";
+        // this type indicates ERROR, tracking for the event stops if it was started earlier,
+        // and error telemetry for the event is logged
+        Constants.TELEMETRY_EVENT_TYPE_ERROR = "ERROR";
+        // For this type, there is no other marker associated and telemetry is logged without waiting for 
+        // associated END or ERROR Event_Type
+        Constants.TELEMETRY_EVENT_TYPE_INDEPENDENT = "INDEPENDENT";
+        ////////////// Telemetry properties keys ////////////////////////
+        // key to report error payload for an error event
+        Constants.TELEMETRY_PROPERTY_ERROR_KEY = "error";
+        return Constants;
+    }());
+    KASClient.Constants = Constants;
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
@@ -827,6 +940,19 @@ var KASClient;
         }
         Form.shouldSeeFormSummaryAsync = shouldSeeFormSummaryAsync;
         /**
+        * Gets whether the current user is subscriber or not
+        * @param {Callback} callback with below parameters:
+        * * * * @param {boolean} isSubscribed true if current user subscriber
+        */
+        function isSubscribed(callback) {
+            KASClient.isSubscriber(function (isSubscribed, error) {
+                if (callback) {
+                    callback(isSubscribed && error == null);
+                }
+            });
+        }
+        Form.isSubscribed = isSubscribed;
+        /**
         * Gets flat responses by all the users, and processed summary from all the responses associated
         * with the form. It requires two callbacks:
         * @param {Callback} mostUpdatedCallback to immediately get the most updated summary from local database. It has below parameters:
@@ -945,10 +1071,12 @@ var KASClient;
         * * * * @param {string} error message in case of error, null otherwise
         */
         function getAggregatedFormSummaryAsync(callback) {
-            KASClient.getSurveyAggregatedSummaryJson(function (summaryJson, error) {
-                if (callback) {
-                    callback(KASClient.KASFormAggregatedSummary.fromJSON(summaryJson), error);
-                }
+            getFormAsync(function (form, error) {
+                KASClient.getSurveyAggregatedSummaryJson(function (summaryJson, error) {
+                    if (callback) {
+                        callback(KASClient.KASFormAggregatedSummary.fromJSON(summaryJson, form.questions), error);
+                    }
+                });
             });
         }
         Form.getAggregatedFormSummaryAsync = getAggregatedFormSummaryAsync;
@@ -1015,14 +1143,15 @@ var KASClient;
         /**
         * Shows all the reaction screen (likes and comments) against the form
         */
-        function showAllReactions() {
+        function showAllReactions(showComments) {
+            if (showComments === void 0) { showComments = true; }
             //////////// MOCK ////////////
             if (KASClient.shouldMockData()) {
                 alert("ShowAllReactions");
                 return;
             }
             //////////// ACTUAL ////////////
-            KASClient.showLikesAndCommentsPage();
+            KASClient.showLikesAndCommentsPage(showComments);
         }
         Form.showAllReactions = showAllReactions;
         /**
@@ -1178,6 +1307,27 @@ var KASClient;
             });
         }
         Form.updateLocalActionPropertiesAsync = updateLocalActionPropertiesAsync;
+        /**
+          * Requests to send push notification to a particular set of users with a custom message
+          * @param {CustomNotificationMessage} customNotificationMessage list of userIds to whom the notification has to be sent
+          * @param {Callback} callback with below parameters:
+          * * * * @param {boolean} success indicates if the update is successful or not
+          * * * * @param {string} error message in case of error, null otherwise
+          */
+        function sendNotificationToUsers(customNotificationMessage, callback) {
+            //////////// MOCK ////////////
+            if (KASClient.shouldMockData()) {
+                alert("sendNotificationToUsers");
+                return;
+            }
+            //////////// ACTUAL ////////////
+            KASClient.sendNotification(JSON.stringify(customNotificationMessage.toJSON()), function (success, error) {
+                if (callback) {
+                    callback(success && error == null);
+                }
+            });
+        }
+        Form.sendNotificationToUsers = sendNotificationToUsers;
         /**
         * Requests to get custom storage properties of a package, if it exists
         * @param {Callback} callback with below parameters:
@@ -1447,6 +1597,9 @@ var KASClient;
                 case KASClient.LOG_TO_REPORT_COMMAND:
                     /* NOT SUPPORTED */
                     break;
+                case KASClient.RECORD_EVENT_COMMAND:
+                    /* NOT SUPPORTED */
+                    break;
                 case KASClient.CREATE_MEETING_REQUEST:
                     /* NOT SUPPORTED */
                     break;
@@ -1593,12 +1746,17 @@ var KASClient;
                 case KASClient.CAN_RESPOND_TO_SURVEY:
                 case KASClient.IS_TALKBACK_ENABLED:
                 case KASClient.READ_TALKBACK_MESSAGE:
+                case KASClient.IS_SUBSCRIBER:
                 case KASClient.LOG_TO_REPORT_COMMAND:
+                case KASClient.RECORD_EVENT_COMMAND:
                 case KASClient.CREATE_MEETING_REQUEST:
                 case KASClient.EDIT_CARD_COMMAND:
                 case KASClient.UPDATE_REQUEST_COMMAND:
                 case KASClient.OPEN_IMMERSIVE_VIEW_FOR_ATTACHMENT:
                 case KASClient.GET_UUID:
+                case KASClient.CUSTOMIZE_NATIVE_TOOLBAR:
+                case KASClient.GET_CLIENT_DETAILS:
+                case KASClient.SHOW_LOCATION_MAP:
                     // For these commands, we don't need an Async API
                     callNativeCommandSync(command, args, successCallback, errorCallback);
                     break;
@@ -1653,6 +1811,9 @@ var KASClient;
                 case KASClient.GET_CONVERSATION_NAME_COMMAND:
                     KaizalaPlatform.getConversationNameAsync(successCallback, errorCallback);
                     return;
+                case KASClient.GET_CONVERSATION_TYPE_COMMAND:
+                    KaizalaPlatform.getConversationTypeAsync(successCallback, errorCallback);
+                    return;
                 case KASClient.GET_ATTACHMENT_PATH_COMMAND:
                     KaizalaPlatform.getAttachmentPathAsync(successCallback, errorCallback);
                     return;
@@ -1685,6 +1846,9 @@ var KASClient;
                     return;
                 case KASClient.IS_CURRENT_USER_O365_SUBSCRIBED:
                     KaizalaPlatform.isCurrentUserO365Subscribed(successCallback, errorCallback);
+                    return;
+                case KASClient.GET_O365_USER_DETAILS:
+                    KaizalaPlatform.getO365UserDetails(successCallback, errorCallback);
                     return;
                 case KASClient.GET_CONVERSATION_PARTICIPANTS_COUNT:
                     KaizalaPlatform.getConversationParticipantsCountAsync(successCallback, errorCallback);
@@ -1724,6 +1888,12 @@ var KASClient;
                     return;
                 case KASClient.UPDATE_PACKAGE_CUSTOM_PROPERTIES:
                     KaizalaPlatform.updatePackageCustomProperties(args[0], successCallback, errorCallback);
+                    return;
+                case KASClient.IS_ATTACHMENT_DOWNLOADING:
+                    KaizalaPlatform.isAttachmentDownloadingAsync(JSON.stringify(args[0]), successCallback, errorCallback);
+                    return;
+                case KASClient.SEND_NOTIFICATION:
+                    KaizalaPlatform.sendNotification(args[0], successCallback, errorCallback);
                     return;
                 default:
             }
@@ -1791,7 +1961,7 @@ var KASClient;
                     KaizalaPlatform.showToast(args[0]);
                     break;
                 case KASClient.UPDATE_RESPONSE_COMMAND:
-                    KaizalaPlatform.updateMyResponse(JSON.stringify(args[0]), args[1], args[2], args[3], args[4] /*, args[5] */);
+                    KaizalaPlatform.updateMyResponse(JSON.stringify(args[0]), args[1], args[2], args[3], args[4], args[5]);
                     break;
                 case KASClient.GET_USER_DETAILS_COMMAND:
                     result = [KaizalaPlatform.getUserDetails(JSON.stringify(args))];
@@ -1818,7 +1988,7 @@ var KASClient;
                     result = [KaizalaPlatform.getMessageProperties()];
                     break;
                 case KASClient.SHOW_LIKES_AND_COMMENTS_PAGE_COMMAND:
-                    KaizalaPlatform.showLikesAndCommentsPage();
+                    KaizalaPlatform.showLikesAndCommentsPage(args[0]);
                     break;
                 case KASClient.SHOW_IMAGE_FULL_SCREEN_COMMAND:
                     KaizalaPlatform.showImageImmersiveView(args[0], args[1]);
@@ -1871,6 +2041,9 @@ var KASClient;
                 case KASClient.SHOULD_SEE_SURVEY_SUMMARY:
                     result = [KaizalaPlatform.shouldSeeSurveySummary()];
                     break;
+                case KASClient.IS_SUBSCRIBER:
+                    result = [KaizalaPlatform.isSubscriber()];
+                    break;
                 case KASClient.CAN_RESPOND_TO_SURVEY:
                     result = [KaizalaPlatform.canRespondToSurvey()];
                     break;
@@ -1882,6 +2055,9 @@ var KASClient;
                     break;
                 case KASClient.LOG_TO_REPORT_COMMAND:
                     KaizalaPlatform.logToReport(args[0]);
+                    break;
+                case KASClient.RECORD_EVENT_COMMAND:
+                    KaizalaPlatform.recordEvent(args[0], args[1], JSON.stringify(args[2]));
                     break;
                 case KASClient.CREATE_MEETING_REQUEST:
                     KaizalaPlatform.createMeetingRequest(args[0], args[1], args[2], args[3], args[4], args[5]);
@@ -1895,6 +2071,15 @@ var KASClient;
                 case KASClient.OPEN_IMMERSIVE_VIEW_FOR_ATTACHMENT:
                     KaizalaPlatform.openImmersiveViewForAttachment(JSON.stringify(args[0]));
                     return;
+                case KASClient.CUSTOMIZE_NATIVE_TOOLBAR:
+                    KaizalaPlatform.customizeNativeToolbar(JSON.stringify(args[0]));
+                    return;
+                case KASClient.GET_CLIENT_DETAILS:
+                    result = [KaizalaPlatform.getClientDetails()];
+                    break;
+                case KASClient.SHOW_LOCATION_MAP:
+                    KaizalaPlatform.showLocationMap(args[0]);
+                    break;
                 default:
             }
             if (successCallback) {
@@ -1957,11 +2142,14 @@ var KASClient;
     KASClient.UPDATE_SURVEY_METADATA = "updateSurveyMetadata";
     KASClient.GET_LOCALIZED_MINIAPP_STRINGS = "getLocalizedMiniAppStrings";
     KASClient.SHOULD_SEE_SURVEY_SUMMARY = "shouldSeeSurveySummary";
+    KASClient.IS_SUBSCRIBER = "isSubscriber";
     KASClient.CAN_RESPOND_TO_SURVEY = "canRespondToSurvey";
     KASClient.IS_TALKBACK_ENABLED = "isTalkBackEnabled";
     KASClient.READ_TALKBACK_MESSAGE = "readTalkBackMessage";
     KASClient.LOG_TO_REPORT_COMMAND = "logToReport";
+    KASClient.RECORD_EVENT_COMMAND = "recordEvent";
     KASClient.IS_CURRENT_USER_O365_SUBSCRIBED = "isCurrentUserO365Subscribed";
+    KASClient.GET_O365_USER_DETAILS = "getO365UserDetails";
     KASClient.CREATE_MEETING_REQUEST = "createMeetingRequest";
     KASClient.GET_CONVERSATION_PARTICIPANTS_COUNT = "getConversationParticipantsCount";
     KASClient.SHOW_PLACE_PICKER = "showPlacePicker";
@@ -1972,6 +2160,7 @@ var KASClient;
     KASClient.GET_FONT_SIZE_MULTIPIER = "getFontSizeMultiplier";
     KASClient.SELECT_ATTACHMENTS_COMMAND = "selectAttachments";
     KASClient.DOWNLOAD_ATTACHMENT_COMMAND = "downloadAttachment";
+    KASClient.IS_ATTACHMENT_DOWNLOADING = "isAttachmentDownloading";
     KASClient.CANCEL_ATTACHMENT_DOWNLOAD_COMMAND = "cancelAttachmentDownload";
     KASClient.OPEN_IMMERSIVE_VIEW_FOR_ATTACHMENT = "openImmersiveViewForAttachment";
     KASClient.GENERATE_THUMBNAIL_FOR_IMAGE_ATTACHMENT = "generateBase64ThumbnailForAttachment";
@@ -1983,7 +2172,11 @@ var KASClient;
     KASClient.UPDATE_PACKAGE_CUSTOM_PROPERTIES = "updatePackageCustomProperties";
     KASClient.GET_DEVICE_ID_COMMAND = "getDeviceId";
     KASClient.GET_UUID = "generateUUID";
-    KASClient.GET_URL_CONTENT = "getUrlContent";
+    KASClient.SEND_NOTIFICATION = "sendNotification";
+    KASClient.CUSTOMIZE_NATIVE_TOOLBAR = "customizeNativeToolbar";
+    KASClient.GET_CONVERSATION_TYPE_COMMAND = "getConversationType";
+    KASClient.GET_CLIENT_DETAILS = "getClientDetails";
+    KASClient.SHOW_LOCATION_MAP = "showLocationMap";
     // Note: If you are adding new commands here, please increment
     // the supported SDK version in clients as well as add details
     // of that version in VersionUtil.ts
@@ -2295,6 +2488,13 @@ var KASClient;
     }
     KASClient.getConversationName = getConversationName;
     ///////////////////////////////////////////////////////
+    function getConversationType(stringCallback) {
+        if (stringCallback === void 0) { stringCallback = null; }
+        var value = getCorrelationIdForCallback(stringCallback, "onGetString");
+        KASClient.callNativeCommand(KASClient.GET_CONVERSATION_TYPE_COMMAND, null, value["successCallback"], value["errorCallback"]);
+    }
+    KASClient.getConversationType = getConversationType;
+    ///////////////////////////////////////////////////////
     function getSelectedUsers(args, jsonCallback) {
         if (jsonCallback === void 0) { jsonCallback = null; }
         var value = getCorrelationIdForCallback(jsonCallback, "onGetJson");
@@ -2324,6 +2524,14 @@ var KASClient;
         KASClient.callNativeCommand(KASClient.DOWNLOAD_ATTACHMENT_COMMAND, [attachment], value["successCallback"], value["errorCallback"]);
     }
     KASClient.downloadAttachment = downloadAttachment;
+    ///////////////////////////////////////////////////////
+    function isAttachmentDownloading(attachment, boolCallback) {
+        if (attachment === void 0) { attachment = null; }
+        if (boolCallback === void 0) { boolCallback = null; }
+        var value = getCorrelationIdForCallback(boolCallback, "onGetJson");
+        KASClient.callNativeCommand(KASClient.IS_ATTACHMENT_DOWNLOADING, [attachment], value["successCallback"], value["errorCallback"]);
+    }
+    KASClient.isAttachmentDownloading = isAttachmentDownloading;
     ///////////////////////////////////////////////////////
     function cancelAttachmentDownload(attachment, stringCallback) {
         if (attachment === void 0) { attachment = null; }
@@ -2406,6 +2614,12 @@ var KASClient;
     }
     KASClient.showAlert = showAlert;
     ///////////////////////////////////////////////////////
+    function customizeNativeToolbar(properties) {
+        if (properties === void 0) { properties = null; }
+        KASClient.callNativeCommand(KASClient.CUSTOMIZE_NATIVE_TOOLBAR, [properties]);
+    }
+    KASClient.customizeNativeToolbar = customizeNativeToolbar;
+    ///////////////////////////////////////////////////////
     function closeCard() {
         KASClient.callNativeCommand(KASClient.CLOSE_CARD_COMMAND);
     }
@@ -2416,8 +2630,9 @@ var KASClient;
     }
     KASClient.editCard = editCard;
     ///////////////////////////////////////////////////////
-    function showLikesAndCommentsPage() {
-        KASClient.callNativeCommand(KASClient.SHOW_LIKES_AND_COMMENTS_PAGE_COMMAND);
+    function showLikesAndCommentsPage(showComments) {
+        if (showComments === void 0) { showComments = true; }
+        KASClient.callNativeCommand(KASClient.SHOW_LIKES_AND_COMMENTS_PAGE_COMMAND, [showComments]);
     }
     KASClient.showLikesAndCommentsPage = showLikesAndCommentsPage;
     ///////////////////////////////////////////////////////
@@ -2566,14 +2781,6 @@ var KASClient;
         KASClient.callNativeCommand(KASClient.GET_UUID, null, value["successCallback"], value["errorCallback"]);
     }
     KASClient.generateUUID = generateUUID;
-    ///////////////////////////////////////////////////////
-    function getUrlContent(url, stringCallback) {
-        if (url === void 0) { url = null; }
-        if (stringCallback === void 0) { stringCallback = null; }
-        var value = getCorrelationIdForCallback(stringCallback, "onGetString");
-        KASClient.callNativeCommand(KASClient.GET_URL_CONTENT, [url], value["successCallback"], value["errorCallback"]);
-    }
-    KASClient.getUrlContent = getUrlContent;
     ///////////////////////////////////////////////////////////
     function shouldSeeSurveySummary(boolCallback) {
         if (boolCallback === void 0) { boolCallback = null; }
@@ -2581,6 +2788,13 @@ var KASClient;
         KASClient.callNativeCommand(KASClient.SHOULD_SEE_SURVEY_SUMMARY, null, value["successCallback"], value["errorCallback"]);
     }
     KASClient.shouldSeeSurveySummary = shouldSeeSurveySummary;
+    ///////////////////////////////////////////////////////////
+    function isSubscriber(boolCallback) {
+        if (boolCallback === void 0) { boolCallback = null; }
+        var value = getCorrelationIdForCallback(boolCallback, "onGetBool");
+        KASClient.callNativeCommand(KASClient.IS_SUBSCRIBER, null, value["successCallback"], value["errorCallback"]);
+    }
+    KASClient.isSubscriber = isSubscriber;
     ///////////////////////////////////////////////////////////
     function canRespondToSurvey(boolCallback) {
         if (boolCallback === void 0) { boolCallback = null; }
@@ -2602,6 +2816,14 @@ var KASClient;
     }
     KASClient.readTalkBackMessageNative = readTalkBackMessageNative;
     ///////////////////////////////////////////////////////
+    function recordEventNative(eventName, eventType, props) {
+        if (eventName === void 0) { eventName = ""; }
+        if (eventType === void 0) { eventType = ""; }
+        if (props === void 0) { props = JSON.parse("{}"); }
+        KASClient.callNativeCommand(KASClient.RECORD_EVENT_COMMAND, [eventName, eventType, props]);
+    }
+    KASClient.recordEventNative = recordEventNative;
+    ///////////////////////////////////////////////////////
     function logToReportNative(data) {
         if (data === void 0) { data = null; }
         KASClient.callNativeCommand(KASClient.LOG_TO_REPORT_COMMAND, [data]);
@@ -2614,6 +2836,13 @@ var KASClient;
         KASClient.callNativeCommand(KASClient.IS_CURRENT_USER_O365_SUBSCRIBED, null, value["successCallback"], value["errorCallback"]);
     }
     KASClient.isCurrentUserO365Subscribed = isCurrentUserO365Subscribed;
+    ///////////////////////////////////////////////////////////
+    function getO365UserDetails(jsonCallback) {
+        if (jsonCallback === void 0) { jsonCallback = null; }
+        var value = getCorrelationIdForCallback(jsonCallback, "onGetJson");
+        KASClient.callNativeCommand(KASClient.GET_O365_USER_DETAILS, null, value["successCallback"], value["errorCallback"]);
+    }
+    KASClient.getO365UserDetails = getO365UserDetails;
     ///////////////////////////////////////////////////////
     function getConversationParticipantsCount(stringCallback) {
         if (stringCallback === void 0) { stringCallback = null; }
@@ -2651,6 +2880,25 @@ var KASClient;
         KASClient.callNativeCommand(KASClient.UPDATE_PACKAGE_CUSTOM_PROPERTIES, [JSON.stringify(properties)], value["successCallback"], value["errorCallback"]);
     }
     KASClient.updatePackageCustomProperties = updatePackageCustomProperties;
+    ///////////////////////////////////////////////////////////
+    function sendNotification(customNotificationMessage, boolCallback) {
+        if (boolCallback === void 0) { boolCallback = null; }
+        var value = getCorrelationIdForCallback(boolCallback, "onGetBool");
+        KASClient.callNativeCommand(KASClient.SEND_NOTIFICATION, [customNotificationMessage], value["successCallback"], value["errorCallback"]);
+    }
+    KASClient.sendNotification = sendNotification;
+    ///////////////////////////////////////////////////////////
+    function getClientDetails(jsonCallback) {
+        if (jsonCallback === void 0) { jsonCallback = null; }
+        var value = getCorrelationIdForCallback(jsonCallback, "onGetJson");
+        KASClient.callNativeCommand(KASClient.GET_CLIENT_DETAILS, null, value["successCallback"], value["errorCallback"]);
+    }
+    KASClient.getClientDetails = getClientDetails;
+    ///////////////////////////////////////////////////////////
+    function showLocationMap(locationJSON) {
+        KASClient.callNativeCommand(KASClient.SHOW_LOCATION_MAP, [locationJSON]);
+    }
+    KASClient.showLocationMap = showLocationMap;
     ///////////////////////////////////////////////////////////
     var currentLocale = null;
     function convertErrorCodeToStringAsync(errorCode, callback) {
@@ -2754,6 +3002,9 @@ var KASClient;
         }
         else if (KASClient.isRenderedForActionDesigner()) {
             KASClient.ActionDesigner.callNativeCommand(command, args, successCallback, errorCallback);
+        }
+        else if (KASClient.isRenderedForWebClient()) {
+            KASClient.WebClient.callNativeCommand(command, args, successCallback, errorCallback);
         }
         else {
             if (!KASClient.shouldMockData()) {
@@ -3051,6 +3302,34 @@ var KASClient;
         }
     })(UWP = KASClient.UWP || (KASClient.UWP = {}));
 })(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var WebClient;
+    (function (WebClient) {
+        function callNativeCommand(command, args, successCallback, errorCallback) {
+            if (args === void 0) { args = null; }
+            if (successCallback === void 0) { successCallback = null; }
+            if (errorCallback === void 0) { errorCallback = null; }
+            window.parent["excecuteCommand"](command, args, function (result) {
+                callFunction(successCallback, result);
+            }, function (error) {
+                callFunction(errorCallback, error);
+            });
+        }
+        WebClient.callNativeCommand = callNativeCommand;
+        function callFunction(func, params) {
+            if (params === void 0) { params = null; }
+            if (func) {
+                if (params) {
+                    KASClient.executeFunction(func, params);
+                }
+                else {
+                    KASClient.executeFunction(func);
+                }
+            }
+        }
+    })(WebClient = KASClient.WebClient || (KASClient.WebClient = {}));
+})(KASClient || (KASClient = {}));
 if (typeof Object.assign != 'function') {
     (function () {
         Object.assign = function (target) {
@@ -3116,6 +3395,20 @@ var KASClient;
         return Platform.Unknown;
     }
     KASClient.getPlatform = getPlatform;
+    // iOS version detection from: https://stackoverflow.com/questions/8348139/
+    // Android version detection from: https://stackoverflow.com/questions/7184573/
+    function getVersion() {
+        if (getPlatform() == Platform.iOS) {
+            // supports iOS 2.0 and later: <http://bit.ly/TJjs1V>
+            var iOSVersion = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
+            return parseInt(iOSVersion[1], 10);
+        }
+        else {
+            var androidVersion = (navigator.userAgent.toLowerCase()).match(/android\s([0-9\.]*)/);
+            return parseFloat(androidVersion ? androidVersion[1] : "0.0");
+        }
+    }
+    KASClient.getVersion = getVersion;
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
@@ -3263,6 +3556,38 @@ var KASClient;
         return false;
     }
     KASClient.isURL = isURL;
+    function isListOfImageAttachments(str) {
+        try {
+            var json = JSON.parse(str);
+            if (jsonIsArray(json)) {
+                for (var i = 0; i < json.length; i++) {
+                    if (!isImageAttachment(json[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+        catch (e) {
+            return false;
+        }
+    }
+    KASClient.isListOfImageAttachments = isListOfImageAttachments;
+    function isImageAttachment(attachment) {
+        try {
+            if (attachment.hasOwnProperty('ty') && attachment['ty'] == KASClient.KASAttachmentType.Image) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (e) {
+            return false;
+        }
+    }
+    KASClient.isImageAttachment = isImageAttachment;
     function isLocation(response) {
         try {
             var location = parseJsonObject(response);
@@ -3292,7 +3617,8 @@ var KASClient;
         return num.toString().match(/^-?\d+(?:\.\d{0,2})?/)[0];
     }
     KASClient.truncatedDecimalString = truncatedDecimalString;
-    function getExpiryUntilString(date) {
+    function getExpiryUntilString(date, forAccessibility) {
+        if (forAccessibility === void 0) { forAccessibility = false; }
         var expiryUntil = (date.getTime() - (new Date()).getTime()) / 1000; // seconds
         var expiryString = "";
         var days = 0, hours = 0, minutes = 0, seconds = 0;
@@ -3300,37 +3626,56 @@ var KASClient;
         if (expiryUntil >= dayInSeconds) {
             days = Math.floor(expiryUntil / dayInSeconds);
             expiryUntil -= (days * dayInSeconds);
-            expiryString += days + "d ";
+            if (!forAccessibility) {
+                expiryString += days + "d ";
+            }
+            else {
+                expiryString += days + KASClient.App.printf(KASClient.Internal.getKASClientString(days == 1 ? "Day" : "Days")) + " ";
+            }
         }
         var hourInSeconds = 60 * 60;
         if (expiryUntil >= hourInSeconds) {
             hours = Math.floor(expiryUntil / hourInSeconds);
             expiryUntil -= (hours * hourInSeconds);
-            expiryString += hours + "h ";
+            if (!forAccessibility) {
+                expiryString += hours + "h ";
+            }
+            else {
+                expiryString += hours + KASClient.App.printf(KASClient.Internal.getKASClientString(hours == 1 ? "Hour" : "Hours")) + " ";
+            }
         }
         var minuteInSeconds = 60;
         if (expiryUntil >= minuteInSeconds) {
             minutes = Math.floor(expiryUntil / minuteInSeconds);
             expiryUntil -= (minutes * minuteInSeconds);
-            expiryString += minutes + "m ";
+            if (!forAccessibility) {
+                expiryString += minutes + "m ";
+            }
+            else {
+                expiryString += minutes + KASClient.App.printf(KASClient.Internal.getKASClientString(minuteInSeconds == 1 ? "Minute" : "Minutes")) + " ";
+            }
         }
         seconds = expiryUntil;
         return expiryString;
     }
     KASClient.getExpiryUntilString = getExpiryUntilString;
-    function getDateString(date, showDayOfWeek, showTime) {
+    function getDateString(date, showDayOfWeek, showTime, showYear) {
         if (showDayOfWeek === void 0) { showDayOfWeek = true; }
         if (showTime === void 0) { showTime = true; }
+        if (showYear === void 0) { showYear = false; }
         var month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         var day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         // Format "Mon Aug 15, 12:30 AM"
         var dateString = "";
         // Optional
         if (showDayOfWeek) {
-            dateString += day[date.getDay()] + " ";
+            dateString += day[date.getDay()] + ", ";
         }
         // Mandatory
         dateString += PrefixZero(date.getDate()) + " " + month[date.getMonth()];
+        if (showYear) {
+            dateString += " " + date.getFullYear();
+        }
         // Optional
         if (showTime) {
             var strTime = getTimeString(date);
@@ -3420,6 +3765,10 @@ var KASClient;
         return inIframe() && window.parent.hasOwnProperty("__ACTION_DESIGNER__");
     }
     KASClient.isRenderedForActionDesigner = isRenderedForActionDesigner;
+    function isRenderedForWebClient() {
+        return window.parent.hasOwnProperty("__WEB_CLIENT__");
+    }
+    KASClient.isRenderedForWebClient = isRenderedForWebClient;
     function inIframe() {
         try {
             return window.self !== window.top;
@@ -3428,6 +3777,30 @@ var KASClient;
             return true;
         }
     }
+    /**
+     * This function required because in iOS 11, UIWebView has a bug, due to which a blocking scenarios in native app.
+     *
+     * Bug Description: Edit any contentEditable div/span or text input in HTML which have position fixed div at top. Now when we scroll up, the div disappears.
+     *
+     * Reporduction path : Open Survey Creation -> Add a Multiple Choice question -> Tap on 2nd option and edit -> Scroll up -> Navigator bar disappears.
+     * We can also easily reproduce this in Job, Lets meets and the Htmls where we are using fixed navigation bar.
+     *
+     * We are tracking this bug with Apple bug ID : 35080721
+     */
+    function isIOSVersionAbove11() {
+        return (KASClient.getPlatform() == KASClient.Platform.iOS && KASClient.getVersion() >= 11);
+    }
+    KASClient.isIOSVersionAbove11 = isIOSVersionAbove11;
+    /**
+    * returns property bag with error message added
+    * gets used to form props for reporting error telemetry event
+    */
+    function getErrorPropsForTelemetry(errorMsg) {
+        var props = {};
+        props[KASClient.Constants.TELEMETRY_PROPERTY_ERROR_KEY] = errorMsg;
+        return props;
+    }
+    KASClient.getErrorPropsForTelemetry = getErrorPropsForTelemetry;
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
@@ -3449,6 +3822,12 @@ var KASClient;
         Version.VERSION_12 = "12";
         Version.VERSION_13 = "13";
         Version.VERSION_14 = "14";
+        Version.VERSION_15 = "15";
+        Version.VERSION_16 = "16";
+        Version.VERSION_17 = "17";
+        Version.VERSION_18 = "18";
+        Version.VERSION_19 = "19";
+        Version.VERSION_20 = "20";
         var commandVersion = {};
         // Commands introduced in version-0 SDK
         commandVersion[KASClient.CLOSE_CARD_COMMAND] = Version.VERSION_0;
@@ -3531,6 +3910,21 @@ var KASClient;
         commandVersion[KASClient.GET_DEVICE_ID_COMMAND] = Version.VERSION_13;
         // Commands introduced in version-14 SDK
         commandVersion[KASClient.GET_UUID] = Version.VERSION_14;
+        // Commands introduced in version-15 SDK
+        commandVersion[KASClient.IS_ATTACHMENT_DOWNLOADING] = Version.VERSION_15;
+        // Commands introduced in version-16 SDK
+        commandVersion[KASClient.CUSTOMIZE_NATIVE_TOOLBAR] = Version.VERSION_16;
+        // Commands introduced in version-17 SDK
+        commandVersion[KASClient.SEND_NOTIFICATION] = Version.VERSION_17;
+        commandVersion[KASClient.IS_SUBSCRIBER] = Version.VERSION_17;
+        // Commands introduced in version-18 SDK
+        commandVersion[KASClient.GET_O365_USER_DETAILS] = Version.VERSION_18;
+        // Commands introduced in version-19 SDK
+        commandVersion[KASClient.GET_CONVERSATION_TYPE_COMMAND] = Version.VERSION_19;
+        commandVersion[KASClient.GET_CLIENT_DETAILS] = Version.VERSION_19;
+        // Commands introduced in version-20 SDK
+        commandVersion[KASClient.RECORD_EVENT_COMMAND] = Version.VERSION_20;
+        commandVersion[KASClient.SHOW_LOCATION_MAP] = Version.VERSION_20;
         // The below method doesn't consider minor version
         function commandIsCompatible(command, callback) {
             if (!commandVersion.hasOwnProperty(command)) {
@@ -3665,6 +4059,29 @@ var KASClient;
         }
         Version.checkIfCommandExists = checkIfCommandExists;
     })(Version = KASClient.Version || (KASClient.Version = {}));
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var CustomNotificationMessage = (function () {
+        function CustomNotificationMessage() {
+            // User ids to send the push notification to
+            this.userIds = null;
+            // Notification Content to be shown in the fallback case
+            this.notificationContent = "";
+            // Priority with which notification needs to be published
+            this.priority = KASClient.NotificationPriority.Low;
+        }
+        CustomNotificationMessage.prototype.toJSON = function () {
+            var object = JSON.parse("{}");
+            object["uIds"] = this.userIds;
+            object["content"] = this.notificationContent;
+            object["p"] = this.priority;
+            object["nb"] = this.notificationBag;
+            return object;
+        };
+        return CustomNotificationMessage;
+    }());
+    KASClient.CustomNotificationMessage = CustomNotificationMessage;
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
@@ -3853,6 +4270,9 @@ var KASClient;
                 case KASClient.KASAttachmentType.Image:
                     obj = new KASClient.KASImageAttachment();
                     break;
+                case KASClient.KASAttachmentType.Video:
+                    obj = new KASClient.KASVideoAttachment();
+                    break;
                 case KASClient.KASAttachmentType.Audio:
                 case KASClient.KASAttachmentType.Document:
                 default:
@@ -3869,6 +4289,9 @@ var KASClient;
             switch (type) {
                 case KASClient.KASAttachmentType.Image:
                     obj = KASClient.KASImageAttachment.fromJSON(object);
+                    break;
+                case KASClient.KASAttachmentType.Video:
+                    obj = KASClient.KASVideoAttachment.fromJSON(object);
                     break;
                 case KASClient.KASAttachmentType.Audio:
                 case KASClient.KASAttachmentType.Document:
@@ -3911,16 +4334,25 @@ var KASClient;
 /// <reference path="./KASQuestionConfig.ts" />
 var KASClient;
 (function (KASClient) {
+    var AttachmentListResponseType;
+    (function (AttachmentListResponseType) {
+        AttachmentListResponseType[AttachmentListResponseType["GENERIC"] = 0] = "GENERIC";
+        AttachmentListResponseType[AttachmentListResponseType["LIST_OF_IMAGES"] = 1] = "LIST_OF_IMAGES";
+    })(AttachmentListResponseType = KASClient.AttachmentListResponseType || (KASClient.AttachmentListResponseType = {}));
     var KASAttachmentListQuestionConfig = (function (_super) {
         __extends(KASAttachmentListQuestionConfig, _super);
         function KASAttachmentListQuestionConfig() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.imageSource = KASClient.ImagePickerSource.All;
             _this.maxImageCount = 10;
+            _this.attachmentListType = AttachmentListResponseType.GENERIC;
             return _this;
         }
         KASAttachmentListQuestionConfig.prototype.toJSON = function () {
             var object = _super.prototype.toJSON.call(this);
             object[KASAttachmentListQuestionConfig.MAX_IMAGE_COUNT_KEY] = this.maxImageCount;
+            object[KASAttachmentListQuestionConfig.IMAGE_SOURCE_KEY] = this.imageSource;
+            object[KASAttachmentListQuestionConfig.ATTACHMENT_LIST_TYPE] = this.attachmentListType;
             return object;
         };
         KASAttachmentListQuestionConfig.fromJSON = function (object) {
@@ -3933,10 +4365,18 @@ var KASClient;
             if (object.hasOwnProperty(KASAttachmentListQuestionConfig.MAX_IMAGE_COUNT_KEY)) {
                 attachmentListConfig.maxImageCount = object[KASAttachmentListQuestionConfig.MAX_IMAGE_COUNT_KEY];
             }
+            if (object.hasOwnProperty(KASAttachmentListQuestionConfig.IMAGE_SOURCE_KEY)) {
+                attachmentListConfig.imageSource = object[KASClient.KASImageQuestionConfig.IMAGE_SOURCE_KEY];
+            }
+            if (object.hasOwnProperty(KASAttachmentListQuestionConfig.ATTACHMENT_LIST_TYPE)) {
+                attachmentListConfig.attachmentListType = object[KASAttachmentListQuestionConfig.ATTACHMENT_LIST_TYPE];
+            }
             return attachmentListConfig;
         };
         // Config to denote what picker sources to show in image type question
         KASAttachmentListQuestionConfig.MAX_IMAGE_COUNT_KEY = "mic";
+        KASAttachmentListQuestionConfig.IMAGE_SOURCE_KEY = "is";
+        KASAttachmentListQuestionConfig.ATTACHMENT_LIST_TYPE = "alt";
         return KASAttachmentListQuestionConfig;
     }(KASClient.KASQuestionConfig));
     KASClient.KASAttachmentListQuestionConfig = KASAttachmentListQuestionConfig;
@@ -4001,6 +4441,1318 @@ var KASClient;
         return KASAudioViewModel;
     }(KASClient.KASAttachmentViewModel));
     KASClient.KASAudioViewModel = KASAudioViewModel;
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var KASCountryPhoneCode = (function () {
+        function KASCountryPhoneCode() {
+        }
+        KASCountryPhoneCode.getAllCountryPhoneCodes = function () {
+            var countryPhoneCodes = [];
+            this.countryPhoneCodeList.forEach(function (element) {
+                if (!KASClient.isEmptyString(element["phoneCode"])) {
+                    countryPhoneCodes.push(element["phoneCode"]);
+                }
+            });
+            return countryPhoneCodes;
+        };
+        KASCountryPhoneCode.getAllFormattedCountryPhoneCodes = function (includeCountryName) {
+            var _this = this;
+            if (includeCountryName === void 0) { includeCountryName = true; }
+            var formattedCountryPhoneCodes = [];
+            this.countryPhoneCodeList.forEach(function (element) {
+                if (!KASClient.isEmptyString(element["phoneCode"])) {
+                    formattedCountryPhoneCodes.push(_this.getFormattedString(element["phoneCode"], includeCountryName ? element["name_en"] : ""));
+                }
+            });
+            return formattedCountryPhoneCodes;
+        };
+        KASCountryPhoneCode.getFormattedCountryPhoneCodeForCountry = function (countryPhoneCode, includeCountryName) {
+            if (includeCountryName === void 0) { includeCountryName = true; }
+            var formattedCountryPhoneCode = null;
+            for (var i = 0; i < this.countryPhoneCodeList.length; i++) {
+                if (this.countryPhoneCodeList[i]["phoneCode"] == countryPhoneCode) {
+                    formattedCountryPhoneCode = this.getFormattedString(this.countryPhoneCodeList[i]["phoneCode"], includeCountryName ? this.countryPhoneCodeList[i]["name_en"] : "");
+                    break;
+                }
+            }
+            return formattedCountryPhoneCode;
+        };
+        KASCountryPhoneCode.getFormattedString = function (countryPhoneCode, countryName) {
+            var formattedString = null;
+            if (!KASClient.isEmptyString(countryPhoneCode + "")) {
+                formattedString = "+" + countryPhoneCode;
+                if (!KASClient.isEmptyString(countryName)) {
+                    formattedString = formattedString + " " + countryName;
+                }
+            }
+            return formattedString;
+        };
+        KASCountryPhoneCode.countryPhoneCodeList = [
+            {
+                "countryCode": "AF",
+                "phoneCode": 93,
+                "name_en": "Afghanistan"
+            },
+            {
+                "countryCode": "AX",
+                "phoneCode": 358,
+                "name_en": "Åland Islands"
+            },
+            {
+                "countryCode": "AL",
+                "phoneCode": 355,
+                "name_en": "Albania"
+            },
+            {
+                "countryCode": "DZ",
+                "phoneCode": 213,
+                "name_en": "Algeria"
+            },
+            {
+                "countryCode": "AS",
+                "phoneCode": 1,
+                "name_en": "American Samoa"
+            },
+            {
+                "countryCode": "AD",
+                "phoneCode": 376,
+                "name_en": "Andorra"
+            },
+            {
+                "countryCode": "AO",
+                "phoneCode": 244,
+                "name_en": "Angola"
+            },
+            {
+                "countryCode": "AI",
+                "phoneCode": 1,
+                "name_en": "Anguilla"
+            },
+            {
+                "countryCode": "AQ",
+                "phoneCode": 672,
+                "name_en": "Antarctica"
+            },
+            {
+                "countryCode": "AG",
+                "phoneCode": 1,
+                "name_en": "Antigua and Barbuda"
+            },
+            {
+                "countryCode": "AR",
+                "phoneCode": 54,
+                "name_en": "Argentina"
+            },
+            {
+                "countryCode": "AM",
+                "phoneCode": 374,
+                "name_en": "Armenia"
+            },
+            {
+                "countryCode": "AW",
+                "phoneCode": 297,
+                "name_en": "Aruba"
+            },
+            {
+                "countryCode": "AU",
+                "phoneCode": 61,
+                "name_en": "Australia"
+            },
+            {
+                "countryCode": "AT",
+                "phoneCode": 43,
+                "name_en": "Austria"
+            },
+            {
+                "countryCode": "AZ",
+                "phoneCode": 994,
+                "name_en": "Azerbaijan"
+            },
+            {
+                "countryCode": "BS",
+                "phoneCode": 1,
+                "name_en": "Bahamas"
+            },
+            {
+                "countryCode": "BH",
+                "phoneCode": 973,
+                "name_en": "Bahrain"
+            },
+            {
+                "countryCode": "BD",
+                "phoneCode": 880,
+                "name_en": "Bangladesh"
+            },
+            {
+                "countryCode": "BB",
+                "phoneCode": 1,
+                "name_en": "Barbados"
+            },
+            {
+                "countryCode": "BY",
+                "phoneCode": 375,
+                "name_en": "Belarus"
+            },
+            {
+                "countryCode": "BE",
+                "phoneCode": 32,
+                "name_en": "Belgium"
+            },
+            {
+                "countryCode": "BZ",
+                "phoneCode": 501,
+                "name_en": "Belize"
+            },
+            {
+                "countryCode": "BJ",
+                "phoneCode": 229,
+                "name_en": "Benin"
+            },
+            {
+                "countryCode": "BM",
+                "phoneCode": 1,
+                "name_en": "Bermuda"
+            },
+            {
+                "countryCode": "BT",
+                "phoneCode": 975,
+                "name_en": "Bhutan"
+            },
+            {
+                "countryCode": "BO",
+                "phoneCode": 591,
+                "name_en": "Bolivia"
+            },
+            {
+                "countryCode": "BQ",
+                "phoneCode": 599,
+                "name_en": "Bonaire"
+            },
+            {
+                "countryCode": "BA",
+                "phoneCode": 387,
+                "name_en": "Bosnia and Herzegovina"
+            },
+            {
+                "countryCode": "BW",
+                "phoneCode": 267,
+                "name_en": "Botswana"
+            },
+            {
+                "countryCode": "BV",
+                "phoneCode": 47,
+                "name_en": "Bouvet Island"
+            },
+            {
+                "countryCode": "BR",
+                "phoneCode": 55,
+                "name_en": "Brazil"
+            },
+            {
+                "countryCode": "IO",
+                "phoneCode": 246,
+                "name_en": "British Indian Ocean Territory"
+            },
+            {
+                "countryCode": "VG",
+                "phoneCode": 1,
+                "name_en": "British Virgin Islands"
+            },
+            {
+                "countryCode": "BN",
+                "phoneCode": 673,
+                "name_en": "Brunei"
+            },
+            {
+                "countryCode": "BG",
+                "phoneCode": 359,
+                "name_en": "Bulgaria"
+            },
+            {
+                "countryCode": "BF",
+                "phoneCode": 226,
+                "name_en": "Burkina Faso"
+            },
+            {
+                "countryCode": "BI",
+                "phoneCode": 257,
+                "name_en": "Burundi"
+            },
+            {
+                "countryCode": "CV",
+                "phoneCode": 238,
+                "name_en": "Cabo Verde"
+            },
+            {
+                "countryCode": "KH",
+                "phoneCode": 855,
+                "name_en": "Cambodia"
+            },
+            {
+                "countryCode": "CM",
+                "phoneCode": 237,
+                "name_en": "Cameroon"
+            },
+            {
+                "countryCode": "CA",
+                "phoneCode": 1,
+                "name_en": "Canada"
+            },
+            {
+                "countryCode": "KY",
+                "phoneCode": 1,
+                "name_en": "Cayman Islands"
+            },
+            {
+                "countryCode": "CF",
+                "phoneCode": 236,
+                "name_en": "Central African Republic"
+            },
+            {
+                "countryCode": "TD",
+                "phoneCode": 235,
+                "name_en": "Chad"
+            },
+            {
+                "countryCode": "CL",
+                "phoneCode": 56,
+                "name_en": "Chile"
+            },
+            {
+                "countryCode": "CN",
+                "phoneCode": 86,
+                "name_en": "China"
+            },
+            {
+                "countryCode": "CX",
+                "phoneCode": 61,
+                "name_en": "Christmas Island"
+            },
+            {
+                "countryCode": "CC",
+                "phoneCode": 61,
+                "name_en": "Cocos (Keeling) Islands"
+            },
+            {
+                "countryCode": "CO",
+                "phoneCode": 57,
+                "name_en": "Colombia"
+            },
+            {
+                "countryCode": "KM",
+                "phoneCode": 269,
+                "name_en": "Comoros"
+            },
+            {
+                "countryCode": "CG",
+                "phoneCode": 242,
+                "name_en": "Congo"
+            },
+            {
+                "countryCode": "CD",
+                "phoneCode": 243,
+                "name_en": "Congo (DRC)"
+            },
+            {
+                "countryCode": "CK",
+                "phoneCode": 682,
+                "name_en": "Cook Islands"
+            },
+            {
+                "countryCode": "CR",
+                "phoneCode": 506,
+                "name_en": "Costa Rica"
+            },
+            {
+                "countryCode": "CI",
+                "phoneCode": 225,
+                "name_en": "Côte d’Ivoire"
+            },
+            {
+                "countryCode": "HR",
+                "phoneCode": 385,
+                "name_en": "Croatia"
+            },
+            {
+                "countryCode": "CU",
+                "phoneCode": 53,
+                "name_en": "Cuba"
+            },
+            {
+                "countryCode": "CW",
+                "phoneCode": 599,
+                "name_en": "Curaçao"
+            },
+            {
+                "countryCode": "CY",
+                "phoneCode": 357,
+                "name_en": "Cyprus"
+            },
+            {
+                "countryCode": "CZ",
+                "phoneCode": 420,
+                "name_en": "Czech Republic"
+            },
+            {
+                "countryCode": "DK",
+                "phoneCode": 45,
+                "name_en": "Denmark"
+            },
+            {
+                "countryCode": "DJ",
+                "phoneCode": 253,
+                "name_en": "Djibouti"
+            },
+            {
+                "countryCode": "DM",
+                "phoneCode": 1,
+                "name_en": "Dominica"
+            },
+            {
+                "countryCode": "DO",
+                "phoneCode": 1,
+                "name_en": "Dominican Republic"
+            },
+            {
+                "countryCode": "EC",
+                "phoneCode": 593,
+                "name_en": "Ecuador"
+            },
+            {
+                "countryCode": "EG",
+                "phoneCode": 20,
+                "name_en": "Egypt"
+            },
+            {
+                "countryCode": "SV",
+                "phoneCode": 503,
+                "name_en": "El Salvador"
+            },
+            {
+                "countryCode": "GQ",
+                "phoneCode": 240,
+                "name_en": "Equatorial Guinea"
+            },
+            {
+                "countryCode": "ER",
+                "phoneCode": 291,
+                "name_en": "Eritrea"
+            },
+            {
+                "countryCode": "EE",
+                "phoneCode": 372,
+                "name_en": "Estonia"
+            },
+            {
+                "countryCode": "ET",
+                "phoneCode": 251,
+                "name_en": "Ethiopia"
+            },
+            {
+                "countryCode": "FK",
+                "phoneCode": 500,
+                "name_en": "Falkland Islands"
+            },
+            {
+                "countryCode": "FO",
+                "phoneCode": 298,
+                "name_en": "Faroe Islands"
+            },
+            {
+                "countryCode": "FJ",
+                "phoneCode": 679,
+                "name_en": "Fiji"
+            },
+            {
+                "countryCode": "FI",
+                "phoneCode": 358,
+                "name_en": "Finland"
+            },
+            {
+                "countryCode": "FR",
+                "phoneCode": 33,
+                "name_en": "France"
+            },
+            {
+                "countryCode": "GF",
+                "phoneCode": 594,
+                "name_en": "French Guiana"
+            },
+            {
+                "countryCode": "PF",
+                "phoneCode": 689,
+                "name_en": "French Polynesia"
+            },
+            {
+                "countryCode": "TF",
+                "phoneCode": 262,
+                "name_en": "French Southern Territories"
+            },
+            {
+                "countryCode": "GA",
+                "phoneCode": 241,
+                "name_en": "Gabon"
+            },
+            {
+                "countryCode": "GM",
+                "phoneCode": 220,
+                "name_en": "Gambia"
+            },
+            {
+                "countryCode": "GE",
+                "phoneCode": 995,
+                "name_en": "Georgia"
+            },
+            {
+                "countryCode": "DE",
+                "phoneCode": 49,
+                "name_en": "Germany"
+            },
+            {
+                "countryCode": "GH",
+                "phoneCode": 233,
+                "name_en": "Ghana"
+            },
+            {
+                "countryCode": "GI",
+                "phoneCode": 350,
+                "name_en": "Gibraltar"
+            },
+            {
+                "countryCode": "GR",
+                "phoneCode": 30,
+                "name_en": "Greece"
+            },
+            {
+                "countryCode": "GL",
+                "phoneCode": 299,
+                "name_en": "Greenland"
+            },
+            {
+                "countryCode": "GD",
+                "phoneCode": 1,
+                "name_en": "Grenada"
+            },
+            {
+                "countryCode": "GP",
+                "phoneCode": 590,
+                "name_en": "Guadeloupe"
+            },
+            {
+                "countryCode": "GU",
+                "phoneCode": 1,
+                "name_en": "Guam"
+            },
+            {
+                "countryCode": "GT",
+                "phoneCode": 502,
+                "name_en": "Guatemala"
+            },
+            {
+                "countryCode": "GG",
+                "phoneCode": 44,
+                "name_en": "Guernsey"
+            },
+            {
+                "countryCode": "GN",
+                "phoneCode": 224,
+                "name_en": "Guinea"
+            },
+            {
+                "countryCode": "GW",
+                "phoneCode": 245,
+                "name_en": "Guinea-Bissau"
+            },
+            {
+                "countryCode": "GY",
+                "phoneCode": 592,
+                "name_en": "Guyana"
+            },
+            {
+                "countryCode": "HT",
+                "phoneCode": 509,
+                "name_en": "Haiti"
+            },
+            {
+                "countryCode": "HM",
+                "phoneCode": 61,
+                "name_en": "Heard Island and McDonald Islands"
+            },
+            {
+                "countryCode": "HN",
+                "phoneCode": 504,
+                "name_en": "Honduras"
+            },
+            {
+                "countryCode": "HK",
+                "phoneCode": 852,
+                "name_en": "Hong Kong SAR"
+            },
+            {
+                "countryCode": "HU",
+                "phoneCode": 36,
+                "name_en": "Hungary"
+            },
+            {
+                "countryCode": "IS",
+                "phoneCode": 354,
+                "name_en": "Iceland"
+            },
+            {
+                "countryCode": "IN",
+                "phoneCode": 91,
+                "name_en": "India"
+            },
+            {
+                "countryCode": "ID",
+                "phoneCode": 62,
+                "name_en": "Indonesia"
+            },
+            {
+                "countryCode": "IR",
+                "phoneCode": 98,
+                "name_en": "Iran"
+            },
+            {
+                "countryCode": "IQ",
+                "phoneCode": 964,
+                "name_en": "Iraq"
+            },
+            {
+                "countryCode": "IE",
+                "phoneCode": 353,
+                "name_en": "Ireland"
+            },
+            {
+                "countryCode": "IM",
+                "phoneCode": 44,
+                "name_en": "Isle of Man"
+            },
+            {
+                "countryCode": "IL",
+                "phoneCode": 972,
+                "name_en": "Israel"
+            },
+            {
+                "countryCode": "IT",
+                "phoneCode": 39,
+                "name_en": "Italy"
+            },
+            {
+                "countryCode": "JM",
+                "phoneCode": 1,
+                "name_en": "Jamaica"
+            },
+            {
+                "countryCode": "XJ",
+                "phoneCode": 47,
+                "name_en": "Jan Mayen"
+            },
+            {
+                "countryCode": "JP",
+                "phoneCode": 81,
+                "name_en": "Japan"
+            },
+            {
+                "countryCode": "JE",
+                "phoneCode": 44,
+                "name_en": "Jersey"
+            },
+            {
+                "countryCode": "JO",
+                "phoneCode": 962,
+                "name_en": "Jordan"
+            },
+            {
+                "countryCode": "KZ",
+                "phoneCode": 7,
+                "name_en": "Kazakhstan"
+            },
+            {
+                "countryCode": "KE",
+                "phoneCode": 254,
+                "name_en": "Kenya"
+            },
+            {
+                "countryCode": "KI",
+                "phoneCode": 686,
+                "name_en": "Kiribati"
+            },
+            {
+                "countryCode": "KR",
+                "phoneCode": 82,
+                "name_en": "Korea"
+            },
+            {
+                "countryCode": "XK",
+                "phoneCode": 381,
+                "name_en": "Kosovo"
+            },
+            {
+                "countryCode": "KW",
+                "phoneCode": 965,
+                "name_en": "Kuwait"
+            },
+            {
+                "countryCode": "KG",
+                "phoneCode": 996,
+                "name_en": "Kyrgyzstan"
+            },
+            {
+                "countryCode": "LA",
+                "phoneCode": 856,
+                "name_en": "Laos"
+            },
+            {
+                "countryCode": "LV",
+                "phoneCode": 371,
+                "name_en": "Latvia"
+            },
+            {
+                "countryCode": "LB",
+                "phoneCode": 961,
+                "name_en": "Lebanon"
+            },
+            {
+                "countryCode": "LS",
+                "phoneCode": 266,
+                "name_en": "Lesotho"
+            },
+            {
+                "countryCode": "LR",
+                "phoneCode": 231,
+                "name_en": "Liberia"
+            },
+            {
+                "countryCode": "LY",
+                "phoneCode": 218,
+                "name_en": "Libya"
+            },
+            {
+                "countryCode": "LI",
+                "phoneCode": 423,
+                "name_en": "Liechtenstein"
+            },
+            {
+                "countryCode": "LT",
+                "phoneCode": 370,
+                "name_en": "Lithuania"
+            },
+            {
+                "countryCode": "LU",
+                "phoneCode": 352,
+                "name_en": "Luxembourg"
+            },
+            {
+                "countryCode": "MO",
+                "phoneCode": 853,
+                "name_en": "Macao SAR"
+            },
+            {
+                "countryCode": "MK",
+                "phoneCode": 389,
+                "name_en": "Macedonia, FYRO"
+            },
+            {
+                "countryCode": "MG",
+                "phoneCode": 261,
+                "name_en": "Madagascar"
+            },
+            {
+                "countryCode": "MW",
+                "phoneCode": 265,
+                "name_en": "Malawi"
+            },
+            {
+                "countryCode": "MY",
+                "phoneCode": 60,
+                "name_en": "Malaysia"
+            },
+            {
+                "countryCode": "MV",
+                "phoneCode": 960,
+                "name_en": "Maldives"
+            },
+            {
+                "countryCode": "ML",
+                "phoneCode": 223,
+                "name_en": "Mali"
+            },
+            {
+                "countryCode": "MT",
+                "phoneCode": 356,
+                "name_en": "Malta"
+            },
+            {
+                "countryCode": "MH",
+                "phoneCode": 692,
+                "name_en": "Marshall Islands"
+            },
+            {
+                "countryCode": "MQ",
+                "phoneCode": 596,
+                "name_en": "Martinique"
+            },
+            {
+                "countryCode": "MR",
+                "phoneCode": 222,
+                "name_en": "Mauritania"
+            },
+            {
+                "countryCode": "MU",
+                "phoneCode": 230,
+                "name_en": "Mauritius"
+            },
+            {
+                "countryCode": "YT",
+                "phoneCode": 262,
+                "name_en": "Mayotte"
+            },
+            {
+                "countryCode": "MX",
+                "phoneCode": 52,
+                "name_en": "Mexico"
+            },
+            {
+                "countryCode": "FM",
+                "phoneCode": 691,
+                "name_en": "Micronesia"
+            },
+            {
+                "countryCode": "MD",
+                "phoneCode": 373,
+                "name_en": "Moldova"
+            },
+            {
+                "countryCode": "MC",
+                "phoneCode": 377,
+                "name_en": "Monaco"
+            },
+            {
+                "countryCode": "MN",
+                "phoneCode": 976,
+                "name_en": "Mongolia"
+            },
+            {
+                "countryCode": "ME",
+                "phoneCode": 382,
+                "name_en": "Montenegro"
+            },
+            {
+                "countryCode": "MS",
+                "phoneCode": 1,
+                "name_en": "Montserrat"
+            },
+            {
+                "countryCode": "MA",
+                "phoneCode": 212,
+                "name_en": "Morocco"
+            },
+            {
+                "countryCode": "MZ",
+                "phoneCode": 258,
+                "name_en": "Mozambique"
+            },
+            {
+                "countryCode": "MM",
+                "phoneCode": 95,
+                "name_en": "Myanmar"
+            },
+            {
+                "countryCode": "NA",
+                "phoneCode": 264,
+                "name_en": "Namibia"
+            },
+            {
+                "countryCode": "NR",
+                "phoneCode": 674,
+                "name_en": "Nauru"
+            },
+            {
+                "countryCode": "NP",
+                "phoneCode": 977,
+                "name_en": "Nepal"
+            },
+            {
+                "countryCode": "NL",
+                "phoneCode": 31,
+                "name_en": "Netherlands"
+            },
+            {
+                "countryCode": "NC",
+                "phoneCode": 687,
+                "name_en": "New Caledonia"
+            },
+            {
+                "countryCode": "NZ",
+                "phoneCode": 64,
+                "name_en": "New Zealand"
+            },
+            {
+                "countryCode": "NI",
+                "phoneCode": 505,
+                "name_en": "Nicaragua"
+            },
+            {
+                "countryCode": "NE",
+                "phoneCode": 227,
+                "name_en": "Niger"
+            },
+            {
+                "countryCode": "NG",
+                "phoneCode": 234,
+                "name_en": "Nigeria"
+            },
+            {
+                "countryCode": "NU",
+                "phoneCode": 683,
+                "name_en": "Niue"
+            },
+            {
+                "countryCode": "NF",
+                "phoneCode": 672,
+                "name_en": "Norfolk Island"
+            },
+            {
+                "countryCode": "KP",
+                "phoneCode": 850,
+                "name_en": "North Korea"
+            },
+            {
+                "countryCode": "MP",
+                "phoneCode": 1,
+                "name_en": "Northern Mariana Islands"
+            },
+            {
+                "countryCode": "NO",
+                "phoneCode": 47,
+                "name_en": "Norway"
+            },
+            {
+                "countryCode": "OM",
+                "phoneCode": 968,
+                "name_en": "Oman"
+            },
+            {
+                "countryCode": "PK",
+                "phoneCode": 92,
+                "name_en": "Pakistan"
+            },
+            {
+                "countryCode": "PW",
+                "phoneCode": 680,
+                "name_en": "Palau"
+            },
+            {
+                "countryCode": "PS",
+                "phoneCode": 970,
+                "name_en": "Palestinian Authority"
+            },
+            {
+                "countryCode": "PA",
+                "phoneCode": 507,
+                "name_en": "Panama"
+            },
+            {
+                "countryCode": "PG",
+                "phoneCode": 675,
+                "name_en": "Papua New Guinea"
+            },
+            {
+                "countryCode": "PY",
+                "phoneCode": 595,
+                "name_en": "Paraguay"
+            },
+            {
+                "countryCode": "PE",
+                "phoneCode": 51,
+                "name_en": "Peru"
+            },
+            {
+                "countryCode": "PH",
+                "phoneCode": 63,
+                "name_en": "Philippines"
+            },
+            {
+                "countryCode": "PN",
+                "phoneCode": 64,
+                "name_en": "Pitcairn Islands"
+            },
+            {
+                "countryCode": "PL",
+                "phoneCode": 48,
+                "name_en": "Poland"
+            },
+            {
+                "countryCode": "PT",
+                "phoneCode": 351,
+                "name_en": "Portugal"
+            },
+            {
+                "countryCode": "PR",
+                "phoneCode": 1,
+                "name_en": "Puerto Rico"
+            },
+            {
+                "countryCode": "QA",
+                "phoneCode": 974,
+                "name_en": "Qatar"
+            },
+            {
+                "countryCode": "RE",
+                "phoneCode": 262,
+                "name_en": "Réunion"
+            },
+            {
+                "countryCode": "RO",
+                "phoneCode": 40,
+                "name_en": "Romania"
+            },
+            {
+                "countryCode": "RU",
+                "phoneCode": 7,
+                "name_en": "Russia"
+            },
+            {
+                "countryCode": "RW",
+                "phoneCode": 250,
+                "name_en": "Rwanda"
+            },
+            {
+                "countryCode": "XS",
+                "phoneCode": 599,
+                "name_en": "Saba"
+            },
+            {
+                "countryCode": "BL",
+                "phoneCode": 590,
+                "name_en": "Saint Barthélemy"
+            },
+            {
+                "countryCode": "KN",
+                "phoneCode": 1,
+                "name_en": "Saint Kitts and Nevis"
+            },
+            {
+                "countryCode": "LC",
+                "phoneCode": 1,
+                "name_en": "Saint Lucia"
+            },
+            {
+                "countryCode": "MF",
+                "phoneCode": 590,
+                "name_en": "Saint Martin"
+            },
+            {
+                "countryCode": "PM",
+                "phoneCode": 508,
+                "name_en": "Saint Pierre and Miquelon"
+            },
+            {
+                "countryCode": "VC",
+                "phoneCode": 1,
+                "name_en": "Saint Vincent and the Grenadines"
+            },
+            {
+                "countryCode": "WS",
+                "phoneCode": 685,
+                "name_en": "Samoa"
+            },
+            {
+                "countryCode": "SM",
+                "phoneCode": 378,
+                "name_en": "San Marino"
+            },
+            {
+                "countryCode": "ST",
+                "phoneCode": 239,
+                "name_en": "São Tomé and Príncipe"
+            },
+            {
+                "countryCode": "SA",
+                "phoneCode": 966,
+                "name_en": "Saudi Arabia"
+            },
+            {
+                "countryCode": "SN",
+                "phoneCode": 221,
+                "name_en": "Senegal"
+            },
+            {
+                "countryCode": "RS",
+                "phoneCode": 381,
+                "name_en": "Serbia"
+            },
+            {
+                "countryCode": "SC",
+                "phoneCode": 248,
+                "name_en": "Seychelles"
+            },
+            {
+                "countryCode": "SL",
+                "phoneCode": 232,
+                "name_en": "Sierra Leone"
+            },
+            {
+                "countryCode": "SG",
+                "phoneCode": 65,
+                "name_en": "Singapore"
+            },
+            {
+                "countryCode": "XE",
+                "phoneCode": 599,
+                "name_en": "Sint Eustatius"
+            },
+            {
+                "countryCode": "SX",
+                "phoneCode": 1,
+                "name_en": "Sint Maarten"
+            },
+            {
+                "countryCode": "SK",
+                "phoneCode": 421,
+                "name_en": "Slovakia"
+            },
+            {
+                "countryCode": "SI",
+                "phoneCode": 386,
+                "name_en": "Slovenia"
+            },
+            {
+                "countryCode": "SB",
+                "phoneCode": 677,
+                "name_en": "Solomon Islands"
+            },
+            {
+                "countryCode": "SO",
+                "phoneCode": 252,
+                "name_en": "Somalia"
+            },
+            {
+                "countryCode": "ZA",
+                "phoneCode": 27,
+                "name_en": "South Africa"
+            },
+            {
+                "countryCode": "GS",
+                "phoneCode": 500,
+                "name_en": "South Georgia and South Sandwich Islands"
+            },
+            {
+                "countryCode": "SS",
+                "phoneCode": 211,
+                "name_en": "South Sudan"
+            },
+            {
+                "countryCode": "ES",
+                "phoneCode": 34,
+                "name_en": "Spain"
+            },
+            {
+                "countryCode": "LK",
+                "phoneCode": 94,
+                "name_en": "Sri Lanka"
+            },
+            {
+                "countryCode": "SH",
+                "phoneCode": 290,
+                "name_en": "St Helena, Ascension, Tristan da Cunha"
+            },
+            {
+                "countryCode": "SD",
+                "phoneCode": 249,
+                "name_en": "Sudan"
+            },
+            {
+                "countryCode": "SR",
+                "phoneCode": 597,
+                "name_en": "Suriname"
+            },
+            {
+                "countryCode": "SJ",
+                "phoneCode": 47,
+                "name_en": "Svalbard"
+            },
+            {
+                "countryCode": "SZ",
+                "phoneCode": 268,
+                "name_en": "Swaziland"
+            },
+            {
+                "countryCode": "SE",
+                "phoneCode": 46,
+                "name_en": "Sweden"
+            },
+            {
+                "countryCode": "CH",
+                "phoneCode": 41,
+                "name_en": "Switzerland"
+            },
+            {
+                "countryCode": "SY",
+                "phoneCode": 963,
+                "name_en": "Syria"
+            },
+            {
+                "countryCode": "TW",
+                "phoneCode": 886,
+                "name_en": "Taiwan"
+            },
+            {
+                "countryCode": "TJ",
+                "phoneCode": 992,
+                "name_en": "Tajikistan"
+            },
+            {
+                "countryCode": "TZ",
+                "phoneCode": 255,
+                "name_en": "Tanzania"
+            },
+            {
+                "countryCode": "TH",
+                "phoneCode": 66,
+                "name_en": "Thailand"
+            },
+            {
+                "countryCode": "TL",
+                "phoneCode": 670,
+                "name_en": "Timor-Leste"
+            },
+            {
+                "countryCode": "TG",
+                "phoneCode": 228,
+                "name_en": "Togo"
+            },
+            {
+                "countryCode": "TK",
+                "phoneCode": 690,
+                "name_en": "Tokelau"
+            },
+            {
+                "countryCode": "TO",
+                "phoneCode": 676,
+                "name_en": "Tonga"
+            },
+            {
+                "countryCode": "TT",
+                "phoneCode": 1,
+                "name_en": "Trinidad and Tobago"
+            },
+            {
+                "countryCode": "TN",
+                "phoneCode": 216,
+                "name_en": "Tunisia"
+            },
+            {
+                "countryCode": "TR",
+                "phoneCode": 90,
+                "name_en": "Turkey"
+            },
+            {
+                "countryCode": "TM",
+                "phoneCode": 993,
+                "name_en": "Turkmenistan"
+            },
+            {
+                "countryCode": "TC",
+                "phoneCode": 1,
+                "name_en": "Turks and Caicos Islands"
+            },
+            {
+                "countryCode": "TV",
+                "phoneCode": 688,
+                "name_en": "Tuvalu"
+            },
+            {
+                "countryCode": "UM",
+                "phoneCode": 1,
+                "name_en": "US Outlying Islands"
+            },
+            {
+                "countryCode": "VI",
+                "phoneCode": 1,
+                "name_en": "US Virgin Islands"
+            },
+            {
+                "countryCode": "UG",
+                "phoneCode": 256,
+                "name_en": "Uganda"
+            },
+            {
+                "countryCode": "UA",
+                "phoneCode": 380,
+                "name_en": "Ukraine"
+            },
+            {
+                "countryCode": "AE",
+                "phoneCode": 971,
+                "name_en": "United Arab Emirates"
+            },
+            {
+                "countryCode": "GB",
+                "phoneCode": 44,
+                "name_en": "United Kingdom"
+            },
+            {
+                "countryCode": "US",
+                "phoneCode": 1,
+                "name_en": "United States"
+            },
+            {
+                "countryCode": "UY",
+                "phoneCode": 598,
+                "name_en": "Uruguay"
+            },
+            {
+                "countryCode": "UZ",
+                "phoneCode": 998,
+                "name_en": "Uzbekistan"
+            },
+            {
+                "countryCode": "VU",
+                "phoneCode": 678,
+                "name_en": "Vanuatu"
+            },
+            {
+                "countryCode": "VA",
+                "phoneCode": 379,
+                "name_en": "Vatican City"
+            },
+            {
+                "countryCode": "VE",
+                "phoneCode": 58,
+                "name_en": "Venezuela"
+            },
+            {
+                "countryCode": "VN",
+                "phoneCode": 84,
+                "name_en": "Vietnam"
+            },
+            {
+                "countryCode": "WF",
+                "phoneCode": 681,
+                "name_en": "Wallis and Futuna"
+            },
+            {
+                "countryCode": "YE",
+                "phoneCode": 967,
+                "name_en": "Yemen"
+            },
+            {
+                "countryCode": "ZM",
+                "phoneCode": 260,
+                "name_en": "Zambia"
+            },
+            {
+                "countryCode": "ZW",
+                "phoneCode": 263,
+                "name_en": "Zimbabwe"
+            }
+        ];
+        return KASCountryPhoneCode;
+    }());
+    KASClient.KASCountryPhoneCode = KASCountryPhoneCode;
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
@@ -4070,6 +5822,14 @@ var KASClient;
             this.properties = [];
         }
         KASForm.prototype.toJSON = function () {
+            if (KASClient.isRenderedForWebClient()) {
+                return this.toAPICompatibleJSON();
+            }
+            else {
+                return this.toClientJSON();
+            }
+        };
+        KASForm.prototype.toClientJSON = function () {
             var object = JSON.parse("{}");
             object["id"] = this.id;
             object["gid"] = this.conversationId;
@@ -4094,6 +5854,30 @@ var KASClient;
                 properties.push(this.properties[i].toJSON());
             }
             object["smd"] = properties;
+            return object;
+        };
+        KASForm.prototype.toAPICompatibleJSON = function () {
+            var actionBody = JSON.parse("{}");
+            actionBody["title"] = this.title;
+            actionBody["isAnonymous"] = this.isAnonymous;
+            actionBody["expiry"] = this.expiry;
+            actionBody["visibility"] = KASClient.KASFormResultVisibility[this.visibility];
+            actionBody["isResponseAppended"] = this.isResponseAppended;
+            actionBody["type"] = this.type;
+            actionBody["reportType"] = this.reportType;
+            var questions = [];
+            for (var i = 0; i < this.questions.length; i++) {
+                questions.push(this.questions[i].toAPICompatibleJSON());
+            }
+            actionBody["questions"] = questions;
+            var properties = [];
+            for (var i = 0; i < this.properties.length; i++) {
+                properties.push(this.properties[i].toAPICompatibleJSON());
+            }
+            actionBody["properties"] = properties;
+            var object = JSON.parse("{}");
+            object["id"] = this.packageId;
+            object["actionBody"] = actionBody;
             return object;
         };
         KASForm.fromJSON = function (object) {
@@ -4176,14 +5960,25 @@ var KASClient;
             this.totalParticipantsCount = 0;
             // How many in the conversation were assigned to respond to this form
             this.targetResponderCount = 0;
-            // Dictionary<QuestionId: number, Result: any>
-            // The result will depend on question type:
-            // For numeric, it's Dictionary<s/a : string, SumOrAverage: number>
-            // For MCQ, it's Dictionary<OptionId: number, HowManySelectedThatOption: number>
-            // For rest, it's Array<answer: any>
-            this.result = {};
+            this.result = [];
         }
-        KASFormAggregatedSummary.fromJSON = function (object) {
+        KASFormAggregatedSummary.prepareRS = function (object, questions) {
+            var rs = [];
+            for (var questionId = 0; questionId < questions.length; questionId++) {
+                var questionSummary = [];
+                for (var optionId = 0; optionId < questions[questionId].options.length; optionId++) {
+                    if (object.hasOwnProperty(questionId + "") && object[questionId].hasOwnProperty(optionId + "")) {
+                        questionSummary.push(object[questionId][optionId]);
+                    }
+                    else {
+                        questionSummary.push(0);
+                    }
+                }
+                rs.push(questionSummary);
+            }
+            return rs;
+        };
+        KASFormAggregatedSummary.fromJSON = function (object, questions) {
             if (object == null) {
                 return null;
             }
@@ -4207,11 +6002,27 @@ var KASClient;
             if (object.hasOwnProperty("rs")) {
                 summary.result = object["rs"];
             }
+            else if (object.hasOwnProperty("rsps")) {
+                summary.result = this.prepareRS(object["rsps"], questions);
+            }
+            else {
+                summary.result = this.prepareRS(JSON.parse("{}"), questions);
+            }
             return summary;
         };
         return KASFormAggregatedSummary;
     }());
     KASClient.KASFormAggregatedSummary = KASFormAggregatedSummary;
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var KASFormConversationType;
+    (function (KASFormConversationType) {
+        KASFormConversationType[KASFormConversationType["ONE_ON_ONE"] = 0] = "ONE_ON_ONE";
+        KASFormConversationType[KASFormConversationType["FLAT_GROUP"] = 1] = "FLAT_GROUP";
+        KASFormConversationType[KASFormConversationType["FORUM"] = 2] = "FORUM";
+        KASFormConversationType[KASFormConversationType["PUBLIC_GROUP"] = 3] = "PUBLIC_GROUP";
+    })(KASFormConversationType = KASClient.KASFormConversationType || (KASClient.KASFormConversationType = {}));
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
@@ -4398,10 +6209,25 @@ var KASClient;
             this.value = "";
         }
         KASFormProperty.prototype.toJSON = function () {
+            if (KASClient.isRenderedForWebClient()) {
+                return this.toAPICompatibleJSON();
+            }
+            else {
+                return this.toClientJSON();
+            }
+        };
+        KASFormProperty.prototype.toClientJSON = function () {
             var object = JSON.parse('{}');
             object["n"] = this.name;
             object["t"] = this.type;
             object["v"] = this.value;
+            return object;
+        };
+        KASFormProperty.prototype.toAPICompatibleJSON = function () {
+            var object = JSON.parse('{}');
+            object["name"] = this.name;
+            object["type"] = KASClient.KASFormPropertyType[this.type];
+            object["value"] = this.value;
             return object;
         };
         KASFormProperty.fromJSON = function (object) {
@@ -4577,38 +6403,50 @@ var KASClient;
 (function (KASClient) {
     var KASFormReaction = (function () {
         function KASFormReaction() {
-            // Denotes whether to show likes and comments
-            this.shouldShowLikesAndComments = true;
             // Number of likes received for the form
             this.likesCount = 0;
             // Number of comments received for the form
             this.commentsCount = 0;
             // Denotes whether the current user has already liked or not
             this.didILike = false;
+            // Denotes whether the current user has already liked or not
+            this.didIComment = false;
             // Denotes whether to show comments or not
             this.hideComments = false;
+            // Denotes whether to show likes or not
+            this.hideLikes = false;
+            // Denotes whether to show likes imeersive view or not
+            this.hideLikesDetails = false;
         }
         KASFormReaction.fromJSON = function (object) {
             if (object == null) {
                 return null;
             }
             var reaction = new KASFormReaction();
-            if (object.hasOwnProperty("shouldShowLikesAndComments")) {
-                reaction.shouldShowLikesAndComments = object["shouldShowLikesAndComments"];
+            if (object.hasOwnProperty("hideComments")) {
+                reaction.hideComments = object["hideComments"];
+            }
+            if (object.hasOwnProperty("hideLikes")) {
+                reaction.hideLikes = object["hideLikes"];
             }
             // Populate like and comment data only if we have to show it
-            if (reaction.shouldShowLikesAndComments) {
+            if (!reaction.hideLikes) {
                 if (object.hasOwnProperty("likesCount")) {
                     reaction.likesCount = object["likesCount"];
-                }
-                if (object.hasOwnProperty("commentsCount")) {
-                    reaction.commentsCount = object["commentsCount"];
                 }
                 if (object.hasOwnProperty("didILike")) {
                     reaction.didILike = object["didILike"];
                 }
-                if (object.hasOwnProperty("hideComments")) {
-                    reaction.hideComments = object["hideComments"];
+                if (object.hasOwnProperty("hideLikesDetails")) {
+                    reaction.hideLikesDetails = object["hideLikesDetails"];
+                }
+            }
+            if (!reaction.hideComments) {
+                if (object.hasOwnProperty("commentsCount")) {
+                    reaction.commentsCount = object["commentsCount"];
+                }
+                if (object.hasOwnProperty("didIComment")) {
+                    reaction.didIComment = object["didIComment"];
                 }
             }
             return reaction;
@@ -4679,6 +6517,8 @@ var KASClient;
         function KASImageAttachment() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.hasSetThumbnail = false;
+            _this.generateThumbnailServerUrl = false;
+            _this.thumbnailServerUrl = "";
             _this.width = 0;
             _this.height = 0;
             _this.thumbnail = "";
@@ -4689,6 +6529,8 @@ var KASClient;
             object["iw"] = this.width;
             object["ih"] = this.height;
             object["th"] = this.hasSetThumbnail;
+            object["turl"] = this.thumbnailServerUrl;
+            object["gts"] = this.generateThumbnailServerUrl;
             object["tib"] = this.thumbnail;
             return object;
         };
@@ -4708,6 +6550,12 @@ var KASClient;
             }
             if (object.hasOwnProperty("th")) {
                 attachment.hasSetThumbnail = object["th"];
+            }
+            if (object.hasOwnProperty("turl")) {
+                attachment.thumbnailServerUrl = object["turl"];
+            }
+            if (object.hasOwnProperty("gts")) {
+                attachment.generateThumbnailServerUrl = object["gts"];
             }
             if (object.hasOwnProperty("iw")) {
                 attachment.width = object["iw"];
@@ -4870,6 +6718,50 @@ var KASClient;
     }(KASClient.KASQuestionResult));
     KASClient.KASNumericQuestionResult = KASNumericQuestionResult;
 })(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var KASO365User = (function () {
+        function KASO365User() {
+            this.displayName = "";
+            this.givenName = "";
+            this.surname = "";
+            this.jobTitle = "";
+            this.email = "";
+            this.mobilePhone = "";
+            this.businessPhones = [];
+        }
+        KASO365User.fromJSON = function (object) {
+            if (object == null) {
+                return null;
+            }
+            var user = new KASO365User();
+            if (object.hasOwnProperty("displayName")) {
+                user.displayName = object["displayName"];
+            }
+            if (object.hasOwnProperty("givenName")) {
+                user.givenName = object["givenName"];
+            }
+            if (object.hasOwnProperty("surname")) {
+                user.surname = object["surname"];
+            }
+            if (object.hasOwnProperty("jobTitle")) {
+                user.jobTitle = object["jobTitle"];
+            }
+            if (object.hasOwnProperty("email")) {
+                user.email = object["email"];
+            }
+            if (object.hasOwnProperty("mobilePhone")) {
+                user.mobilePhone = object["mobilePhone"];
+            }
+            if (object.hasOwnProperty("businessPhones")) {
+                user.businessPhones = JSON.parse(object["businessPhones"]);
+            }
+            return user;
+        };
+        return KASO365User;
+    }());
+    KASClient.KASO365User = KASO365User;
+})(KASClient || (KASClient = {}));
 /// <reference path="./KASQuestionResult.ts" />
 var KASClient;
 (function (KASClient) {
@@ -4971,6 +6863,43 @@ var KASClient;
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
+    var KASPhoneNumber = (function () {
+        function KASPhoneNumber(countryPhoneCode, phoneNumber) {
+            if (countryPhoneCode === void 0) { countryPhoneCode = 0; }
+            if (phoneNumber === void 0) { phoneNumber = ""; }
+            this.countryPhoneCode = 0;
+            this.phoneNumber = "";
+            this.countryPhoneCode = countryPhoneCode;
+            this.phoneNumber = phoneNumber;
+        }
+        KASPhoneNumber.fromJSON = function (phoneNumberReponseJSON) {
+            if (phoneNumberReponseJSON == null) {
+                return null;
+            }
+            var response = new KASPhoneNumber();
+            if (phoneNumberReponseJSON.hasOwnProperty("cc")) {
+                response.countryPhoneCode = phoneNumberReponseJSON["cc"];
+            }
+            if (phoneNumberReponseJSON.hasOwnProperty("pn")) {
+                response.phoneNumber = phoneNumberReponseJSON["pn"];
+            }
+            return response;
+        };
+        KASPhoneNumber.prototype.toJSON = function () {
+            var jsonResponse = JSON.parse("{}");
+            jsonResponse["cc"] = this.countryPhoneCode;
+            jsonResponse["pn"] = this.phoneNumber;
+            return jsonResponse;
+        };
+        KASPhoneNumber.prototype.toString = function () {
+            return "+" + this.countryPhoneCode + " " + this.phoneNumber;
+        };
+        return KASPhoneNumber;
+    }());
+    KASClient.KASPhoneNumber = KASPhoneNumber;
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
     var KASQuestion = (function () {
         function KASQuestion() {
             // Index of the question, starts with 0
@@ -4992,7 +6921,29 @@ var KASClient;
             // List of options for the question
             this.options = [];
         }
+        KASQuestion.prototype.getAPICompatibleQuestionType = function (type) {
+            if (type == "SingleSelect") {
+                return "SingleOption";
+            }
+            if (type == "MultiSelect") {
+                return "MultiOption";
+            }
+            if (type == "SingleSelectExternal") {
+                return "SingleOptionExternal";
+            }
+            else {
+                return type;
+            }
+        };
         KASQuestion.prototype.toJSON = function () {
+            if (KASClient.isRenderedForWebClient()) {
+                return this.toAPICompatibleJSON();
+            }
+            else {
+                return this.toClientJSON();
+            }
+        };
+        KASQuestion.prototype.toClientJSON = function () {
             var object = JSON.parse("{}");
             object["id"] = this.id;
             object["title"] = this.title;
@@ -5010,6 +6961,20 @@ var KASClient;
                     questions.push(this.options[i].toJSON());
                 }
                 object["opts"] = questions;
+            }
+            return object;
+        };
+        KASQuestion.prototype.toAPICompatibleJSON = function () {
+            var object = JSON.parse("{}");
+            object["title"] = this.title;
+            object["type"] = this.getAPICompatibleQuestionType(KASClient.KASQuestionType[this.type]);
+            object["isInvisible"] = this.isInvisible;
+            if (this.options.length > 0) {
+                var questions = [];
+                for (var i = 0; i < this.options.length; i++) {
+                    questions.push(this.options[i].toAPICompatibleJSON());
+                }
+                object["options"] = questions;
             }
             return object;
         };
@@ -5044,6 +7009,9 @@ var KASClient;
                 switch (question.type) {
                     case KASClient.KASQuestionType.Image:
                         question.config = KASClient.KASImageQuestionConfig.fromJSON(config);
+                        break;
+                    case KASClient.KASQuestionType.AttachmentList:
+                        question.config = KASClient.KASAttachmentListQuestionConfig.fromJSON(config);
                         break;
                     default:
                         question.config = KASClient.KASQuestionConfig.fromJSON(config);
@@ -5112,11 +7080,27 @@ var KASClient;
             return questionOption;
         };
         KASQuestionOption.prototype.toJSON = function () {
+            if (KASClient.isRenderedForWebClient()) {
+                return this.toAPICompatibleJSON();
+            }
+            else {
+                return this.toClientJSON();
+            }
+        };
+        KASQuestionOption.prototype.toClientJSON = function () {
             var object = JSON.parse("{}");
             object["id"] = this.id;
             object["at"] = this.text;
             if (this.pictureUrl) {
                 object["ap"] = this.pictureUrl;
+            }
+            return object;
+        };
+        KASQuestionOption.prototype.toAPICompatibleJSON = function () {
+            var object = JSON.parse("{}");
+            object["title"] = this.text;
+            if (this.pictureUrl) {
+                object["pictureUrl"] = this.pictureUrl;
             }
             return object;
         };
@@ -5148,6 +7132,10 @@ var KASClient;
         KASQuestionType[KASQuestionType["SingleSelectExternal"] = 7] = "SingleSelectExternal";
         // Attachment List type answer
         KASQuestionType[KASQuestionType["AttachmentList"] = 8] = "AttachmentList";
+        // Phone Number Type
+        KASQuestionType[KASQuestionType["PhoneNumber"] = 9] = "PhoneNumber";
+        // Date Type
+        KASQuestionType[KASQuestionType["DateOnly"] = 10] = "DateOnly";
     })(KASQuestionType = KASClient.KASQuestionType || (KASClient.KASQuestionType = {}));
 })(KASClient || (KASClient = {}));
 var KASClient;
@@ -5214,6 +7202,75 @@ var KASClient;
 })(KASClient || (KASClient = {}));
 var KASClient;
 (function (KASClient) {
+    var KASVideoAttachment = (function (_super) {
+        __extends(KASVideoAttachment, _super);
+        function KASVideoAttachment() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.thumbnail = "";
+            _this.duration = 0;
+            _this.streamingPath = "";
+            return _this;
+        }
+        KASVideoAttachment.prototype.toJSON = function () {
+            var object = _super.prototype.toJSON.call(this);
+            object["tib"] = this.thumbnail;
+            object["adr"] = this.duration;
+            object["strpu"] = this.streamingPath;
+            return object;
+        };
+        KASVideoAttachment.fromJSON = function (object) {
+            if (object == null) {
+                return null;
+            }
+            var attachment = new KASVideoAttachment();
+            this.populateModelFromJSON(attachment, object);
+            return attachment;
+        };
+        KASVideoAttachment.populateModelFromJSON = function (attachment, object) {
+            _super.populateModelFromJSON.call(this, attachment, object);
+            attachment.type = KASClient.KASAttachmentType.Video;
+            if (object.hasOwnProperty("tib")) {
+                attachment.thumbnail = object["tib"];
+            }
+            if (object.hasOwnProperty("adr")) {
+                attachment.duration = object["adr"];
+            }
+            if (object.hasOwnProperty("strpu")) {
+                attachment.streamingPath = object["strpu"];
+            }
+        };
+        return KASVideoAttachment;
+    }(KASClient.KASAttachment));
+    KASClient.KASVideoAttachment = KASVideoAttachment;
+})(KASClient || (KASClient = {}));
+/// <reference path="./KASAttachmentViewModel.ts" />
+var KASClient;
+(function (KASClient) {
+    var KASVideoViewModel = (function (_super) {
+        __extends(KASVideoViewModel, _super);
+        function KASVideoViewModel() {
+            var _this = _super.call(this) || this;
+            _this.videoLocalPath = "";
+            _this.videoStreamingPath = "";
+            _this.thumbnailBase64 = "";
+            _this.shouldBlurThumbnail = false;
+            return _this;
+        }
+        return KASVideoViewModel;
+    }(KASClient.KASAttachmentViewModel));
+    KASClient.KASVideoViewModel = KASVideoViewModel;
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var NotificationPriority;
+    (function (NotificationPriority) {
+        NotificationPriority[NotificationPriority["High"] = 0] = "High";
+        NotificationPriority[NotificationPriority["Medium"] = 1] = "Medium";
+        NotificationPriority[NotificationPriority["Low"] = 2] = "Low";
+    })(NotificationPriority = KASClient.NotificationPriority || (KASClient.NotificationPriority = {}));
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
     var UI;
     (function (UI) {
         var Assets = (function () {
@@ -5221,9 +7278,10 @@ var KASClient;
             }
             Assets.navigationBackiOS = "iVBORw0KGgoAAAANSUhEUgAAACcAAAA/BAMAAACRCMzwAAAAAXNSR0IArs4c6QAAABJQTFRFAAAAAKf/AKP/AKL/AKL/AKH/S2WhQAAAAAV0Uk5TACBAwOB5MxF5AAAAU0lEQVQ4y2NgQAXCAgwYgNHVEVNQJDREAFNhaKgjpsJQDKUghRhKQQrRBSEK0bSPKhyWChlMwYIKhFMFdjNHlY5ApY5ElDbYyyWsJRj2sg5SKgIAZD9xjxU9CiMAAAAASUVORK5CYII=";
             Assets.navigationBackAndroid = "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClLOS0AAAAAXNSR0IArs4c6QAAABJQTFRFAAAAALP/AKb/AKH/AKH/AKH/jAPDRgAAAAV0Uk5TAAoUgNF8rpdwAAAAU0lEQVQ4y2NgQABmAwbswDQYuzhzaCh2LaahocE4NISGCGDXEOqES4PCqAZ6asACwBqwSpiSLIHTKJyW43YuTg+OaqGbFgFSCgDcRQbOQga1WAIAxPhlI6IvlcwAAAAASUVORK5CYII=";
-            Assets.like = "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAAXNSR0IArs4c6QAAAbZQTFRFAAAA////gID/qqqqgIC/mZmZgICqkpKSgICfcY6qgICZdIuidomdgICScICPeIeWcYCceYaUc4CZeYaSdICXdYCVcIWZdoCTdoCSd4CRcICPb4OQc4CScYKUcoKScoKScICUc4KRcoCScIKPcIKTcYKScoGRc4GQb4GQcIGPcoCRcYGScYGRcICPcICPcICScYCRb36QcH6PcX6RcICPcICRb36QcYCRb36QcYCRcYCQcX6RcICPcX6QcX6QcICRb36QcICRb36QcYCRcH6PcH6PcH6RcH6RcX+Qb3+QcICRb3+QcYCQcYCQb4CQcH+RcH+QcICPcX+QcICPcICPcICRb3+QcH+PcYCQcH+PcH+Rb4CQcICPcICPb3+QcICQb36QcH+Pb36Qb36QcH+QcH6Pb3+Qb3+QcH+Pb36QcH+QcH6Pb3+QcH6Qb3+QcH+Pb36QcH+Pb36Qb3+Qb3+QcH6Pb3+QcH6QcH+Pb36QcH+Pb36QcH+Qb3+QcH6Pb3+Qb36QcH+Pb36Qb36Qb36QcH+Qb3+QcH6Pb3+QcH6PcH6Pb36Qb36QcH+Pb36QcH+Pb36Qb36PM0LYtQAAAJF0Uk5TAAECAwQFBgcICQoLDQ4QERITFBUWGBkaHB4gJyorLzEyMzg5Oz9BRUdJSk1PUFJUVldZYWJkZWZnaGxvcHFzdHV2d3h5e31/g4WGh4iKjI2PkJGSlJaXmZqbnZ6gpKWoqqusrrGytbe5vr/AxcbHy8zNztHT1NXY2drb3t/h4uXo6ers7u/x8vP09vj6+/z9/tH8Fq4AAAIESURBVEjHlZX5Q0xRFMdv02ZLWaKIkl2ykyWZkTC2hLJEdokkyhYxVBKl+fzHzrvPzMTcx7nnl/O9957PO3c9zxiHbRvo69y7yOjtPGITyQVq4DHWhpZqgRRceClEf0wXXwnfCmLxn3BIB2yRb4u7CG91QAI6xZWNQ60K6IGDgb8HTSrgFdQHPg4dmvjSGWYXBmIfdGuAOnhnxS64rQH2w10rDsANDdANcSta4ZwG+Ph7zaYLmhXxa+XeFVo1AJsVwGnosSI2Bcv/H1/wARqtqpFU67JWVxR9kcZKMps0195scAP3oT1UN/8EmG50xa+YgdWhvDM412RB09sdQBs8cWaufgbjSwJVvqPJ2u7KoDUMe9xzrRiBFvFrUpk5Tm6yj+171NuXy/tA3MPcqoaMaYCnURsud7FX3Hs5p6uBwawxx+ByFNAOXeJGodq2JYWtSImI+HmfYWsecAmORAArp8IxNWCa5bS9gPk/oMoHMC9g/d9Axz+AQll1jU+GM5Aq9gBOSECrz6KlDvbGfIAknDI+wElIegHX4Gg+EL2t5V9goz5DRULK22iRHmiR0XRYBHSATPXTTuMB9GeqmxJYlSa9zAlE7JK83z4TleF6Wd4/7LiMNWRaw7mqMWnP322PsvjZXKdU+arX7vjni3PF4MpY2Pf1VtBZfHgwnRc+0laSjf8FL0lJtsGF5bIAAAAASUVORK5CYII=";
-            Assets.unlike = "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAAXNSR0IArs4c6QAAAThQTFRFAAAA////gICAQICAM2ZmVVWASUltQGBgM01mO05iQFBgPEtpNlFrM01mPUlhOlFoNUpgM1JmN0lkM01mN0lhNU1lNkxiNEljM01hMktfNkxiNElfNUlhM0tiNEpgMkthNEliNEhgNUlgNEphM0lgNUtgNElhNUlhNUphM0phMklfM0pgNElhM0pgMklgNEhhM0lfM0lhNElfM0hgNElfMkhgM0hfNElgM0pgM0lgNEhgM0lgM0hhNEhgM0lfM0lgMklfMklgMklfM0lgM0lgMklgM0lfMkhfMklgM0lgMkhgM0lfM0hfMkhgM0lgMklfMklfMklfM0lfM0hfMklgM0hgM0lfMkhfM0hfMkhgM0lfM0hgMkhgM0lgM0hfMklfMklgM0lfM0lgM0hgM0hfMklgMkhfMkhfNdytPAAAAGd0Uk5TAAECBAUGBwgKDRARExQVFhgZHB4qKy8xMjM5Oz9BRUdJSk1PUFJUV2FkZmhsb3Bxc3R2eHt/g4WHiIqQkZSWl5mdnqSlqK6xsrW3ub7Fx8vM0dPU1djZ297f4eLl6Ozu7/Hy+vv9/jvPKOUAAAFiSURBVEjHldRnU8JAEAbgFbA3xIZdsWNXFBUVRWyIBRULiiIi+///gUkwlxtySXbfb3fzPnOTm9wCKDJ1mz1aaAV69lFLKd5CBtdoJNdJBcUawBsfrR9EM0s0MCHAMw1sCoCDJJC2QJQEHi2QoPSbKhZIUUDY6uMZBSxK4IQCUhLYo4B3CawS+gNSH8cJYEcG3d79hjepXxoSCfs9f6S65EfU4NwJ4M+Mqt9TQWcxrQAxdMlXh15pn40amQ/qqwc3gOtao998j1gekx+bMhcauLSWOYCIO8ho4BUxfawH8Rdgwx0kNVBA7DU+V1v/TyTnTNrAgTtY4YI8F2CIC4brQcID9DFPKAaYYIv50RkfE2wDE8S5YM0O3K91lHlCwc8D1doQIIOPOeABc8hQQbVLCZxvKQvMEyImkAZRGSDu1L8So27X2kwDhJ7U/bs2AZoPP2t736f6ZmD5vmqrv8QaRf8P/lv8xBH7lW8AAAAASUVORK5CYII=";
-            Assets.comment = "iVBORw0KGgoAAAANSUhEUgAAADYAAAAwCAMAAABtwnnyAAAAAXNSR0IArs4c6QAAAdRQTFRFAAAA////gID/qqqqgIC/mZmZgICqkpKSgICfjo6OdIuLgICVdomJgICSd4iIgICPeIeWgICOeYaUc4CMdICLeoWQeoWPdoCJe4SOdoCJd4CIc4SMeICPdYOKeICOdYOKc4CMd4KIdICLdYCKcoKNdYCKdoCJc32MdoCJdH2LdX2KdX2Kc4CMdX2Kdn6JdICLdICLc36JdYCKc36IdYCKdH6IcoCKdH6Lc4CJdH6LdX6Kc4CJcn6KdICIcn6KdICIc36KdYCKcoCKcoCKdH6JdH6Ic32Jcn6KdH2JdH2JdH2Jcn2Ic32Icn6Jc32Kc32KdH6Jc3+Icn6Jc3+Kc36Jc36Jcn+Jc36Icn+Jc36Icn+Jc36Ic3+JdH6Ic3+Jcn6Jc32Ic36Jcn2Ic36Jc36Jc36Jc32Jc32Jcn6Ic32Jc36Icn2Jc36Jcn2Ic36Jc32Ic32Ic36Icn6Jcn6Jcn6Jc36Icn6Jcn6Jc32Ic36Jcn2Ic36Jcn2Jc32Jcn6Ic32Jcn6Ic32Jc32Jc32Jc36Jcn2Ic36Jcn2Ic36Jcn2Ic36Jc32Icn6Jc32Icn6Ic32Jcn6Ic32Jcn6Ic36Icn2Jc36Icn2Jc36Icn2Jc36Icn2Jcn2IHkihwwAAAJt0Uk5TAAECAwQFBgcICQsMDQ4PEBESExQWFxkaGxweHyAjJCUoKywwMTI0NTY5Oz0+P0FCREVGR0pLTE1QUVNUVVZXWFleYGJjZWhrbG5wcnZ7fH6EhYaJioyPkJGSk5SVlpean6ChoqSoq62ur7K3uLm6u7/BwsfJysvNztHS09ba29zd3uDi4+Tl6Onq6+zt7vHy8/T19/j5+vv8/f4n3j/bAAACPUlEQVRIx6WW50PTQBjGz0aByCqjgANEqKNSZwVFEJTKVAsIqDgrG7UiS1EcDEFEEAUq2uef9Q1ovZQklyvvl+Se6y9J752MxVpxc9/kwhosrT2G8XRMQ2xBPeR+CTv2VOGh3OBvTVwK+n1FGczYzm8AIyqvlH0nJvz47G5mbp5V4E06rzRqrxrIZ1Z2eBmYzuEE5R5B709aQiztE/C5gFceEjWSaU2xG8A3Ny/4iepJEFAsCNTz62PrQDcTWhdwlVum0zdPqNJYK/D1AJPFXD+ACiaN3QVeMWksLwz45LFG8hiTx14AfnksJYyISx6rAMaYPEYx3BwHFgIux4FNAd7oRnaV52+UVm+l1d5yn8MQWwIO/bsvojS8rd20ACtH6er8AAw5jDBydjKXGUAWveMXXftIaNKE0zvEBoCqOD5yFCjljqTE5pHMACe42LLrAKoBLnl3H6QKxOSDq4HKeHSR+tNuKD8Hav+vhmwmTvI6IlxFpjQdtoPV6mvHPnL4OTGVOAtc54VOYFyMUcDM62qpi7rPJRGV+gWo00u3gEVBed01CHzco9ecc8DrJEssQCF9MVY8TmHTZUWVUs9s2y5fo4d1mzeqanpsSDHYeETcsFmfD0So9xpuKg+0Juw12srppa23+838orX8/m0tXw1oA8SzFNM/cGFrwDjDDxiFN2e1snBfsTiuvCeR6DjjVPO9V1rfbQ49E6cEoXDEYHiar3GIIy9mVFvprVRtVgz35mC4sTwVulOWaPajP4S0PvuJHhA3AAAAAElFTkSuQmCC";
+            Assets.like = "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";
+            Assets.unlike = "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";
+            Assets.comment = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAABABJREFUeAHtWltIFFEYPjN7aW9u6noptbDERKgHe8qXXgp6q15SKs2Hki5KF0otKLGXQMgK6sXMIESjslgKocIIinqxki4SKnYzBctk0/W2rjvNvzgyszvt7tk9xZnZmZc95z8z//zf9//n/OfM/gxauDiOY+qvtDR45317Xe7JhDmPhxHG1PBrMBq5RJt1Qq9jm2sqS48zDMMBLj/IuvqmLEbPdo/9Hk9RA9hwGJKX2kc5r6+grqb8OwuejyfwQA44GjADdp05JefCzzHXpnCsqW18enbW8ran366HOS8Gl5+bjYq3bkaJdptYrPi2a9yNbt3vRB/7vyxiAewsLHiLEr6hRvCADxwK2MQXYGcDV3u1eV4MOBAbYGfFN8RjWyMgHr0uxqxFgJiNeGxrERCPXhdj1iJAzEY8tvW4oN+870XtHU/R1PQM7qP//H7+jI9yV2Whfbu2IaMhMmjYU8D56BmV4IFd/niL+j4NInBSpBc2AZEqVsp92ARs37IRWcwmKvHBFFizegVavy4vYvsimygidaAc5wWiR6lsYkcAlShiMEojIAbyVPGoFgGqcGMMILQIiIE8VTyKvQ8gfRYQNi+wfzfodf+dVOwpQPosAPv33oFvqPtD5Pt3kixhE0Dy5TTowiaA9FkApkBezkpUsDby/TtJ4rDXAO0sQJJ+CnRhTwEKbCZqgkYAUToVqEyLAAU6jajJWgQQpVOByrQIgApKseOgmkqtVyA2wM5C+agYMJSSBd4oHldqWyiTE9vvL52F2lleeEwYgDq6uoZrQjfo99LZo0EyOQF8N2i5+9D/d5XcOA0yo8HYxELhMNTOkjRo4OsQanM+pho8YK46tLOK5Y+jHBQOkyJhZHQMNd98gLzeeZKcEtUlFEsDdv9xGKqm+S8zabGWy0+4p1Bji5PKf49DlsuHovdI7UVJlvjbGuCZ86LL1++gweERibqM9JTWmorSEomQog72BxE52+G73o3bHUHgM5envao+uJta8ICFyEYIKkZ6+j5LuFmWmjyU7TBskAgp7MRMQOfzLvSi650EmiPJ7v41w+QVFRXRuxIuWBwTAZDrO568lIC3J1jnfB5f/vmqPZOSAUo7Ua8BcrnebFriMzBMYS2fVSjFG2RWVATI5XqdTsdZbdbiM4fLXge9hWIBNgHyuZ7h0hxJp09WlrZTjFXWNGwCrrY60ZhrXKIsI93Rxuf6cxKhQjrYBAwO/5BAy0xP7aquKKE610sMDujElAX8uT7VWBigU1HdqAlQUq4P5ZGoCFBarg9FAPYaoMRcH4qAsBGQYLV4BQWsns/1ZvOO2hPlisr1gv1yv2EjwGo17ecfbOQYxNkspgOnKsvuySlSquwPlhhldlRdYNwAAAAASUVORK5CYII=";
+            Assets.mycomment = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAA4NJREFUeAHtWztvE0EQntnYPJQICYkCIUIHjQV2h6ipQGlIAQ0FUiANtDxDFxr4BYCSDokCUSKqFFRUKDQWEuIVsIA8kEOwCXHOPmb8uLuNze3ZnHO759si3pf35vtmZmfOmiA0m23bmLrz+iIATtgAGQB7pLUWj08sIUCecM1at3MziEgwCS3/Gb6X3/+nsvmISDjJ47g3Aj+3a0f6fPla5rtgzQ8SeFYuK7qJGXFoev4S2cLDuGu9Ez4y/8kU+zxx4q7v3gP23lGwU2l3LgY9tDYBi18A1tc8aHBCNC48dy6O4BkdK5SxeRtjF7Qk3fZx07wEuM2q7REiYLBbQsBg6x8gsYDEAgacgYF3AcoE/dupA5QnnwA4OOy/T7fVQpny3JcAz7/6S6a0ABPBM2RWGMuuakoCVAeYvq4kgM2Izcm01nIBldzKO4B9aPSp6hhz15UWYC60YJInBATjKb67EguIr26DIUssIBhP8d2lzAP6/S7QSlhUOXu/VKB0gX6/CwTN2SMjoF8P1uVcpQX0+12g5QJREaK8A5J3gahUs03PVbrANskR2WMSAiKjXpMHJxagiSIiEyOxgMio1+TBiQVooojIxEgsgKrESl76uZoqrq0dG5ZEo3zUhcylZO0b3XVTe06ZnAcAY6e3QXuW5o4781RHh+v5Rg2tM+l2aody7sCnh+VVwB8LtMNTg+izP5IlgTOiWTg8F6YAuFEm8J+1Bs/1wtatY7OCq6a5cJgnwiABrQ3A5Y90VC2M4/pyRqtYmrGTGzRa0HJ5PxfAqgW4+BbAqrSO1ejTp1zeT0oxPS858b8IQLtG4N8BVH7Lxwm8UZvK3ZUn9RmFkgewGeEKXXhbwKPABzqDZzWEQ0CxQFXYPyW1kn89Gz+cvSxNajj4bwJwbQng14oEDQFf7duJ556cxaq0oOFA+auwn8z1WL/6Td6C+Imiytji1YwRhTU9W0DHWI9YTKWHTvP/4sis6DvqiYDOsR4rQogzletH3+gLt12yrl2gHuuX3lOeY7mn1RMKvECZ1Qt30oxe9wQsf2hPdBBuVqeyj82ALEvZvQtsjfWI93WP9TJkedQ9AZ7v12P9kewVz5Rx3Z4JMCnW+2ml6zugfphhsT5cAlCUUmlhVKz3IyCAC2DBOQCFLQSOmRbrHfk7dJQEoBCT9K5XoN/IFlCkx02M9R1wO1N/AdbeDi2ziqzrAAAAAElFTkSuQmCC";
             Assets.editImage = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAbtJREFUSA21lU1OAkEQhV8Pmrj25xaCegVw58KdJgr+nMAVLryAMe5dGBMDKIkcwSBnULwCO4GVG6NYvtK0TM8I0zLaSaemuqe+V11T6QH+YogYVOUEFelwlsNIE3YmehYJUMUFY/e/4w2OsWOO1E8vUJVLCPa+4fYhwClK5nDK+hNbg1vGliiScRjvKLNsz+lPoNSabFDgmtNN2KATOKqTOiXTYOgm52sEcRbxPdyKrLBTmmjIbOztiqyzLC/cF9pz3f9dia5lGW+4Y5zC7zlXsWt6tMNRkzWWqogZzg0z8Bdw4RbYxjQK2DJduxC1ft9A4QM0GRwtS44naqEu81Gw9ZMFarL0CRfM2SDHCrIUuXHWQs54AYULaz4K/gV6ojkIMZ3H0d/AB27QRYA8iubRoYacn09Ql1xi5h5w1YkLKFxbcVxZPOEq4JboSrJ4Z1cIRnYFI7q8ELQ12wpIGkMBP3iP8LwvXMW/SuQLN/6Z25Ppn2iRJWlxYcEuxqxBj6Up8H5/iO0lLAT/CVdtvb/HZ57hhbb9+8ztweJtaneAPv9RCtdbc+IxSqD/2Yop4ZrVTwJ9rqfO3B75A7THlDrp4UmvAAAAAElFTkSuQmCC";
             Assets.chevron = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAkCAYAAACTz/ouAAAAAXNSR0IArs4c6QAAAVRJREFUSA21109qwkAUBvAkSnGhiyx6AekNFIorRbxQl93NzqX36B0KWXoIEXqBLoq40sR8wRma+EzmvXkZkJA3me/nnzi8RBExPsz2DS9iil0aNFfcg6dlPV2sNvE++/5tXsM5rwH/wm1GMOIAIlwFSZBijBkOkuGrTSSOU+lvEtswY75eTsnP7JpfJrZGHI8783kg6k9LDsAVfSA1oA/kAdBGSEATeQpoIa2ABtIJhCJeQAjiDUgRFiBB2AAXEQEcpNpNsUAy8vza+QY7L6BgbIp/0XFeRMWYmr/Xqp2XDXDCAbEAbjgLkIR7A9JwLyAkvBMIDW8FNMIBkH80hKPD8LnPEdI2Hm5TG67VvtQA7XB8Mgf0EQ6g6k3ROp6S81zra0GwHRWQZVn+vlyPymJqJxpHdsto17vuGs8BeB4gEHE4EAfghECCwpFJDrTq0na9GXgDuCcssrft97EAAAAASUVORK5CYII=";
             Assets.emptyState = "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NkEAAQQQQAABBBBInQAFaOosaQkBBBBAAAEEEEAgCQEK0CSQ2AQBBBBAAAEEEEAgdQIUoKmzpCUEEEAAAQQQQACBJAQoQJNAYhMEEEAAAQQQQACB1AlQgKbOkpYQQAABBBBAAAEEkhCgAE0CiU0QQAABBBBAAAEEUidAAZo6S1pCAAEEEEAAAQQQSEKAAjQJJDZBAAEEEEAAAQQQSJ0ABWjqLGkJAQQQQAABBBBAIAkBCtAkkNgEAQQQQAABBBBAIHUCFKCps6QlBBBAAAEEEEAAgSQEKECTQGITBBBAAAEEEEAAgdQJUICmzpKWEEAAAQQQQAABBJIQCCexDZsggAACCCCAAALBEgjJQonKRSlPqmbLN0yb+8fardm0QJS8EltWUp/yvnzcoPJx7ISOAAIIIIAAAggkL3DG73TyG6diS+dM+ePZd6SipaC1wSn4oI0o+SCAAAIIIIAAAh4XoAD1+AARHgIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggEAABVQAcyIlPwgs0PlSJ0eYUA8VJXuIlnHmvdR87meWc7pMQcm1Mkv9T5ff7+iL+foS0/Yvd7RJl9/Rb5c0232B83YkXa7g96pLmu2+8NvvlZIGk8OV5u/VNdvlwgoEEJAwBghkXEBrR+bLR6bfYbG+dUsE8feMB0SHCCCAQIoFmv8hbYtQXggg0ImA08k6ViGQXgGlXHO08/n0dkLrCCCAQJ8LbO3zCAgAAY8KcAreowMT+LDu1seJKxeJIy+ZXO3PClOUlpuT7+UyU9UFPn8SRACBYAss0KFYgjNVNNiJkh0CCCCAAAIIIIAAAggggAACCCCAAAIIINAtgXv1uG5tz8YI+FCAa0B9OGiEjAACCCAQUIF5+nJpkndknp4d0AxJC4GYANeA8ouAAAIIIICAFwTu1kebqeIeNz/x/zZ/W2areV4IjRgQSLUAR0BTLUp7CCCAAAII9EQgV14xu73dZtfbzJHQA9t8ZhGBwAjE/5UVmIRIpA8EHtcFcqyqTXnPdr7Qu6RYIlJkjgjkSVRyzXGBkJm91jGnqPjdTTk4DSKAQEYFwuYvW5OZD0Sbv24hqTd/1bbF/sI1yEMmjqmxWJR8av4GTpeT1OqMxkZnCKRZgP+Ipxk48M0/r8OySv5j8vzQPMfobPmqqupVzs3tlZgis8Q8R6TYlJr8jvYKlJ0RQMB3Ao75R7cr95m4d43FrmSRjJD95VDV5LtcCBiBLgQ4Bd8FDKuTFPhEzjBb2n+pnyQVZj5Pe9SyJy87Z97deqh8IhPN7iPNUYESis+eQLIPAgj4XsCVavNP7x+bPBpjuWiZYv42nun7vEgAgTYCPSsW2jTAYhYLzNeF5tTRlW0EHhT7lKPuvLRWcp8eaI527mX+xb+L+eF3sjt+bIsAAsEU0PKu+Wt4cyI5V34m8/VI8498zgolUFjwswD/sffz6PV17FouNAXo0JYw3jdXaV7TrZAW6Bxzjece5t/4I8wVUOFu7cvGCCCAQNAForHT8Cta0hxo3n8U+5tp/3byQsDnAhSgPh/APgt/gR5g+r440X/IFKMzVUPi884W7NHTBlN8OpK/s035HgEEEMhKARU7J3RrIncts8xNSkNifzvt31BeCPhYgALUx4PXp6Fvk6+Y/vvFYlDmBqRT5Omk47HFa0jGcdQzaTE2RACBbBVw5TmT+vst6Reaa0NnxP522r+h83RZtrKQt/8FKED9P4Z9lcFxiY6V3Gqu/dSJzztasMVnnYxiGqUdIfEdAggg0E7gscQnbQpQ+2qeim4kRWhMg//xoQAFqA8Hrc9DXqDzzbWfX4zFocyfwVxzVVIyL3vKqNHc4c4LAQQQQCB5geajoPEbPA8wJ+ZzEzuHzTX0nI5PcLDgHwEKUP+MlXcirY8VnwWxgLSZn26mqthpcPaieUfGcORzp1JsgAACCLQXcGSTOfX+D/PzrPnH/2/MxPShxAb2SKj928qNSQkSFvwhwJ3H/hgnb0XpyhfaBPRCm+XOF+20IXeZP5AOd7p3DsRaBBBAYCcCWi5JbBFNLDUv2FlEaszfWK0/SPpyqA5N8BGBTAtwBDTT4kHoT5m711tf/25d7GLpz1LG3e5d2LAaAQQQSIWAnVHE/q3lhYBPBChAfTJQngpTm7sv4y9Hdvx8YvuEo/rEXKHxvXhHAAEEEEi1gGv+1tq/ubwQ8IEABagPBslzISrz1Pf4S5trk3b0qpfBnHrfERDfIYAAAikSsKfi7d9cXgj4QIAC1AeD5MEQm+f/tIH130EB+ry21xjzx9CDA0hICCAQWIHB0vy3N7AJklgwBChAgzGOmc1CS+tj4I5VtV12vkpKeLZ7lzp8gQACCKRewDXnnOzfXl4IeFyAAtTjA+Tr8ML8EfT1+BE8Agj4U4C/vf4ctyyLmgI0ywY8Y+lq7ZjnFRdnrD86QgABBBBoFrB/e+3fYF4IeFiAX1APD46vQ3vQPCfeMRMk80IAAQQQyKyA/dt7FwcAMotOb90VYCL67oqxfXICDaYA5YUAAggg0DcCESkyHW/ti84f/U/VXlo1fkaUHhbrX6u1SkfeOu6Afkv6Ih769KYABag3x8XbUSlZsdMAteTtdBs2QAABBBBIj0CG/wY/tVTn1m/ZfK646ruuNOxuHhkqsZ9YdtosNsgj/9n8kTj697n9B9xy1DhVn57EadUvApwi9ctI+S3Ou/REcxKo9W55v8VPvAgggICfBWzF9221OBMpPPpaxf5uU/QBU3GOSq4/9bETDp143LSS/ya3PVsFUYBrQIM4ql7ISQlP4/DCOBADAghkp0CG/gY/+p+tJ+ho9J/tik+lKszRrb8oca5r/pG/mGfUV7QOhB5l97H7tq5jKdsEOAWfbSOeqXzD5hakpkx1Rj8IIIAAAu0E7N/gNL/skU9TSN6jtc61XSmlNpnC87JdQ/3/NG2aamzb/Wuv6cgn0S2nmzPzV5ntB8b2Ue49po3VHAltK5U9y5yCz56xzmym8/TkzHZIbwgggEDABZQsTGSoZUZiuauF2eqNrr7q7Xp7zee28i0fxI98KiVLwiF15LHTBqzaUdtPLtoyqqHRfUpr2at5O/VxXln/PbgmdEdqwfwu7f9CCiYbWSGAAAIIIJBhAW3n92z5yXDXHbuL3XDUcs2nPfKZTPFp2zh6Sv+P7bZ2n+Y29ajmtjr2wOegC1CABn2EyQ8BBBBAAIFUC5i73eNN2tPuOzvyGd/Wvttt7T6JdW3aSqxjIfACFKCBH2ISRAABBBBAIHUCsXk+Re8ea9HcXGSv+exu67F9Wm5MMpM07W7b7G4bbO9vAQpQf48f0SOAAAIIIJBRgdgk8y09Kq2f63jDUTLB2H3svvFt27YZX8d7sAUoQIM9vmSHAAIIIIBAagXiTziKters/MEkXfbeZt92bXa5A18ESIACNECDSSoIIIAAAgj4RkCZx5XwyloBCtCsHXoSRwABBBBAoAcC5tnurXu5u7Uud3NJu6MTe7RrM7GWhQALUIAGeHBJDQEEEEAAgVQLKB15K96mVuowO8l8/HOy73Yfu298+7ZtxtfxHmwBCtBgjy/ZIYAAAgggkFKB4w7ot8ScPf8o1qjWJfYJR93tILaP2dfuZ9uybXa3Dbb3twAFqL/Hj+gRQAABBBDIvICjfx/v1D5e8/HXNo+Mf97Zu93W7pPYrk1biXUsBF6AAjTwQ5yGBOfr3ST+k4bmaRIBBBBAwNsCuf0H3GKOXX5so7TPdm+K6r8mU4Tabey2dp/mDNXHzW15O1+iS70ABWjqTYPfopbl5nFwzT/Bz5YMEUAAAQQ6CNhntzvh0InmkZr19iv7bPemqLz+6H83n93ZNaF2nf3ObhN/Drzd17bBc+A74GbJR6ZAyJKBTmma88yfj/hrtur8d2ienhzfhHcEEEAAgZQILGrTypQ2y50vzlZvdP5F6tY++p+tJ2jl3mOOaOYmWjVPOGqeZD4+z6e7W+yGo5ZrPu12tvhU2vnWcQeUPpTYj4WsEghnVbYkiwACCCCAAAIpE7AF5KOvVazWTdEHzHHQUbGGTaFpjlJ8XcRt7afNcQt76l6FQiceN63kv60bsJRtAhSg2Tbi5CsFjqhfTJEJUwbK+KH5MqokIqMLwzLMUVIUduzXUmiZzJ/OmiZXal0t1TVNsraiUVauq5OPF22SDy9dJO/XuuZCBJ+99CxpewTFZ9H7P1w1X3Z+1Mr/aZJBugS0HJJouvNzT4mvM7lgC8mnluo96rdsPldc9V37bPfO+o/dOW9uOMrt3/8WTrt3JpRd6wJdgD7zdtUhWrszvDikSjkLj5jU759ejC2IMc0eLYPO3UsOG10k+/XPkakhR/rtLM+QSGkoJKV2u/ywjB+YJzLW7PW5wSLnTJCqLQ3y+spqeeWWJfLcvJWycWft8T0CCCDQKwElVb3aP407txSU15kurnv0P1V7xZ7tHn+8pplk3s7zyVRLaRwAHzYd6ALUFp/a1XM9OS6Oa+OiAE3j4IwrkZzb9pPD9i2TY0zRub/pKmU33dkC1hSkM+zPXQfLRTccIP99s1yeOPsVeW5phTSkMS2aRgABBDwt0FJoMq+np0ep74MLdAHa97xE0BcC08sk/w8HygkTS+VUc0q9ZaqPtEbimAL3wEOHyoFLjpUfLN4qd5/5sjz0arnUpbVXGkcAAQQQQMCnAoEuQO1pbmk+0ui54YnF5rmo/B3QwBwJPXOEnDSpv5weUs2nzjOdkS14PzNAfvDyUXLa21vkT0c8I3/e1CDRTMdBfwgggAACCHhZINAFaMs1lpzm9vJvYIpi+9OBsu83d5NLzbWa41LUZK+asQXw5AFy4aoT5Nj7V8gvTn9Z3uxVg+yMAAIIIIBAgARSdk1cgExIxUcCI4okvPJ4ufi0cfJHrxSfbflsTDY2G6ONte13LCOAAAIIIJCtAhSg2TryAcj7wgky/L2vyF2jCuUkk46HJiXZDlfZGG2sNubtvmUFAggggAACWSZAAZplAx6UdO89SKb/arrcZ+bv3MsvOdlYbcw2dr/ETJwIIIAAAgikQ4ACNB2qtJlWgb8dLoefNEZuMRPH73Quz7QG0oPGbcw2dptDD3ZnFwQQQAABBAIhQAEaiGHMniRe+rJ87Yhhco15An3Er1nb2G0ONhe/5kDcCCCAAAII9EaAArQ3etm6r5IV5orL5p8MGtijhgcOlp+YLoPwe+vYXDgSmsFfILpCAAEEEPCMAHflemYofBTILDUm09Ha6ya/OFSuNv0GofiM8zk2J5NbxSkvyqvxlbwjgAACCCAQdIEg/cc86GOVtfnZO8e/OUZ+7efT7l0Nns3J5sbd8V0JsR4BBBBAIIgCFKBBHNUA5WTnzvzZFPmlH284SnYYbG42R+YJTVaM7RBAAAEE/C5AAer3EQx4/P/6kvzAT1Mt9XQ4bI42157uz34IIJAFAkoWmuvvm3+yIF1SDLYABWiwx9fX2dnHa5oJ3L/p6yS6EbzN1ebcjV3YFAEEsklAS7HEf7Ipb3INpAAFaCCH1f9JDcyRkH22u8nEy084SjW0sjnb3FPdMO0hgAACCCDgJQEKUC+NBrEkBJ45Qk7y4rPdEwGmacHmbHNPU/M0iwACCCCAgCcEKEA9MQwE0VZgepnkT+ovp7ddl03LNndrkE05kysCCCCAQHYJUIBm13j7Its/HCgnhJSU+iLYNARpc7cGaWiaJhFAAAEEEPCEAAWoJ4aBIOIC40okZ2KpnBr/nK3v1sBaZGv+5I0AAgggEGwBCtBgj6/vsrttPzks7MhA3wWe4oCtgbVIcbM0hwACCCCAgCcEKEA9MQwEERfYt0yOiS9n+zsW2f4bQP4IIIBAcAUoQIM7tr7LbPZoGdQ/R/b3XeBpCthaWJM0NU+zCCCAAAII9JkABWif0dNxR4HzJ8ZOOfM72QrjnLsXp+FbOVhCAAEEEAiKQDgoiZBHBgXm690Svc1SKxLLvVwYVST79bKJwO0+utnk/sAlRkIIIIAAAlktQAGa1cPfw+S1LG+zZ0qeVFTgiCqNyNQ27bJoBMxp+KnWptY1D+BLwUvNlykpaIYmEEAAAQQQ6JUApzt7xcfOqRL4xRSZEHKkX6raC0o71sTaBCUf8kAAAQQQQMAKUIDye+AJgSkDZbwnAvFgENh4cFAICQEEEECgVwKcgu8VHzunSmBovoxKVVtBaweboI0o+SDQQwEthyT2TMnFT4nWWEAg4wIUoBknp8POBEoiMrqz9awTwYbfAgQQiAkoqUICgaAIcAo+KCPp8zwKwzLM5ymkLXxs0kZLwwgggAACfSRAAdpH8HTbXsBRUtR+DZ/iAtjEJXhHAAEEEAiKAAVoUEbS53mYZ58X+DyFtIWPTdpoaRgBBBBAoI8EKED7CJ5u2wuYX8TC9mv4FBfAJi7BOwIIIIBAUAQoQIMykuSBAAIIIIAAAgj4RIAC1CcDFfQwXZGaoOfY0/yw6akc+yGAAAIIeFWAAtSrI5NlcTW5UptlKSedLjZJU7EhAggggIBPBChAfTJQQQ/T1VId9Bx7mh82PZVjPwQQQAABrwpQgHp1ZLIsrpomWZtlKSedLjZJU7EhAggggIBPBHgSkk8GylNhKlmR6ngqGmXlwLxUtxqM9qxNMDIhCwQQQAABBJoFKED5Tei+wCw1pvs77XiPdXXy8dh+O94mW7+1NtmaO3kjgAACCARTgFPwwRxX32W1aJN86LugMxQwNhmCphsEEEAAgYwJUIBmjJqOdiRw6SJ5P+pK1Y62ycbvrIm1ycbcyRkBBBBAILgCnIIP7tj6KrNaV/TWRnm9LFdm+CrwNAe7pUFetzap6kbPkkWpaot2EPCbgJovU/wWc7t4lSxMfNb8rUxYsOBLAY6A+nLYghn0x9XySjAz63lWKzHpOR57IhA0AS3F5p+jzT9By418sk6AAjTrhty7Cd+0WJ4z0ZkH//BqEXBvWRIzAQQBBBBAAIFACVCABmo4/Z3MvJWy0Zxy/q+/s0hd9NbCmqSuRVpCAAEEEEDAGwIUoN4YB6JoEXizXJ4Ao1kAC34TEEAAAQSCKkABGtSR9WleZ78iz5lnn2/yafgpC9saWIuUNUhDCCCAAAIIeEiAAtRDg0EoIksrpGHxVrk72y2sgbXIdgfyRwABBBAIpgAFaDDH1ddZnfmyPBTVstXXSfQieJu7NehFE+yKAAIIIICApwUoQD09PNkZ3KvlUvf2FvlTdmYvYnO3BtmaP3kjgAACCARfgAI0+GPsywyPeEb+XNckS30ZfC+Ctjnb3HvRBLsigAACCCDgeQEKUM8PUXYGuKlBovevkF+Y7FP2FCAfSGqbs83dB7ESIgIIIIAAAj0WoADtMV0W7zhf7ybxnzQynP6yvPlxjdyfxi481bTN1ebsqaAIBgEEEEAAgTQIUICmATXwTWpZbo5LNv+kOdnP/01uqGmSJWnups+btznaXPs8EAJAAAEEEEAgAwIUoBlApoueC6yulqYrFsn/uFqqet6Kt/e0udkcba7ejpToEEAAAQQQSI0ABWhqHGkljQLXvy9r7l8uF2ktjWnspk+atjnZ3GyOfRIAnSKAAAIIINAHAhSgfYBOl90XOOVFefXZdfITs6fb/b09u4drc7K5eTZCAkMAAe8IaDnEXP7U/OOdqIgEgR4JUID2iI2d+kLgS3+Xv7+8Qa42fQehCHVtLjanvrCkTwQQ8KGAMpcixX98GD4hI9BWgAK0rQbLnhf47NPyyDNr5Ud+Ph1vY7c52Fw8D06ACCCAAAIIpEGAAjQNqDSZXgF71PDPy+VcP96YZGO2sXPkM72/I7SOAAIIIOBtAQpQb48P0XUhYK+bvPhVOdlPUzTZWG3MXPPZxaCyGgEEEEAgawQoQLNmqIOXqL1zfM//k2+bCdztoyu9/MQkbWO0sXK3e/B+D8kIAQQQQKD7AhSg3TdjDw8J2LkzRz8sv7pzqZzhxWfH25hsbDZG5vn00C8OoSCAAAII9KkABWif8tN5qgTsIyxHPiQnv7FZro9q2Zqqdnvajo3BxmJj4vGaPVVkPwQQQACBoApQgAZ1ZLMwr00NEp3yhNxz4FNy9Fub5YYmVzZlmsH2afu2MdhYbEyZjoH+EEAAAQQQ8LpA2OsBEh8C3RV4tVzq9n1C7h5XIg/ctp8ctm+ZHNM/R/Y37aTrH1zulgb575vl8sTZr8hzSyukobsxsz0CCCCAAALZJEABmk2jnWW52kLwC8/KX03af509WgadP1EOG1Uk+5VGZGrIkX694Yi6UrW1UV5fUSWv3LJEnpu3Ujb2pj32RQABBBBAIJsEKECzabRTlauSFalqKlPt2ALR/Nxv+ru/JCzOz/aVPaYMlPFD82VUSURGF4ZlmKOkKOxIgTlMWmjjMo9bqjGn1GvN3J3VZgqltRWNsnJdnXy8aJN8eOkieb/W9fSd95mipR8EEEAAAQS6LaC6vQc7IJCMwDw9OZnN2AYBBBBAIE0Cs9UbaWqZZhHotUC6ronrdWA0gAACCCCAAAIIIBBMAQrQYI4rWSGAAAIIIIAAAp4V4BpQzw4NgSGAAAIIINBGQMnCxCctMxLLLCDgQwEKUB8OGiEjgAACCGShgJbiLMyalAMqwCn4gA4saSGAAAIIIIAAAl4VoAD16sgQFwIIIIAAAgggEFABCtCADixpIYAAAggggAACXhWgAPXqyBAXAggggAACCCAQUAEK0IAOLGkhgAACCCCAAAJeFaAA9erIEBcCCCCAAAIIIBBQAQrQgA4saSGAAAIIIIAAAl4VoAD16sgQFwIIIIAAAgggEFABCtCADixpIYAAAggggAACXhXgSUheHRkvxzVf75YIb5ZakVhmAQEEEEAAAQQQSEKAAjQJJDbpIKBleZs1qs0yiwgggAACCCCAwE4FOAW/UyI2QAABBBBAAAEEEEilAAVoKjVpCwEEEEAAAQQQQGCnApyC3ykRGyCAAAIIIOABAS2HJKLg4qcEBQv+FKAA9ee4ETUCCCCAQLYJKKnKtpTJN7gCnIIP7tiSGQIIIIAAAggg4EkBClBPDgtBIYAAAggggAACwRWgAA3u2JIZAggggAACCCDgSQGuAfXksBAUAggggEAQBfas+DR31scvjZ1QvX7kkG0Vo0saa3eNuNF+EXELHNctUOKGmlSoLqpCNY3Kqa0L567bmFu0annRwJXPDp+0/JHBk7YE0YWcsk+AAjT7xpyMEUAAAQQyJBAx/Vz/5gP7Tt2yfP+h2yqnFTZumyRa29WJlxbV4DpOTVSpWhEVzXMbBzi6oTCk3TxdX6VG1GySKZtXygmrXpObnJzlm3ILX/uoZJdXr93j2JdeLR1Wl2iIBQR8JEAB6qPBIlQEEEAAAX8IXPr+07t9dc3rx4ys3XJk2G3axUbtmgKzIpz/yob84rfW5pV+/N6A4SsfHLb/6nf6Dd7WWVYlDY3OrNUvDZu6ddnIETWbRw/ZVjlhQH3N9OF1W2ban4M/fb9uU26/ha8OHPvknH1O/k9FTsTtrB3WIeBFAWYS8+KoeD2meVonQpytOv8dmqcnJ7ZhAQEEEMgSgVvfuGfqF9ctPqOkse4Am3KTE1q3qqDsry8N2v2F/93rmMWbwgXR3lLMWfr8iKM/feuA3SvXH1XUuO0ztr2GUHjNuyUj5n3vgNMeWxEpboz1MVu90du+2B+BdAl0XjykqzfaDYYABWgwxpEsEEAgZQI3L7pvyjFr3zq/MFo/yfyzPLohp/jZfw4Z//Ccyd96vbkaTFlX7Ro6Z+nC4aes/s+xY6o3zHS0Wxp1QhsXlwy/8/gDzltQcWbO6+025gMCHhKgAPXQYPgmFApQ3wwVgSKAQHoFZq59o+zKdx+5YFBd5dGiVOO6/NL/u330IXf9dtyMNentuX3rk6vW5P160f3H71W59tSQGx28LRz5sEjrMwY8eN2/22/JJwS8IUAB6o1x8FcU8/XyRMCz1JjEctsFTsG31WAZAQQCKPDoi7cedWD50h8prYsqIoUv3jLu8GtvHHfo6p6m+uXaT0qOrFs+akxT5dA8t6GwQKIFOdFoQdQcUW1Qodo6J1Jb5eRULo4MXH3PgAmrluriho597VO1Ie+OV+44fXT1xllKdI4SddvAkPqBevAGblbqiMXnPhWgAO1T/gB3TgEa4MElNQSyW8AebZz38h9+tEvd1q+YU94bFg7e45qT9j9rYXdURoRqwz/+9L/7TK3/dNouTbXTinT9OEfr0mTbMP/xduslvL4inLN4dbj41acLR716bfHUj+P72+tEL1vyf3O06C+Yde+GQuETyx68bkn8e94R6GsBCtC+HoGg9k8BGtSRJS8EslrgOyteHHrF4sduzos2jLFHPS+YcvLlT+4ycWsyKCW60bmx/Pn9Plu37qiBTbVfcEQXJLNfsts0SHjtJ5F+Ty0o2eOpa/pNWalX/PStje9W/Ei5+qemEG0IqdCssoevfzjZ9tgOgXQKUICmUzeb26YAzebRJ3cEAikwd8lT485e9twtYe2WLSkeesvhMy65K5kbjA5pWFd0zcYXvjGuacs3w647KBM4tU7knX6qcW7RZd9/ZMvxP/hsk9IPmdPxg5VS5w186IZbMxEDfSCwIwEK0B3p8F3PBShAe27Hnggg4DmBm81k8jNX/fdGM4l8rrm7/bKZB3zv7zsL8jB3XdGv1jw/e3S00t6h3m9n26fje1Nwvmcmt79av7vspUa38W9mEr1xSjk/G/TwDVemoz/aRCBZAQrQZKXYrnsCFKDd82JrBBDwrMBV7z02/syl//yDCdB5eMSUC75vplbaUbD2MUePf/rYsdNr188JSXTAjrbN1HdmaqiXnZrqn2z7aO0vzUTO05WjLh700G9+nan+6QeBjgJOxxV8RgABBBBAAIFmAXszz+lL//lbe+QzmeLzvIq3d12x6o4/HVC75qdeKT5tJubI54FuYb9nc/Ya+5o58rRYu/pX5Sf84DTGGYG+EuAIaF/JB71fjoAGfYTJD4HAC0yrXFXw6As335frNg7/+5C9Lt7Zne6Prn/8iIPrPrnM3FxU5GmcxqZ3G99fYe6410PFcQ4b9OAN//R0vAQXSAGOgAZyWEkKAQQQQKC3Ane//IcrcqKNI98qGXH9jopPe3f74lX3/GhG3eprPF98WpRIeO/IuFH9tagGieo/V5160eDeWrE/At0VoADtrhjbI4AAAggEXuDZf94ws2xb1RHleUV/P/yQH/65q4T3bKjMfXP1Pb8ebm406mobT67PyymMjNgl10zPNHRbbeN9eu5c6gFPDlRwg+IXLrhjS2YIIIAAAj0QOHvVC0MnVaya0xCKfPKdaWf8rKsm7PRKz6578Pf9o3UzutrGy+tVaT8nVFZirw89bNM7FWd5OVZiC54ABWjwxpSMEEAAAQR6IfDDJX+7xDxeM//pXfa56sWy3ao7a8oe+bx3/ZO/KXLrP9PZ935ZF9plkKhI2IZ7Pafi/TJqwYiTAjQY40gWCCCAAAIpELjvlTsOKa2vOWRjbvHT35k265XOmhyoGkNPrX/4mqJow5TOvvfVupAjoWGDzVFQN7/edR71VewE62sBClBfDx/BI4AAAgikSsDO3/m5jR+e6ypV+9NJX7uuq3YXfvLAhea0+yFdfe+39U5Jkah+haLr6g+oPP9/mZrJbwPo03hjx91TFftf39gyw3Vlhm3PcWThkZP7L7TLvAIqoLWS+8x4u6LlVLUwoFmSFgIIZInAPS/94bC8poaxK/sNumvBsMnlnaX9l/VPHL5rQ+VJnX3n53XhIWXSWFWjGqtqf1t97Z1/LbrktPV+zofYvS+Q0gLUFp/mYubY473Msn0tjP0v/xM8gXv1vjJfHjGJjTY/75vzNxNFqeZRD162ZIQAAlkgsP/mj76jHWfbL/Y+9u7O0p1T+fYIM9XSFZ195/d1qiDPHAUtkGhldX7T5q2Paq0/ax7jyd90vw+sh+PnFLyHB8fToUVklYmvrCXGCXK3HNcu3rA5KsoLAQQQ8InAjW8umFQQrd9jTV7pI48MnrSls7B/uOU1708y31ngSa4LDTZ/0s1RpOjmiv0rf/a77yW5G5sh0CMBCtAesbGTzFSbRUnrc4S1XC7P69Yj6k3mxDwvBBBAwCcCMza+d6wN9YmRkzu9EeeJ9Y8dVexum+6TdHoUplOYL5KbI9GtleYIgr7anIrfpUcNsRMCSQhQgCaBxCZdCtiL9OPXCe1rjolemtjS/CM6scwCAggg4GGBcdvKc4bUVh5RG8r98Io9jl3aMdTPNW0sPLBu/YUd1wfxc6h/P5GmqLiVNSXRutrWgwxBTJac+lSAArRP+X3e+SxVY46C/rRNFpdL/BnwIalvs55FBBBAwLMCV7z16AGORPuZm4+e6CzIX6//x0khiQ7o7LugrXNKi2MpuVurzLs6uep/f79X0HIkH28IUIB6Yxz8G8UIucMUoYtaErCzmDwg8/Vgs26bf5MicgQQyCaBiVVr97P5/m3I3i92zHt6dHP++KbNJ3dcH9TPKiciypyG19W15nJQrdwG9ydBzZW8+laAArRv/f3f+6GqSSLmBiQln7YkM85cPPSs+Rzyf3JkgAAC2SAwcFvV9KgT2viLCV9e0THfGz/9+wmO1qUd1wf5syoqEN3YJLq+wRwElRMrfnHH7kHOl9z6RoACtG/cg9XrSWq1KTq/ZpKKn3afZK4AfcD8NJ/LCVa2ZIMAAgESOHr94tL8aMPum3MKX+0srbENW4/vbH1P1uUePFWKf3yW9Dv/WxIaNawnTYiYI5QFM78sxZd/VwpP+5rY6ZNS/XLMdEz2pavr7FHQkKqvPyPVfdAeAhSg/A6kRmC2etk0dHaiMS37m2Og95l/Pe+dWMcCAggg4DGBo9a/NcbMGafW55W81zG0G8tfmJSrm0Z2XN+Tz05ZqeQdun/suetO/2IpPOUYCY0e3r2mTPFZ+K1jJbLnGFHmaS/hkUMl96DJ3Wsjia1VXnNR625rPqZgpjT5lilEqReSsGOT5AX4hUreii13JjBbzTObfNv8xI+EDjNHRv9ofj6/s135HgEEEOgLgTGVG0fbfj8pHLDSvrd9HVG38pi2n3u1HGp/VZKKhKXw5KOTL0Jbis/wiA4zI4VbZ7/rVXxtdlY5pk1HNZ+Cb16/a8VVv/tCm01YRKDXAhSgvSakgXYCzUXooYlrQpXUmWtEl7Tbhg8IIICARwQG11eOtqG8UrLbSvve9jWoqfbgtp97s+xuKJeGd9rP8JR0EdpF8enW1En9S2/2Jqwu91W5uSIN5hrQlpd5JtJX4su8I5AKAQrQVCjSRnsBezo+ItNNEWrvjr9SmqTTZyq334lPCCCAQOYFzPWfuyhzueM9ow5a17b3H1UtGh3W7uC263q7XPfI36XxvWXtmtlpEbqD4rNm3mOiK+x0Sal/2bh0Y5vpnLUclvpeaDGbBShAs3n005m7vTHpVFOE5snN5lrQpnR2RdsIIIBATwUi2i2IKlVXkRNp9/S2L1WuiE3N1NN2O93PPOay9sFnki9Cd1J8uhs3d9pNSlaGTHlg4pVoM4t5MtJePBkpJbI00iLQ5cUjT7y2pdvP8ra/q/GXWb7StHFl/HOy78dM62/+McorEALKnLSxr/v0OnNH/Ihu5aTkJ+ba0Z7dfarkKrPvX7rVX3xj+o1L7Pwd550bxbfg9yousfP3DP9efVg0WEbVmEJOydfb/t3YNVq1786D7cEWLUVowTeOMDcTjU00ED8SWnPfkxJduSZ2t7u94ajjNZ/2tLs98pnW4tNGZQtQ89LaNTQty/W1nzWreva3NdYa/4NAqwBHQFstWEqXwEnmFLxrrgXlhQACCHhMoKipXmoiOdtFVeg2jt5uZapWtBShXZ6O331U7G73Pis+bZ7mLvvYK9p6ZMkcDN2zeSX/i0DvBShAe29ICzsTUEpLoSznVPzOoPgeAQQyLdDohCTitrnW0QRgH+mWJ02j0hrLjorQk47quyOfLUkrE1/s1eacpBK1R1pNaDyrBNr8avU+7ydf3zLX/M7GTrsr84zwo6f2n9v7VmkhMALzdaEpQseZK0JT+nsXGB8SQQCBjAsse+rHtxdG68ftcux1h8Y7P632/cE3fPqPp+Of0/pu/mPZ8XR8x/4ydtq9TcfRNZ9KtLxCcvYylwmEm6eQMqH+t+TKcw5osxmLCPRYgCOgPaZjx24LzFI1pvhc3e392AEBBBBIk0DUUTUhHW1+9E9LH7s3bC1JU3fbNxs/EvrB8u2/M2u0mQw+I9d8duhdx0+9t5u/VA3ssBkfEeixAAVoj+nYsUcCs5WdkmmVmBk+erQ/OyGAAAIpFKhX4UpTA0YOKl9RFG+2f7S+ML6ckXcz5ZEqaFcDt3ZrCkBVmN/6OVNLTWbyEnsjUtvzVVr6Zap7+gm+AAVo8MfYexnaIjQqS7km1HtDQ0QIZJvA1pyCVTbn49YuSlzzWay3dVENpkGni6mW4j3F747v9mM74w308F3XN4hjYmv70kpTgLYFYblXAhSgveJj5x4L2NPxOfIBd8f3WJAdEUAgBQJrc5sfwTm+Yv3oeHO5rtu+8op/ker3LopP3dT+pqiMF6GuayahN0dAc9vPDmBuJ82MS6qdac+TAhSgnhyWLAlqpmqQb5siNCqfcDQ0S8acNBHwmMA7A3ZdaUMaUr91TDy0KpVTG19O23sXxae94aj6Dw8lP1l9GgLU25ofwak6FKDmuqnqNHRHk1kqQAGapQPvmbTtFE2nq43maOgSM9fxevPT7mkknomTQBBAIJACN485fIVWqnpwfdWUeIKbQ5Ga+HJa3ndQfMZuODLPje/WE5NSHKRb2zxts1OQ175lpdLz3M/2vfApSwQoQLNkoD2f5kwVlVPVOtlVFptYV5lblCpNKcqNSp4fOAJEwN8C9hGcFTkFr/drrJ84feva2N0+myJF6TsCurPiM/54zfjd8d19dnwKhkNXmfTNzUcdb35SoitT0DxNIBAToADlF8FbAoeqJrE3KX1bLTOn5982RegKc3p+ozkyWmXKUXteKMod9N4aMqJBwO8Cqwv6v2qedR4+96O/xY6CPpk/er2yZ2dS/Uq2+Iz32xdFqOlTm8sAVIGpxeNPQ0rEIx/HF3lHoLcCXT4LvrcNsz8CvRZofpb8VtOO/eGFAAIIpEVg0jfm1Jpq86Ij17491fwD+JZ3TC967q12zuKRqeywsCdPOLJF6EPPSsEJ5glNnTw7vvqPD4v7qZ3dLjUv1xz91OYmpFC/TmaiUuaafV4IpEiAI6ApgqQZBBBAAAF/Cgx68MYPzBnnV03ZeYI+a25sCiZzADSlxVZo2GAJjx7eDijpJxyZgtAWoZ09Oz53+j7t2uztB3dL81l2p3T7GZfMtbLv97Z99kcgLkABGpfgHQEEEEAgawXMKfd55jKfovJNW4+3CFrUm6nEcKubjyzG20y6+EzsYIrQB5/Zrgh1q1J4Y3rUFbeyWpyifFHmcoGOLyWhtzqu4zMCPRWgAO2pHPshgAACCARGIKcw/35z4802reR8m5RynH+kMjltCru6x56XqLnJqGn5J1Jz5yPixm84SrajlmtC6196U6KbK6ThrffFLqfq5Zabq51MH07/Tp9EWlk8of9rqeqLdhBo+5CtXmv89Y0tM8yZghm2IXPt8sIjJ/dfaJd5IYAAAggg4HWBDcfPudkc+jw3FHKOHLDf5H9V1lZv0VpvfyjQ64n0JD7X3OX5/nJTeCuJ7DGm/SM4TXtK1BMlc79/bE+aZh8EOhNI6U1ILQXnws46Yh0CCCCAAAJeFghFQte6je5ZUde9XF0866Ctc3/7son3YC/HnKrYovbop3kCU2j4kO2Kz1gfSp5JVV+0g4AV4BQ8vwcIIIAAAggYgbL7r19tjoDeaX4+u+GEOd8whwPvywoYU3jaSwPsIz+dAcXbpWxOlTaFwpEF233BCgR6IUAB2gs8dkUAAQQQCJZAXij/cqVki9LqhpyayifNqedtwcpw+2ya1m9qPvo5dJA5+tnplXnPFP3kzE+335M1CPRcgAK053bsiQACCCAQMIF+D/5io7ng8VJz7efw2mXrLzbLjwUsxXbp2LvzXXNDk+pXIJ1NvWQ3NtMv3dVuJz4gkAIBCtAUINIEAggggEBwBAY++JvbTeH5ktbueU2r1tvrQIP5ippT76vXx+4ajph5Sjt/qeUlB+/5SOffsRaBngtQgPbcjj0RQAABBAIoYB/DGdHhk00RujW6peJyaWj6ZwDTFFNci25skvBwU3zm5nSaopnR5hfq0EObOv2SlQj0QoACtBd47IoAAgggEEyB/n+57mNzaHC2uSJyQOPSlYPFzDEYpFd0fbm4VTXmpqMSM+/n9jceNeeqVvUbEpoXpLzJxTsCFKDeGQsiQQABBBDwkMCgh2943ExIf7WOuns2Lv/EHC70UHC9CMVOOB/dUC5Ofq6Euzz1LmLmQ/2hOvvsxl50xa4IdClg/nHHCwEEEEAAAQS6Eth4/A9uN9eDnhkq7dcYGjE0Yk7N+/blbqmSptXrRJlT7pGxI0TCoU5zMSk+XTL3nCM7/ZKVCKRAgCOgKUCkCQQQQACB4AoMdA78nik6H45urYo0fbxW/Ho63i2vkCZzINfO9xnebXiXxaeZi6lW56pzgjuiZOYFAQpQL4wCMSCAAAIIeFZAPTgzOqhsr5PMFJn3uOaZ7o0rPonNm+nZgDsJLGrm+mxa86moHFN8miOfKqfrJ4wqR3+v9NLvL++kGVYhkDIBH59ISJkBDSGAAAIIILBTATM3qCo/8Ye/cZui59sCLjxyqKiCvJ3u16cbmKcc2aOebmVNLNbI6B0d+YxF+qfSueec0acx03lWCHAENCuGmSQRQAABBHorYKdnGrjg+jlOYcFV5rnpunHZanMzz5beNpu2/XVNnTQu/ThWfDqlxRIZs+sOTrvbR8CrV0qKB52btoBoGIE2AhwBbYPBIgIIIIAAAskIlJ/38zPdTZW36foGZY+C2rvJPXM01E4wb065RzdX2qrSzPM5ZAdTLTVna4rr91Sk8PPFP55dnkz+bINAbwUoQHsryP4IIIAAAlkpUD331pMb1m24u2nT1tjZRKd/iYSGDIjd5NMnIFqbx2pWSuzZ7qYIdYoKJGQL47zOJ5lvjVGtysmPHFTwP2eai1t5IZAZAQrQzDjTCwIIIIBAAAUqf37rV9zahgfMdZZ5rjnlLY6SUKkpRAeVdvl0oZQzRF1ztLNC3E1bYk82UuGwKTwHmme7dzXBfGsE5saqxZG8nC9TfLaasJQZAQrQzDjTCwIIIIBAQAUqr/rtZ3WTejxaVT3ATvCua7aZU9/KHIHMjxWBTnGRmdU99bdcuNW1ordWiVtRJWay/NiRV2dgfwmVlcSe774zblMA/NtMt/QVc8e7dy9k3VkSfO9bAQpQ3w4dgSOAAAIIeEVg689vGytu9AHReqo9Eupu3CJudY2ZM9Q8PskcFTU3Lokyp8SVLUrzcmMFandjt89t16botO1r8xhN+9m+nPy85kdqDjBHPE3hm8zLRHRr8YBRF6rzj6pPZnu2QSDVAsn9pqa6V9LAUOQAABnzSURBVNpDAAEEEEAgYAJ6wYKcyvfKrzVPTZoTS81MgeRWVMeOULo1tZJ4lKfjmCcRhc1cnKYQzTUPVgqFzI/5z7EyTyUyb9o+d94Wrm5UdH2j6IaG2Lu58z4hZp9kpEqKJGSe426Xu/Haaro7o9/l5/ylG/uwKQIpF6AATTkpDSKAAAIIZLNA1c9/9wXX1beYeUP3TDiYgtJOixQ1haiuMwcd601RaY9gmhuHdvoyj8tUplC1R05VYb75MUdSzdOMuvsy/8FfEAk7FxZc9r013d2X7RFItQAFaKpFaQ8BBBBAIOsF9G23RarWRy9wtb7MYHR+N5AtShsamx/taY562us4YwWpvV7UHiU17/aGoq6e154sspnfc0lIOecXXfnd55Ldh+0QSLcABWi6hWkfAQQQQCBrBfQNd5ZWVNaeo7S6wJSbAzMMsSgUCv2i6LKz/2Lm+TTVLS8EvCNAAeqdsSASBBBAAIGACpgjogVVn0ZPNqfmTzXF4OftYz3TkqqSGlPsPmKOeN7FEc+0CNNoigTS83+AFAVHMwgggAACCARNoO6qO0Y1Rhtmmqs/DzNHRT9nbk4q7FWOSq1RWp43d8A/XVxQ+Ki6eJa5/Z4XAt4WoAD19vgQHQIIIIBAgAVi14pubJruumqS0nq8KUb3MHfCj9Kiis31oP3Mf6TNJKKqSZSuMgVrtfl+izmCutRcLPqhuVD0AzPF0ysll3/XfOaFAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIIAAAggggAACCCCAAAIIIJAOgdyzbho75KL5helomzYzL+Bkvkt6RAABBBBAAAEEkhcoOu+mQSrqPl2xdeuU5PdiSy8LUIB6eXSIDQEEEEAAgWwW0NoZdtZtBU21+gmtZXel3WnZzBGk3MNBSoZcEEAAAQQQQCAgAnfrr4TujfYvb9p2gojez2ZlitDpAcku69OgAM36XwEAEEAAAQQQ8JjAPfoAceX+0NtPLDdl58REdIoCNGHh8wVOwft8AAkfAQQQQACBQAncq8eZ4vPx8MpX81X5ytbi0ySptRpbesGdpYHKN0uToQDN0oEnbQQQQAABBDwnMF8Plqg8HVr33sDQypfahKd08wettlVVTm3zBYs+FaAA9enAETYCCCCAAAKBEpiv7RRLTzqbV40Jf/j3RGoqkvcfpeTO+AqzzHWgcQwfv1OA+njwCB0BBBBAAIFACDyvw6LlQadq47TI4ifNuXY3lpYuGiQN0075syidOBzqauFO+AAMOgVoAAaRFBBAAAEEEPC1wGr5vTm3fmTkncdEog3NqeQVS+M+x4mbU7RPSOTVeH5KOAIat/DzOwWon0eP2BFAAAEEEPC7wDw9VzVuOyPyziMiDTXN2UTyYsWnzikQMafcp+/6mSXmizr7pdZ6pJ2YvnlD/tevAhSgfh054kYAAQQQQMDvAvP1GcqNXhl553FRtVuas3HC0rj3seIW9I9nN3HhITPC5trPN+Mr3G2K0/BxDJ++U4D6dOAIGwEEEEAAAV8LzNdHmXvbfx9+72lRlWubUzFVZtOEL4lbPKw1NS1hWSP7mknoE6fhXVdzI1KrkC+XKEB9OWwEjQACCCCAgI8F5mt7BHNBeOnCsLPpo0QiTWMPkeig3ROfEwtRma6Uei3+WUts//hH3n0oQAHqw0EjZAQQQAABBHwrcK8eY2J/Mvzx64XO2rcSaURHTJXo8M8kPrdbUDItrMKJAlRRgLbj8eMHClA/jhoxI4AAAggg4EeB+/RAaTITza//YHBoxYuJDNzBe0h0zOcSnztZmH7Rrt//wNyQVGW/M6fjh+Z/93fDO9mOVT4RoAD1yUARJgIIIIAAAr4WeFwXmOLzCWfL6nHhD581qTQ/3Ej3H2Gu+zyi5VMXGWrZY+5eUqC0WhTfQjU1cCNSHMOH7xSgPhw0QkYAAQQQQMBXAgt0SLbI/U71pv1jE8270Vj4unCgNO51jGi103LEkUaZolWbG5E084H66negQ7A7HfEO2/MRAQQQQAABBBDonkCd/NZMNH9s80Tz9c375vZrnusznJNcW+ZGJEc5ietAzXl4joAmJ+fJrShAPTksBIUAAggggEBABObrn6im+rMjb5unHNVXNycVzjXF51dF59rHvyf9muY6urUAFeYCTVrOgxtSgHpwUAgJAQQQQACBQAjM07NVNHpVZLGdaL68OaX4RPOFZd1NcVr97ecvM9MxxWasN1MxleV95+bdutsI23tDgALUG+NAFAgggAACCARL4B59hJlo/g/h9/8mauualtzsRPNHiFvSgxvYtewu92r7eKTEUVClo5yG9+lvDQWoTweOsBFAAAEEEPCswDw9WaLyUGjZCxFn49JEmNGxnzcTzY9LfO72QpNMNfskClCX0/DdJvTKDhSgXhkJ4kAAAQQQQCAIAn/Wo00aT4U/eaNfaM0biYyiwydL066TE597tKDME5Gc1jvhlXAnfI8cPbATBagHBoEQEEAAAQQQCITAAj1AGuSvoY1Ldwkt+1ciJdcc9YyOPTjxuRcL0yTS+kQkMyH9VK3N5Ey8fCdAAeq7ISNgBBBAAAEEPCjwvM6TOvk/p2LNhPD7z5gAWyaaN9d7Nk34kpnrMyUxT6u79ZzV5kakT5tb08XFZ/xufEpappGMClCAZpSbzhBAAAEEEAiggNaOrJZ7nZrNB0XefVzEbYolqQvKpHHvY0U7odQkrWWkzNeDTWmbuA60UZq4ESk1uhlthQI0o9x0hgACCCCAQAAF5suNalvN1yPvPCrS1DLRfE6hNE4yc32aOT9T/JqmVGsBqsWlAE0xcCaaowDNhDJ9IIAAAgggEGCBnI0f/S7ntXs/kfqq1iwbasQ++Sj80QsSKl8pKtrY+l3vlqY5Wr0ab8IUo9Pjy7z7RyDsn1CJFAEEEEAAAQS8KKCWPHWYucQzv/mqz9YIVU25hMyP2LvhzWl43W8XcfuPjP3o4iHmKtEeXRg6XSn3tpZLTG0bk7+xYEHowZkzmx8w39o9Sx4W6NHIezgfQkMAAQQQQACBPhCYO1c7135y02RThH5Ru/qLWqmDzPPauz7/HsoVt3RXcQeMFG2L0vzSZKNeL7PV0Lwzblxt7oDf1e4UUWqf6j/OeTfZBtiu7wUoQPt+DIgAAQQQQACBwAns+oMF+Rsr1n9elP6iuSP+cHMb/GfMe9d1R26/xNFRt/8I0ZH8rk1CMiL3HzfdZNr7mt1IOer0bXfMubPrHfjGawJd/yJ4LVLiQQABBBBAAAHfChSdd9OgaK0+zB4hNUkcbo5ejuw6GSW6cGDs6Khbao6Qlg5vfye9I1/Le/7GvUxbV9s2HKVurfvjnHO6bo9vvCbANaBeGxHiQQABBBBAIIAC1Tefv9GkdX/Lj/Q785bxDTr6RXOa/nBzDPNQ817Smra5srNmo7l+1Pysft1UmGHRxUMTR0ilePA0M/HTP8Vt3sNMSM+NSK14vljiCKgvhokgEUAAAQQQCK6AvYnoiWfWT9diTtebgtSUnwea90iXGYdzGs1d9QvNUVR7NNXUr6p+71Bev9dvPztlt9p32TdfpESAAjQljDRiBezj0Ha/+M4nlXKenDy94PfckcjvBQIIIIBATwQGff+3RTX10UOi2j3c3ChvilKZuLN2QuHw1Nrbz120s+343hsCFKDeGIdARDH24rtmae3Os8mYx6QtDmnngg9/PfvvgUiOJBBAAAEE+kyg4KzbhrrRbeZGJnO6Xil7/eiw7YJRznfr/3j+bdutZ4UnBShAPTks/gtq4twFRdtqqj8w1+G0+6NgCtFHlaiLPvrVt5f5LysiRgABBBDwokDR2TftFW3SXzSXgNpT8IeYwrTI/Pfmjm1/nHOmF+Mlpu0FKEC3N2FNDwTGXHTX/5qH/17a2a7mj0KD0nJDyBlw9QfXfrXNYzI625p1CCCAAAIIJC8w9azbIovd+gNMETraFKB3J78nW/alAAVoX+oHpO89Lpu/W9O2pvfMdBixCYePnDJ+4QdrNoaXf7r1oHZzvim13vzCXfrRtd+eZ4pSszkvBBBAAAEEEMhGAQrQbBz1FOc89qI7HzZ3Ln7dNluQG3n3zxeeONHekLRk9aYlVz/8fLRmW8M+bbs0z+19TRyZs+yXp7/Udj3LCCCAAAIIIJAdAhSg2THOacty7CXzDtVu9B/NHSh91SmHL957xOC923b46CvvvXj3wjfHRF13aNv15kLy+xwV+Z+Prv3WJ+3W8wEBBBBAAAEEAi1AARro4U1vcnbettdfrVlkrruZZHsaNaT03zeedvTnOuu1ocmtveHxF195+YPV+5vT8q3PV1NSa2YY/uWQoQW/evnCmXWd7cs6BBBAAAEEEAiWQChY6ZBNJgW2jT76u6b4PN32af4lU33dt48uKsgNF3UWQ8gc6vzcnqNGf2GfMRteW7ZmcfW2hhEt25mJhvWhNdWNp5Z9/mtrN7/46OLO9mcdAggggAACCARHgCOgwRnLjGay79w7S6uq9VJzJ9FA2/Ghk8YsnHPUgTOSDeL1ZWvf+tWj/8rd1tg0od0+Sv3LCTlzPrpm9hvt1vMBAQQQQAABBAIjQAEamKHMbCJjL77zN+ZGozm215DjrH7gh98cHA6p2F3wyUei3Pv+9eaLD720eIKr9aDEfkpcJc6fpND5ybK5szYk1rOAAAIIIIAAAoEQoAANxDBmNonxl945wUwA/I6ZdD5se/7ul6f/58v7jj+gp1HUNTZVXvPIC4veXr7uIHNE1ZySb36ZCewrxVE/Kx27902vnz2N5/vGYXhHAAEEEEDA5wKOz+Mn/D4QiDbJDfHis7gg743eFJ82/PxIuPinM78w46bvHLOmrKTwlXhKZmqnYnON6aUNKz7o9LrS+Ha8I4AAAggggIC/BChA/TVefR7tmP+562hz6v3LzYGo6BUzDy1MVVAjBpaMvu7UL+0XDoWi8TbNnKFXvHPNKVvin3lHAAEEEEAAAf8LUID6fwwzlsHU216LSFRfH+9wwvCyF3ffZcD4+OdUvM9f+KY0RaOx2RnK+hVs+v35xz+QinZpAwEEEEAAAQS8I0AB6p2x8HwkW5e9e76ZMqml4FQVPz5hxsRUBv3RunL5x7vLE02ef/SBA4fk533wzuaG75mjrkwZlpBhAQEEEEAAAX8LUID6e/wyFv3YufMHa+1eHu/w6Knj3yzOzy2Lf07F+x/+/lqimQPGj5DPjN7FXAKqy8z1pjd9UCW7J75kAQEEEEAAAQR8LUAB6uvhy2DwtdGrREuJ7TESCi8//fBpB6Wy9xcWr5QP1myKNRkJOXLaF6YkmjdTNdw6oVh9kFjBAgIIIIAAAgj4WoAC1NfDl5ngx118577mSOQZ8d7OO2b/zSHVPAVTfF1v3usbozLv+dZ554/db08ZUtp847tSqlyHInN70z77IoAAAggggIC3BGLzOHorJKLxmkBUy40mptg/Vgrzc5YfvOfoaamM8eGXF0t5tXkkvHmVFuXLzAP3TjRv74Lfp1RxF3xChAUEEEAAAQT8L8ARUP+PYVozME88MlMu6YPjndTUNYy5eN7T8qG5YSgVr42VNfLIK0sSTc2asa/k5bT8u0ipdyf2j9yW+JIFBBBAAAEEEAiEAHcWB2IY05fE5hcfXXbLc28tMz3sb3762Z42V9fJs299JOu3Vsv4oQMlPzfx8CL7dbdet/71FVm5ofkA5+5Dy+TsI6Yn9g+FnZMH54ds37wQQAABBBBAIEACPIozQIOZzlTufGPF6MXLNrz3+Gvv5zU2JeaJl7xIWI4/cKIcZ67bjIS79++Zxas3yE/ufTYR9i9P/ZLsMXxg7LP5xXx0n4G5X0t8yQICCCCAAAIIBEaAAjQwQ5neRN4ub7jdzIl05oaKarnzH2/Iyx+satfh4JIic+f6ZDlwj5Ht1nf1wUytJBfe9ZSs+LT56OfBE0fLhcc231hvngFfr8ORvSaVqtZJQbtqiPUIIIAAAggg4DuB7h2y8l16BJwKgSWb6/fWom43banCvBz53J6jZO+RQ2T5p5tla822WBc19Q3y4vur5N1VG2TMkAFSWpi3w67tKXz7Y1+5kZD8+PgZUtByKt9cmPzrfQaEH9phA3yJAAIIIIAAAr4V4Aiob4cuc4GbKZicd7c0nmXmAf25WW4+R266t0cx//bmUrnvhbeksq4+EZC5c12O2HecnHLwZ8RMVp9YH1+oqW+U79/2mFTUNu9z8ucnycyD9ol9bXZdHynLGT9Bqar49rwjgAACCCCAQLAEKECDNZ5pzWbFFl1a5TZeaTo5x1SfiTuP7NHPB/79jjz1+gfS5JqqtOVVmJsjJ35uHzlq6h4Sdlp/1f70j0Xyf6+8F9tqUHGh3HrWsYnrR0OiTps4MOeueBu8I4AAAggggEDwBFqrguDlRkZpEni7Uk+QxobrzRHRI9t2saa8Qv703CJ5ffnatqtleFmxnH7YVJk6Zpis3Vwp59/xRKJQveS4z8tnJzRfN2qu/Xx177LI/mby+dYqtl1LfEAAAQQQQACBIAhQgAZhFPsoh3c2Nx2t3eh1pvs92obw+rI1Yo9yrimvbLtapo4dLvWNTeY60U9j6yeOGCxXn/LF1m2U89lJZZGXW1ewhAACCCCAAAJBFKAADeKoZjAnc01oxBSi55krQq8wp+VL4l3bU/FPvfa+3P/iO1Jrrvns+LLXiV7/7aNktyH9Y1+Zo5/37jMw51sdt+MzAggggAACCARPgAI0eGPaJxktrdKD6hoarza/UGfYm5biQdgbje574U15xtzxbm9air+O2Hd3+f6X7dz29qVq81Vkj3Fl6pPmz/wvAggggAACCARZgAI0yKPbB7kt3tKwrxuV32jRh7Tt3s73ecdzr8liM02TnW7pd2d/VUoKWu6QV84V5tT7z9tuzzICCCCAAAIIBFeAAjS4Y9unmb1dXv8N88v1K3PUc1TbQF4yc4XWmetAD9tnTGy1ORX/cdGAnAm7KdU8oWjbjVlGAAEEEEAAgUAKUIAGcli9kdQKrfNqypsuckX/yFwjWthpVEpmTirLfbDT71iJAAIIIIAAAoEUoAAN5LB6K6kPNunhDdL4S1Fysrk+tPV3TqkXJpXltDtV763IiQYBBBBAAAEE0iHQWgyko3XaRKCNwNvljQcqrW8014dON3N9uo4jUyf2z3mzzSYsIoAAAggggAACCCCQWgF7BPTdTQ2z39lcf3VqW6Y1BBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQCAoAiooiZAHAgj0jcDWub/Vqei5dO45/D1KBSRtIIAAAj4QcHwQIyEigAACCCCAAAIIBEiAAjRAg0kqCCCAAAIIIICAHwTCfgiSGBFAwB8C3T2NnqrT9/7QIUoEEEAAgbgAR0DjErwjgAACCCCAAAIIZESAAjQjzHSCAAIIIIAAAgggEBegAI1L8I4AAggggAACCCCQEQEK0Iww0wkCCCCAAAIIIIBAXIACNC7BOwIIIIAAAggggEBGBChAM8JMJwgggAACCCCAAAJxAQrQuATvCCCAAAIIIIAAAhkRoADNCDOdIIAAAggggAACCMQFKEDjErwjgAACCCCAAAIIZESAAjQjzHSCAAIIIIAAAgggEBegAI1L8I4AAggggAACCCCQEQGeBZ8RZjpBIDsEeLZ7dowzWSKAAAK9FeAIaG8F2R8BBBBAAAEEEECgWwIUoN3iYmMEEEAAAQQQQACB3gr8P3BqUYZ+7dt1AAAAAElFTkSuQmCC";
@@ -5242,6 +7300,12 @@ var KASClient;
             Assets.rightArrowAlbum = "iVBORw0KGgoAAAANSUhEUgAAAF0AAACoCAMAAAC18BJbAAAAeFBMVEUAAAAAAAAAAAAAAAAAAAAiIiK+vr4AAAAQEBAAAAAAAAAAAAAAAAAAAAAAAADm5uYAAAAAAAAAAAAAAAAAAAAAAADY2NjOzs4bGxvm5uYAAAAAAADDw8Pk5OTg4ODc3NzT09MAAADy8vLHx8exsbGPj4/29vb///8OoutaAAAAJ3RSTlOAAHN9EInLQ4QKY09JLiLnVnluGGld3dWG6DkHzubj4Nkn89HDsvYAZ7aHAAACyUlEQVRo3tXb23LaMBSF4b9bSoyPNWDSFJI2UNq8/xu2F8loih0QQWvG2g/wXXhsg7XX4kui8d22qftNNdjSObOh2vR1QQK3LfrBMTHGrXJtQUupl229AlDo+94BEn3dGCDRy+0K0OhlsQSR7hsHIt3XDkR62QAqvTVk+roClb4rHDK9M5DpBch0X6HTO0OnFyDTdxt0elmh0/0Knb42dHq3RKfvHTq9c+j09RKd7g2dXq7Q6bsKob5BqBcI9Q6h7k2pVwj1AqHeIdR3ptQLhPraKfUKod4i1EtT6g1C3aPUa6XunVJvQKeXDnR6Acj0cgnI9C2ATF8BqPQ1kjGuux1/H/483V2rWyz++m++312n74mch9fAR+t9vB74WL10RF+ZwMfqLdFzH/hYvSY9H/QVyfmge0jOB73lc/zXuxi9Jj0fdCM5H3QPyfmgt6Tng16Qng96T3o+6APp+aA7ZLzhQcYbHTre2KLjjQYdb9ToeKMnDf88wRsbdLxRoeONgZvn6Z1/HOl2M/74/KbfM9KXOhzD3Yr/CHhqPeBPTOlLHY5hOhxj0OEYlQBP8SZY/HzDf/Gh3utwjFqHYzQ6HGN7G/6Ns3qnwzH8Z/CHS3j4tyTAgz4I8KD3AjzohQAPeivAg+5F+PVfZYuXN/wFgMRflMd3fAGQ+mv4EPBY3V+jBzz9KcQx4IITlMXxcDguuEpvEY0hOmEen7qJ9D2aGZ92ik9qcztl/v+Byux0/2QzkdVW5fR5zWqbNdrE5bRFHP9EZbS9HW+eM9qajzb+WaUVxu+DjFIio4RLTumcs/fN7FNRUZd+rmm0mCTdfFOAlxOMM05fXkyOzjr1eiGxO/O08dmk9OxT3mcS6hmk6z98peXRaphuZOTSJpm8Ovm0eKYaSBm1pyaaXzm11saNu7zagqdNx9xamqcN0/zasVHN3lm3ki80qv8CjPJbs/3U474AAAAASUVORK5CYII=";
             Assets.tapToDownloadDark = "iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAMAAABmmnOVAAAAV1BMVEUAAAAAo/8Ao/8Auf8Ao/8Aof8Aov8Aov8Apv8Aov8Ao/8Apf8Aov8Aof8Aov8Aov8Aov8Aov8Aov8Aov8Aov8Aov8ApP8Aov8Aov8Aof8ApP8Aov8Aof/O4IyYAAAAHHRSTlMATlUGevXZxhPvPByK5c3Ar21gKXioSNa6gEOWmOVToAAAAwFJREFUeNrs1lmygyAQhWGUYjI44pyz/3Xe96BGFNr7kH8FX3W3FuzXr1/R00Vnm7qSpYAoZVU3tis0o4sXS22wlamXgrP0uX4WOErMvWMp063CmVSbbDNjg/M1I4sfzyuEVeU8MqGbEN7UxWSsEteSayzCa8D1hleUTbQCdxItvz8Ghbupu8PIDO5nslursIiTvb4SrRArpa+eg0S85LXDcCViVjoWXmEQN1OEGwRiJ0IVziB+xoXdZIkUlSHXqSXSJPVpA1dIleJnERbpsicNGVKWnTtKg5SZ17WDoD+LFqlrvy9DIHXi60IGpG9gx60IzY4Woa3HVykR2Jsx9kZg8vA2O4SWM8ZyhNYdDWJCaNmlv9t0MIocRAjk+4iKDFHtGkaQITDuIRpCRLNj0CBEQG8jWlJEu41QpAi1aXAgRcBtIXpiRL+FmIkRM/PjghghuI8oQIxA4SMWcsTiI2pyRO0jDDnCeAYNcgS0d5f0CP8yO3qE/8izDyCs/5agRzTeF0qP8L/Rih7hPzTlAwj5iSgfQJSfCPEAQnwi8AAC/3ISf8zaywqDMBCFYUjSRqW1IqEXnPd/zlI3ZzFQhp8sIrgMfAtNMmdmiG/iGlhz1DCiHnfwd6yhNLYEESWUCq9ux4zt9C2EaO40iu2YWzBpKgFEC6ZfGzhFkxR/ESWaddzAfUIKh0AG28HNSgqHQAZbwB1TCodwBpgOzEAhBDHMoO5wCiGQwR68ApNCCGSwD69FpRACGWzhVbkUQiDDJfN8QgohiMHeJKnxCiGAwRrKrLxCCBlQZqWnEsWJIIaKc0yvOBHOwHPMyYDiRACDTTjb9or8e4Fhoym/V/BeybNXvyNxw9qv85P4yo49sAQNr9yzG5iQwfa+fdFEDNc8fId4jF75GFMDQ8xPjDFJMsRMzbd9O6YBAABgEObf9VwsPUAHNe4i47MyjjPivTMuROPHNM5U49E1bmXj2zYOduPlN1QD4jsM6WKYH0Q/IQ7MEHGIDVSUJOJFFTmrGOKqqncDCztVWUv854kAAAAASUVORK5CYII=";
             Assets.whiteEditIcon = "iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAv9JREFUaAXtmc1u1DAUhSdDi5BYgOBx4AEQ25bpdIp4KVawLz9CPABiiRAbWADiRZCQ+CmEc517pJOMx+0oGtuVYslzHdtNzudrX7vJbDalaQSmEUiNQJNqzN3Wtu0VPLNFNl1t0zT/cmsY/TyH6N0nVtfrUNsFBcPeR36L/BT5lumE3atNb1QPhcKukDV9xcXlgIHQuY/6iRD8QvmnX3+Dve196vQMBBJi6aLNnEnZgCzVCwNxYXRh75pSTwrBOoXhNLPIVj5B4Rw5hH3Ya8inyJZ+d2btlzC6ZoI3i9FAYlQA6p+5/E0wXDNPTDz6lvMKHr7vIh6h/Am5N1Vw/RzZUgyGXnnj94gOiLXtNEEcIQ6D1O7nM8xNezBsGGHYF11TD0bXzj3tv1PRw5tDWAyCU+UL2m+oOFyrZxTiWPsNn7PTa4F4gDITxXEKmWeGMFwz/JuiEAyxR1QDSwhWpWAYzY7cE/k3RKgkxDEVRyDYRBibZmHNuHALzXe8nH9x4+GEWFEp7NAT0hSKhLFpFqIZ5zyuLw0EoRgAProXGjQUnU7beIIQ6rGHNUyni6wJiqdViIOSENwnNp1iKThmYxDhflwjWSyUESIVYmMAVqcQh+6JohCxzW6TeNYrxKIGCD07qTgKjlntt6wB4kBUqjipXitqPx47ioRYromxnigKwR17IeOsIyzVa0XtVwXE2BDLNVFkOtETYze7Kk6xY48dDLFFPTEWouhmF47OWLJjIXh2KrJj80XA2IVdDsJ3Wb48e+9BlK9i1mLqoEJDbHaI1H9fPwwM6SIvw/5KvwU+0LwG5D7sn3CHDD8pELbZF6RUUoglxL/KDWHiKDYlNNWmECtAvATEXk5PUNwYEIU4gXh7sWYQZ7x5TpvaoEyoJdruqvtQaXVXvcIg7IVaMQgK61kIYtT6gPJ5qdwBsKd6Nkt55J33/Q6rkcs+GV9HfgxP2EvnujzhorcygBizxrZ61nmdwzSKdYLIjW3efw6PDNdP7FZT3TQC0whUMAL/AceaBRYh0iS9AAAAAElFTkSuQmCC";
+            Assets.videoPlayIcon = "iVBORw0KGgoAAAANSUhEUgAAAGwAAABsCAMAAAC4uKf/AAAAdVBMVEUAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////li2ZAAAAAJnRSTlMA+BdeKhDyvpoIxgTqoIPV245tMyM9Lt+liezkQwuTd81jS0mpqAbcCrAAAANjSURBVGje7VrZdqMwDLXNZpZQloadJE1a//8nTufFpgSE7ACTOc19hcO1rhbLFuSFF174xQhzq/4MkoYKQZsk+KytPCSb4BgHVNyBBvFxbaaON2IWDe/WY3LOpVhAcnZWoWInKhBwU/a4VSkVSND6Qes+IqGB6IOY490TmvDejc1yhTZcy4jKP0xlFc9uNvMJ8Zl9y/hU5nHfIAgvYoQy7fy7FXVpK0YItMPSbkc2HY6zpeVAR6uy9bjy5qcnYgaqEP/0bpRrcblAAiHS0dVgsxsgnFFpEqGVZO3QrIwgkdGh3xgy5odxmGg4u0iGMYnb6Q5DCR2tQjqUkqPqhlA4hJpbeSUULISj3eHitMEHIbkcWN7ALmKAgW2ehoheaNQUeWghnUjFoWO43SYq2+BPpCq/bGKIQuVbDaazei+bTEFcdqsVQ6l9WnDuG85c5bYUkFsaRqfDVlALVSepDP95r52XxP6bD1JKlOvPZA7l0oLENzBSOq6M6dkeW64nJvNkKClj+anjUqmhDCBDScnoUslrVJ0CyHBSVjKxZxoXZTpEhpNSfSyHdS4JRIaUsoX9H8hMBMmQUp7A8hBKn3YgGVLKm3wtnGrf5FMfJENK2cu1FxNPLdmqEJAMK+UF2tVqmRkwGVZKDkXIp9xckGRKSnijqaBgvMFkWCmvkFvkbm7DZFgpC7kaqFgxmAwrJYMKlgxVHybDStlLy6EPEZgMK2X4NGTbybhrgOwa+rsm9a7latdCvOsWs+vmuX1bcFVtwZ4ND9zKteu2cts3qZ1qUv99+73RwWL7I1O97JJkrcMgU4dBxDE3feyYe0Iccx13nQO8jTnAk3Sdq4lAKbTjpYvLcFFEC2KInKqo3vyiTA3b2v55rgB/XG5WJmRfg9U+17UtsYRCpXsh/SVQIirwHa/aiR8IhaTQiPlSf4hAWLn9eETBjvQHP3YgBojejUdaqaM5zG4KrZITaQ3r6tGwTrPU2eWoz65mt9yuGo8htefHLBAjtKdbT0borydgwIpHyMUd6IVn14L1Ydiz4prxy9ToOCQmsIyG4v/DuP8bVqRD1VrkITg1RSsY9+RRsNTd/ucTBeec7PBbjcKRA86L+JGsjDz2JtxHvTgnmyAsrLgK3iL6jegtqGKrCMkLL7zwe/EHCuOTkKLCajgAAAAASUVORK5CYII=";
+            Assets.dropDownExpand = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAYBAMAAABglkJ9AAAAElBMVEUAAAAAof8Aof8Apv8As/8Aof8yAeP/AAAABXRSTlMAgNEUCm0C0cYAAABqSURBVBjTbcuxCYBAEETREy3AxArEXKzAFk6Y/ltxL/nfwA0GdnjTfu/+PsuIaf9W11qxPafNfPRCSTFQsrYtKQZKelWDidJrKCs0hjBQg4lgIJgIJpKBZCAZSAaSgWAgmEgGkolkIBnoBY3bKrSdHeJoAAAAAElFTkSuQmCC";
+            Assets.addImageGridAlbum = "iVBORw0KGgoAAAANSUhEUgAAANgAAADYCAMAAAC+/t3fAAAAbFBMVEUAAADh4+cAcPMAcPLh5Ofh5Oji5ejn7PHj7Ozh5Ojh5Ojh5Ojl8v/g5Ojh5Ofh4+fg4+fg4+fg4+ji4+jh5Ojg5Ojh4+nh5Ori5ejj4+jk5OoAdfEAdPQAcPIAb/MAb/EAb/EAdP/g4+cAb/FofRcCAAAAInRSTlMAgEDA9+VjERrbsI4J8uzLwLemnIZ8XFNONzAlLunPpZUL09duaQAAAyNJREFUeNrt28tu4kAQheFK0r7fjQ02ITfz/u843W2sMcQoI0Ua5VTOv2iH5aeqdtggn8qHrElKM4FkyqTJhly+KApTGNI6k4aR3C/viwm2or87tjCYoAtC2SqupqWkbrMHkLK2TqalKpZPjcFqW8H6+2YIRrlpb2ZWB6e62LoLYH/jmsG7WGCLd7PhSjYarz0IdIdZMa6wgd/Po4B3nB2xLFX+M/AaXk+okkuhnyD8vFxHv42h+HLPBL9fSwe/fLm4ev8+FCX5d2Mvtqhwi6jggs3FbhmLaLlhnaipW25Z6gYG+n1jq8iNLBXJ56ei/KRyGebJKcrfrUEy91C0iSKRE2XS2DMRVSWW1PizFlXVflalPVtRVWtJpRi/kKrKLMnIZHsQVT04E2FAEYYWYWgRhhZhaBGGFmFoEYYWYWgRhhZhaBGGFmFoEYYWYWgRhhZhaBGGFmFoEYYWYWgRhhZhaBGGFmFo/XfY87NsBw57P5/fZTNs2PPZtj0zbNijgz3KVoQRRhhhhK0jjDDCCCNsHWGEEUYYYesII4wwwghbRxhhhP1y2Ont6X6vDvb6dL+300+Ffbycv9XLxw+Fnc7f7PRDYWonpvaO6X0rEnYTYYQRRhhh6wgjjDDCCFtHGGGEEUbYOsIII4ywXwhT+6MdtT+z0vvDuHsRRhhhYBGGFmFoEYYWYWgRhhZhaBGGFmFoEYYWYWgRhhZhaBGGFmFoEYYWYWgRhhZhaBGGFmFoEYYWYWgRhtYMM/bIRFWZJRkp7dmKqlpLKiWxZy2qqi0pkcafqnKzaiSbbJEoKnKiTAb3CEVRoRMNkhv7SEVRqQWZ/PJUtIuRn9QyuU7U1C13KyrcyGJRUuwGVvgN7B1xJ0raOU0vrjxwfx9ERQdnCfLV+9EcRUFHc/Xfq/JMBdcs9stX3XwO4Gd2DG4nNPoJGvB7dpgVo6zaT74d8DrGu9mwl6v2ZvLcDvQ7SNRdAHu5aQxmsElDOFsUpmbyBePGKKtpKanb7AGkrK2TaamKZaswmKALQrlT3hcTbEWff7WtgP3LmyEfsiYpYXimTJps+DysP5WX8GBdowDwAAAAAElFTkSuQmCC";
+            Assets.addCameraImageEmptyGridAlbum = "iVBORw0KGgoAAAANSUhEUgAAAQIAAADtCAMAAABj9IuBAAAA+VBMVEUAAAAAcPEAcPMAcPMAcvUAcfIAb/IAb/IAcPIAcPIAcPIAb/EAef////////8AcPIAcPL///8AcPIAdvoAcfYAb/IAcPQAc/UAcPP///////////////8AcPL///////////8AcPL///8Aev8Ab/IAb/Lz+P4AcPIAcPIAcfMAcPIAcPL///////////////////////////////////9hpvcAb/H///9Ak/QfgfIQePJgpfZPm/Wcx/ktiPP4+/6Twvno8v3L4vwyi/Pb6v2KvfhGlvR2svdtrPbD3fu92fujy/oYfPKqz/qNvvglg/Oz1fp9tvhXofX5kUX7AAAANnRSTlMAgG5jMXr69Vy25rwJ7gfby3uwEhrtRiOPx6mVFKpqUzk5EA7UnP7ApVROheDRg3FHJdtfuZ0A/gD4AAAIF0lEQVR42uzcTW+qQBTG8aPIFOkkEJXChgUR49v+MX1LmjZdNO1C/f4f5g6D91Yj6QXrZmbOfy0LfswZnA10llxlwygRMCSRRMNsJelqjb3RDQzsZuSN6RpJ38j7Pyj4kn6dF8LoQo9+1yTGIRHNF1nPkLLFPBI4FE/oFxXh0VQZ1vcOFhZ0cYGoAdZTMrLpukYQwcUC0M0mZGyTGXQXGhRCL4ElGd1SLwRRXAQY6jkakOEN6vuYUPdifaXBQ3D6LGPqnKenwPg1UDXQs+BRx6SmM3wf+NsSqlBSt3yoZmRJM6h86tT4phoDCzaCuom+nXH3nWBN1rTuvhuMKjVD/xM2Nb0BMKIOyfoKi9LPVFL7VvW6sSg92StqXwZAGHc2/KmxAJBR+4YAIrKqCMCw4+/nZFXzjk81AbAgq1oASKh99eBYld7eqH1Q9ciqelAxARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwARMwgWkEctAqSSorCQaxQKtEPLCToBBonSisJIjQochGghSdSi0kWEI18ls0gmppIUEAoKRWlQACSwmG1KohEzABE7hJMLjTFe4SrHEoc5YgxqHILoK0l98eV3YjKG+Py3upeQS+wFntCc4TvmkEOXBdAiA3iyDA9QkQGEUQoir3+6et2hGs+qf5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";
+            Assets.addImageEmptyGridAlbum = "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";
+            Assets.removeImageGridAlbum = "iVBORw0KGgoAAAANSUhEUgAAAC0AAAAtCAMAAAANxBKoAAAApVBMVEUAAAAAAAD09PQODg79/f3V1dV4eHhJSUnCwsIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABhYWFCQkIAAADw8PC9vb26urp+fn4yMjIAAAAAAAAAAAAAAAD5+fnn5+fd3d3Z2dmvr6+np6empqZUVFQjIyP///8KYF+8AAAANnRSTlOAAPSD/Nqnlc4FDH54MhB1WVZJPh8XetdtZFFPNyojHAidkkTxysmpjmZiQCb46eDdwr29mImeNObTAAABlklEQVRIx63V6XKCMBSG4aNWbcIiq/u+a+3ecv+X1oAhn2AC7Uzff0yecZI4HKjxl/5D83i+cNkvNJsHQ4uybM/hldqd9KnQ6GLUPFAWnSO9nsEWGjONfiJTJ17WzCdzvUVJA+uyXWhsw9hweaNnVJcHzfsm9L1q0bWp0gHJju3tvkWo85w01/KkTGrXItkgSZJ2C/hBPO/kQyj1RC2/JJIDJ/v8XpaZZtj1ZyI5cPNIMifTc0KPkgN31Zqf6YA0HFhls1QPScMPCqMo1RZpeKIwcoTmhMCBUSh0TDoOjALClaDOVb+2qJgv9IIQ7hn3jiZCuxqs5xuhmQ43Bxo+Fbpha3AXfxOapdrTYbrnFk+1A9xVWPEBJlEj1Rz6Q2HwFclCoUUjpQ85BoeOr/pCqvft25rQ7mYnXv5ensnU+kudMc51RPWNMU/GtbjnQrNTDbai28nGe9XaKU7NhV2FN+X57Q7N23Dup/3SMx0wakCjqW7z1tg1fNNYeLd7L674Xi4d38bPjkJY6EIscsLAn2ymM15e+gHQ4TOFzq9t5wAAAABJRU5ErkJggg==";
             return Assets;
         }());
         UI.Assets = Assets;
@@ -5914,12 +7978,16 @@ var KASClient;
                 this.viewLessText = null;
                 this.likes = 0;
                 this.didILike = false;
+                this.didIComment = false;
                 this.comments = 0;
                 this.likeAction = null;
+                this.subtitleAction = null;
                 this.showAllCommentsAction = null;
+                this.showAllLikesAction = null;
                 this.hideSenderSection = false;
                 this.hideTitleSection = false;
                 this.hideLikes = false;
+                this.hideLikesDetails = false;
                 this.hideComments = false;
                 this.hideLikesAndCommentsSection = false;
                 this.useOriginalName = false;
@@ -5991,10 +8059,13 @@ var KASClient;
                 UI.setAccessibilityAttribute(userProfilePicDiv, UI.KASFormAccessibilityKey.Hidden, "true");
                 var userNameLabel = UI.getLabel((this.useOriginalName ? this.creator.originalName : this.creator.name), this.getUserNameAttributes());
                 var assignedToLabel = UI.getLabel(this.assignedToLabel, this.getSentToAttributes());
+                UI.setAccessibilityBasic(assignedToLabel, false, UI.KASFormAccessibilityRole.None, "");
                 var assigneesLabel = UI.getLabel(this.assignees, this.getAssigneesAttributes());
+                UI.setAccessibilityBasic(assigneesLabel, false, UI.KASFormAccessibilityRole.None, "");
                 var assigneesActionLabel = null;
                 if (this.assigneesActionTitle) {
                     assigneesActionLabel = UI.getLabel(this.assigneesActionTitle, this.getAssigneesActionAttributes());
+                    UI.setAccessibilityBasic(assigneesActionLabel, false, UI.KASFormAccessibilityRole.None, "");
                     UI.addClickEvent(assigneesActionLabel, this.assigneesAction);
                 }
                 var sentToAssigneesLabel = UI.getHorizontalDiv([assignedToLabel, UI.getSpace("2pt"), assigneesLabel, UI.getSpace("2pt"), assigneesActionLabel, UI.getFlexibleSpace()]);
@@ -6010,12 +8081,15 @@ var KASClient;
                 return this.titleDiv;
             };
             KASFormDetailsModule.prototype.setFormTitle = function () {
+                var titleText;
                 if (this.showDrawer && this.drawerCollapsed) {
-                    UI.setText(this.titleDiv, KASClient.getEllipsizedString(this.formTitle, FORM_TITLE_VISIBLE_LENGTH));
+                    titleText = KASClient.getEllipsizedString(this.formTitle, FORM_TITLE_VISIBLE_LENGTH);
                 }
                 else {
-                    UI.setText(this.titleDiv, this.formTitle);
+                    titleText = this.formTitle;
                 }
+                UI.setText(this.titleDiv, titleText);
+                UI.setAccessibilityBasic(this.titleDiv, false, UI.KASFormAccessibilityRole.Text, "Title, " + titleText);
             };
             KASFormDetailsModule.prototype.getFormDescriptionRow = function () {
                 if (this.formDescription == null || this.formDescription == "") {
@@ -6040,44 +8114,78 @@ var KASClient;
                 if (this.formSubtitle) {
                     var subtitleDiv = UI.getLabel(this.formSubtitle, this.getFormSubtitleAttributes());
                     UI.setAccessibilityBasic(subtitleDiv, false, UI.KASFormAccessibilityRole.Text);
+                    subtitleDiv.onclick = this.subtitleAction;
                     return subtitleDiv;
                 }
                 return null;
+            };
+            KASFormDetailsModule.prototype.likeClickPreProcessing = function (likeIconImage, likeIconDiv, likeTitleDiv, likeCountDiv, likeDiv) {
+                var likeSrc;
+                var likeTextBackground = GREY_BACKGROUND_COLOR;
+                var likeTextLeftPadding = "5pt";
+                UI.setAccessibilityAttribute(likeDiv, UI.KASFormAccessibilityKey.Hidden, "true");
+                if (this.didILike && this.likes > 0) {
+                    this.likes--;
+                    this.didILike = false;
+                    likeSrc = UI.Assets.like;
+                    if (this.likes == 0) {
+                        likeTextBackground = CLEAR_COLOR;
+                        likeTextLeftPadding = "0";
+                    }
+                }
+                else {
+                    this.likes++;
+                    this.didILike = true;
+                    likeSrc = UI.Assets.unlike;
+                }
+                likeIconImage.src = UI.getBase64Src(likeSrc);
+                likeTitleDiv.innerHTML = "" + this.likes;
+                UI.setAccessibilityBasic(likeDiv, false, UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString(this.likes == 1 ? "KASFormPageLikeCount" : "KASFormPageLikesCount", this.likes));
+                UI.setText(likeTitleDiv, "" + this.getLikesOrCommentsCountString(this.likes, "like"));
+                if (!this.hideLikesDetails) {
+                    likeCountDiv.style.backgroundColor = likeTextBackground;
+                    likeCountDiv.style.paddingLeft = likeTextLeftPadding;
+                }
+                this.likeAction();
             };
             KASFormDetailsModule.prototype.getLikesCommentsCountRow = function () {
                 var _this = this;
                 var likesAndCommentsElements = [];
                 if (!this.hideLikes) {
                     var likeIconImage = UI.getBase64Image((this.didILike ? UI.Assets.unlike : UI.Assets.like), this.getLikeIconAttributes());
-                    var likeTitleDiv = UI.getLabel("" + this.likes, this.getIconTitleAttributes());
-                    var likeDiv = UI.getHorizontalDiv([likeIconImage, UI.getSpace("5pt"), likeTitleDiv]);
+                    var likeIconDiv = UI.getHorizontalDiv([UI.getSpace("10pt"), likeIconImage, UI.getSpace("5pt")], this.getLikeIconBackgroundAttributes());
+                    var likeTitleDiv = UI.getLabel("" + this.getLikesOrCommentsCountString(this.likes, "like"), this.getIconTitleAttributes());
+                    var likeCountDiv = UI.getHorizontalDiv([likeTitleDiv, UI.getSpace("10pt")], this.getLikeTextBackgroundAttributes());
+                    var likeDiv = UI.getHorizontalDiv([likeIconDiv, likeCountDiv], this.getLikeParentBackgroundAttributes());
                     UI.setAccessibilityBasic(likeDiv, false, UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString(this.likes == 1 ? "KASFormPageLikeCount" : "KASFormPageLikesCount", this.likes));
-                    UI.addClickEvent(likeDiv, function () {
-                        var likeSrc;
-                        UI.setAccessibilityAttribute(likeDiv, UI.KASFormAccessibilityKey.Hidden, "true");
-                        if (_this.didILike && _this.likes > 0) {
-                            _this.likes--;
-                            _this.didILike = false;
-                            likeSrc = UI.Assets.like;
+                    UI.addClickEvent(likeIconDiv, function () {
+                        _this.likeClickPreProcessing(likeIconImage, likeIconDiv, likeTitleDiv, likeCountDiv, likeDiv);
+                    });
+                    UI.addClickEvent(likeCountDiv, function () {
+                        if (!_this.hideLikesDetails && _this.likes > 0) {
+                            _this.showAllLikesAction();
                         }
                         else {
-                            _this.likes++;
-                            _this.didILike = true;
-                            likeSrc = UI.Assets.unlike;
+                            _this.likeClickPreProcessing(likeIconImage, likeIconDiv, likeTitleDiv, likeCountDiv, likeDiv);
                         }
-                        likeIconImage.src = UI.getBase64Src(likeSrc);
-                        likeTitleDiv.innerHTML = "" + _this.likes;
-                        UI.setAccessibilityBasic(likeDiv, false, UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString(_this.likes == 1 ? "KASFormPageLikeCount" : "KASFormPageLikesCount", _this.likes));
-                        UI.setText(likeTitleDiv, "" + _this.likes);
-                        _this.likeAction();
                     });
-                    likesAndCommentsElements.push(likeDiv);
-                    likesAndCommentsElements.push(UI.getSpace("10pt"));
+                    if (!this.hideLikesDetails && this.hideComments) {
+                        var chevronIcon = UI.getChevronIcon();
+                        var likeCompositeDiv = UI.getHorizontalDiv([likeDiv, chevronIcon], UI.getCoverRestOfTheSpaceAttributes());
+                        UI.setAccessibilityBasic(chevronIcon, false, UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString("KASFormPageShowDetail"));
+                        UI.setAccessibilityBasic(likeCompositeDiv, false, UI.KASFormAccessibilityRole.None, "");
+                        UI.addClickEvent(chevronIcon, this.showAllCommentsAction);
+                        likesAndCommentsElements.push(likeCompositeDiv);
+                    }
+                    else {
+                        likesAndCommentsElements.push(likeDiv);
+                        likesAndCommentsElements.push(UI.getSpace("10pt"));
+                    }
                 }
                 if (!this.hideComments) {
-                    var commentIconImage = UI.getBase64Image(UI.Assets.comment, this.getCommentIconAttributes());
-                    var commentTitleDiv = UI.getLabel("" + this.comments, this.getIconTitleAttributes());
-                    var commentDiv = UI.getHorizontalDiv([commentIconImage, UI.getSpace("5pt"), commentTitleDiv]);
+                    var commentIconImage = UI.getBase64Image((this.didIComment ? UI.Assets.mycomment : UI.Assets.comment), this.getCommentIconAttributes());
+                    var commentTitleDiv = UI.getLabel("" + this.getLikesOrCommentsCountString(this.comments, "comment"), this.getIconTitleAttributes());
+                    var commentDiv = UI.getHorizontalDiv([UI.getSpace("10pt"), commentIconImage, UI.getSpace("5pt"), commentTitleDiv, UI.getSpace("10pt")], this.getCommentBackgroundAttributes());
                     var chevronIcon = UI.getChevronIcon();
                     if (this.showAllCommentsAction != null) {
                         UI.setAccessibilityBasic(commentDiv, false, UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString(this.comments == 1 ? "KASFormPageCommentCount" : "KASFormPageCommentsCount", this.comments));
@@ -6130,9 +8238,76 @@ var KASClient;
                     return null;
                 }
             };
+            KASFormDetailsModule.prototype.getLikesOrCommentsCountString = function (likesOrCommentsCount, type) {
+                var suffix = "";
+                var divider = 1;
+                if (likesOrCommentsCount == 0) {
+                    return type == "like" ? KASClient.Internal.getKASClientString("KASFormPageNoLikes") : KASClient.Internal.getKASClientString("KASFormPageNoComments");
+                }
+                else if (likesOrCommentsCount < 1000) {
+                    return likesOrCommentsCount.toString();
+                }
+                else if (likesOrCommentsCount >= 10000 && likesOrCommentsCount < 1000000) {
+                    /* 10K, 11K ... 999K */
+                    return (likesOrCommentsCount / 1000).toString() + "K";
+                }
+                else if (likesOrCommentsCount >= 1000 && likesOrCommentsCount < 10000) {
+                    /* 1K, 1.1K ... 9.9K */
+                    divider = 100;
+                    suffix = "K";
+                }
+                else if (likesOrCommentsCount >= 1000000 && likesOrCommentsCount < 1000000000) {
+                    /* 1M, 1.1M, 1.2M ... */
+                    divider = 100000;
+                    suffix = "M";
+                }
+                else if (likesOrCommentsCount >= 1000000000) {
+                    /* 1B, 1.1B, ... */
+                    divider = 10000000;
+                    suffix = "B";
+                }
+                var truncatedCount = (likesOrCommentsCount / divider).toString();
+                var firstDigit = truncatedCount.substring(0, truncatedCount.length - 1);
+                var secondDigit = truncatedCount.charAt(truncatedCount.length - 1);
+                var countString = secondDigit == "0" ? firstDigit : firstDigit + "." + secondDigit;
+                countString += suffix;
+                return countString;
+            };
+            KASFormDetailsModule.prototype.getCommentBackgroundAttributes = function () {
+                var attributes = {};
+                attributes["height"] = "32px";
+                attributes["width"] = "fit-content";
+                attributes["border-radius"] = "100px";
+                attributes["box-shadow"] = "0 1px 2px 0 rgba(0, 0, 0, 0.2)";
+                return attributes;
+            };
+            KASFormDetailsModule.prototype.getLikeIconBackgroundAttributes = function () {
+                var attributes = {};
+                attributes["height"] = "32px";
+                attributes["width"] = "fit-content";
+                attributes["border-radius"] = "100px 0 0 100px";
+                attributes["border-right-color"] = CLEAR_COLOR;
+                return attributes;
+            };
+            KASFormDetailsModule.prototype.getLikeTextBackgroundAttributes = function () {
+                var attributes = {};
+                attributes["padding-left"] = !this.hideLikesDetails && this.likes > 0 ? "5px" : "0";
+                attributes["height"] = "32px";
+                attributes["width"] = "fit-content";
+                attributes["border-radius"] = "0 100px 100px 0";
+                attributes["border-left-color"] = CLEAR_COLOR;
+                attributes["background-color"] = !this.hideLikesDetails && this.likes > 0 ? GREY_BACKGROUND_COLOR : CLEAR_COLOR;
+                return attributes;
+            };
+            KASFormDetailsModule.prototype.getLikeParentBackgroundAttributes = function () {
+                var attributes = {};
+                attributes["border-radius"] = "100px";
+                attributes["box-shadow"] = "0 1px 2px 0 rgba(0, 0, 0, 0.2)";
+                return attributes;
+            };
             KASFormDetailsModule.prototype.getDetailsModuleAttributes = function () {
                 var attributes = {};
-                attributes["padding"] = "12pt 12pt 0 12pt";
+                attributes["padding"] = "12px 12px 0 12px";
                 attributes["border-bottom"] = "1pt solid rgb(219, 219, 219)";
                 attributes["background-color"] = "rgb(255, 255, 255)";
                 return attributes;
@@ -6211,16 +8386,16 @@ var KASClient;
             };
             KASFormDetailsModule.prototype.getLikeIconAttributes = function () {
                 var attributes = {};
-                attributes["width"] = "16pt";
-                attributes["height"] = "16pt";
+                attributes["width"] = "16px";
+                attributes["height"] = "16px";
                 attributes["flex"] = "none";
                 attributes["overflow"] = "hidden";
                 return attributes;
             };
             KASFormDetailsModule.prototype.getCommentIconAttributes = function () {
                 var attributes = {};
-                attributes["width"] = "17pt";
-                attributes["height"] = "15pt";
+                attributes["width"] = "16px";
+                attributes["height"] = "16px";
                 attributes["flex"] = "none";
                 attributes["overflow"] = "hidden";
                 return attributes;
@@ -6228,8 +8403,8 @@ var KASClient;
             KASFormDetailsModule.prototype.getIconTitleAttributes = function () {
                 var attributes = {};
                 attributes["font-size"] = UI.getScaledFontSize("12pt");
-                attributes["font-weight"] = REGULAR_FONT_WEIGHT;
-                attributes["color"] = TEXT_PRIMARY_COLOR;
+                attributes["font-weight"] = MEDIUM_FONT_WEIGHT;
+                attributes["color"] = this.hideLikesDetails ? TEXT_PRIMARY_COLOR : BLUE_COLOR;
                 return attributes;
             };
             return KASFormDetailsModule;
@@ -6403,6 +8578,15 @@ var KASClient;
                             KASClient.App.showImageImmersiveView([this.src]);
                         };
                     }
+                    else if (!this.plainTextSubtitle && KASClient.isListOfImageAttachments(this.subtitles[i])) {
+                        var attachmentsList = [];
+                        var attachmentsListJSONArray = JSON.parse(this.subtitles[i]);
+                        for (var i = 0; i < attachmentsListJSONArray.length; i++) {
+                            attachmentsList.push(KASClient.KASImageAttachment.fromJSON(attachmentsListJSONArray[i]));
+                        }
+                        var gridView = new UI.KASImageGridAlbumView("", attachmentsList, true, null, null);
+                        subtitleLabel = gridView.getInputView();
+                    }
                     else {
                         subtitleLabel = UI.getLabel(this.subtitles[i], this.getSubtitleAttributes(i));
                     }
@@ -6512,6 +8696,7 @@ var KASClient;
                 _this.footerText = null;
                 _this.imageAttributes = null;
                 _this.footerTextAttributes = null;
+                _this.imageTowardsLeft = true;
                 return _this;
             }
             KASFormImageTitleSubtitleActionModule.prototype.getNumberOfRows = function () {
@@ -6532,7 +8717,12 @@ var KASClient;
                 if (this.footerText != null && this.footerText[i] != null) {
                     footer = UI.getLabel(this.footerText[i], Object.assign(this.getModuleFooterAttributes(i), this.footerTextAttributes));
                 }
-                return UI.getVerticalDiv([UI.getHorizontalDiv([image, this.getSpaceAttributes(), _super.prototype.getRowView.call(this, i)], this.getRowWithImageAttributes()), footer]);
+                if (this.imageTowardsLeft) {
+                    return UI.getVerticalDiv([UI.getHorizontalDiv([image, this.getSpaceAttributes(), _super.prototype.getRowView.call(this, i)], this.getRowWithImageAttributes()), footer]);
+                }
+                else {
+                    return UI.getVerticalDiv([UI.getHorizontalDiv([_super.prototype.getRowView.call(this, i), this.getSpaceAttributes(), image], this.getRowWithImageAttributes()), footer]);
+                }
             };
             KASFormImageTitleSubtitleActionModule.prototype.getImageAttributes = function (i) {
                 var attributes = {};
@@ -6558,7 +8748,12 @@ var KASClient;
             };
             KASFormImageTitleSubtitleActionModule.prototype.getRowWithImageAttributes = function () {
                 var attributes = {};
-                attributes["justify-content"] = "flex-start";
+                if (this.imageTowardsLeft) {
+                    attributes["justify-content"] = "flex-start";
+                }
+                else {
+                    attributes["justify-content"] = "space-between";
+                }
                 return attributes;
             };
             return KASFormImageTitleSubtitleActionModule;
@@ -6624,14 +8819,18 @@ var KASClient;
                 var attributes = {};
                 if (!this.navigationBarHidden) {
                     if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-                        attributes["margin-top"] = NAVIGATION_BAR_HEIGHT_IOS;
+                        if (!KASClient.isIOSVersionAbove11()) {
+                            attributes["margin-top"] = NAVIGATION_BAR_HEIGHT_IOS;
+                        }
                     }
                     else {
                         attributes["margin-top"] = NAVIGATION_BAR_HEIGHT_ANDROID;
                     }
                 }
                 if (!this.bottomBarHidden) {
-                    attributes["margin-bottom"] = BOTTOM_BAR_HEIGHT;
+                    if (!KASClient.isIOSVersionAbove11()) {
+                        attributes["margin-bottom"] = BOTTOM_BAR_HEIGHT;
+                    }
                 }
                 attributes["background-color"] = CLEAR_COLOR;
                 attributes["padding"] = MODULE_GAP;
@@ -6715,8 +8914,14 @@ var KASClient;
             };
             KASFormPage.prototype.showPage = function () {
                 this.view.style.left = "0";
-                this.navigationBar.getView().style.position = "fixed";
-                this.bottomBar.getView().style.position = "fixed";
+                if (!KASClient.isIOSVersionAbove11()) {
+                    this.navigationBar.getView().style.position = "fixed";
+                    this.bottomBar.getView().style.position = "fixed";
+                }
+                else {
+                    this.navigationBar.getView().style.position = "static";
+                    this.bottomBar.getView().style.position = "static";
+                }
                 KASClient.Internal.screenChanged(this.navigationBar.title);
                 this.view.removeAttribute(UI.KASFormAccessibilityKey.Hidden);
             };
@@ -6765,7 +8970,9 @@ var KASClient;
             };
             KASFormPageBottomBar.prototype.getBottomBarAttributes = function () {
                 var attributes = {};
-                attributes["position"] = "fixed";
+                if (!KASClient.isIOSVersionAbove11()) {
+                    attributes["position"] = "fixed";
+                }
                 attributes["left"] = "0";
                 attributes["right"] = "0";
                 attributes["bottom"] = "0";
@@ -6818,6 +9025,7 @@ var KASClient;
                     else {
                         backIcon = UI.getImage(this.backAsset, this.getBackIconAttributes());
                     }
+                    UI.setAccessibilityAttribute(backIcon, UI.KASFormAccessibilityKey.Hidden, "true");
                     var backIconDiv = UI.getHorizontalDiv([backIcon], this.getBackIconContainerAttributes());
                     UI.setAccessibilityBasic(backIconDiv, false, UI.KASFormAccessibilityRole.Button, this.backAccessibilityLabel ? this.backAccessibilityLabel : KASClient.Internal.getKASClientString("KASFormPageBackIcon"));
                     UI.addClickEvent(backIconDiv, this.backAction);
@@ -6853,6 +9061,7 @@ var KASClient;
                         this.rightButtonElements = [rightButton];
                     }
                     var titleSubtitleDiv = UI.getVerticalDiv([this.titleDiv, this.subtitleDiv], this.getTitleSubtitleAttributes());
+                    UI.setAccessibilityBasic(titleSubtitleDiv, false, UI.KASFormAccessibilityRole.None, "");
                     this.view = UI.getHorizontalDiv([backIconDiv, iconDiv, UI.getSpace("8pt"), titleSubtitleDiv, UI.getFlexibleSpace()].concat(this.rightButtonElements), this.getNavigationBarAttributes());
                 }
                 return this.view;
@@ -6880,7 +9089,9 @@ var KASClient;
             };
             KASFormPageNavigationBar.prototype.getNavigationBarAttributes = function () {
                 var attributes = {};
-                attributes["position"] = "fixed";
+                if (!KASClient.isIOSVersionAbove11()) {
+                    attributes["position"] = "fixed";
+                }
                 attributes["top"] = "0";
                 attributes["left"] = "0";
                 attributes["right"] = "0";
@@ -7241,7 +9452,7 @@ var KASClient;
                 if (this.getNumberOfRows() > i + 1) {
                     attributes["border-left"] = "1pt dashed #98a3af";
                 }
-                attributes["height"] = "45pt";
+                attributes["height"] = "auto";
                 return attributes;
             };
             KASFormTimelineModule.prototype.getRowWithImageAttributes = function () {
@@ -7376,6 +9587,7 @@ var SHADOW_COLOR = "rgba(0, 0, 0, 0.1)";
 var CLEAR_COLOR = "rgba(0, 0, 0, 0)";
 var TEXT_PRIMARY_COLOR = "rgb(50, 72, 95)";
 var TEXT_SECONDARY_COLOR = "rgb(102, 119, 135)";
+var GREY_BACKGROUND_COLOR = "rgba(212, 216, 219, 0.4)";
 var REGULAR_FONT_WEIGHT = "normal";
 var MEDIUM_FONT_WEIGHT = "500";
 var SEMIBOLD_FONT_WEIGHT = "600";
@@ -7845,6 +10057,28 @@ var KASClient;
             attributes["-webkit-user-select"] = "text";
             return attributes;
         }
+        function highlightLinksInElement(element) {
+            if (element == null)
+                return;
+            var allowedTypes = ["label", "div", "p"];
+            if (allowedTypes.indexOf(element.nodeName.toLowerCase()) == -1)
+                return;
+            var text = element.innerText;
+            var urlRegexHttp = /(\b(https?|ftp):?\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig; // for http urls
+            var urlRegexWww = /(^|[^\/])(www\.[\S]+(\b|$))/gim; // for www urls
+            text = text.replace(urlRegexHttp, function (url) {
+                return "<a href=\"" + url + "\">" + url + "</a>";
+            });
+            text = text.replace(urlRegexWww, function (url) {
+                var newUrl = url;
+                if (url.toLowerCase().lastIndexOf("www") == 0) {
+                    newUrl = "http://" + url;
+                }
+                return "<a href=\"" + newUrl + "\">" + url + "</a>";
+            });
+            element.innerHTML = text;
+        }
+        UI.highlightLinksInElement = highlightLinksInElement;
         function showImageImmersiveView(path) {
             if (path === void 0) { path = null; }
             var alertAttributes = {
@@ -8097,6 +10331,53 @@ var KASClient;
             }
         }
         UI.getStyle = getStyle;
+    })(UI = KASClient.UI || (KASClient.UI = {}));
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var UI;
+    (function (UI) {
+        var UrlType;
+        (function (UrlType) {
+            UrlType[UrlType["Current"] = 0] = "Current";
+            UrlType[UrlType["Fixed"] = 1] = "Fixed"; // A fixed url value will be shared irrespective of current window.location
+        })(UrlType = UI.UrlType || (UI.UrlType = {}));
+        var UrlAction;
+        (function (UrlAction) {
+            UrlAction[UrlAction["None"] = 0] = "None";
+            UrlAction[UrlAction["Share"] = 1] = "Share";
+            UrlAction[UrlAction["OpenInBrowser"] = 2] = "OpenInBrowser"; // 'Open in Browser' option will be available in toolbar actions
+        })(UrlAction = UI.UrlAction || (UI.UrlAction = {}));
+        var KASNativeToolbarProperties = (function () {
+            function KASNativeToolbarProperties() {
+                this.icon = null;
+                this.title = null;
+                this.subtitle = null;
+                this.fixedUrl = null;
+                this.urlType = UrlType.Current;
+                this.urlAction = UrlAction.None;
+            }
+            KASNativeToolbarProperties.prototype.toJSON = function () {
+                var object = JSON.parse("{}");
+                if (this.icon) {
+                    object["icon"] = this.icon;
+                }
+                if (this.title) {
+                    object["title"] = this.title;
+                }
+                if (this.subtitle) {
+                    object["subtitle"] = this.subtitle;
+                }
+                if (this.fixedUrl) {
+                    object["fixedUrl"] = this.fixedUrl;
+                }
+                object["urlType"] = this.urlType;
+                object["urlAction"] = this.urlAction;
+                return object;
+            };
+            return KASNativeToolbarProperties;
+        }());
+        UI.KASNativeToolbarProperties = KASNativeToolbarProperties;
     })(UI = KASClient.UI || (KASClient.UI = {}));
 })(KASClient || (KASClient = {}));
 var KASClient;
@@ -8578,6 +10859,7 @@ var KASClient;
                 if (this.slides.length > 1) {
                     this.photoIndexLabel.style.display = "block";
                     this.photoIndexLabel.innerText = (this.currentIndex + 1) + " / " + this.slides.length;
+                    KASClient.UI.setAccessibilityBasic(this.photoIndexLabel, false, KASClient.UI.KASFormAccessibilityRole.Text, KASClient.Internal.getKASClientString("X_of_Y_Images", (this.currentIndex + 1), this.slides.length));
                 }
                 else {
                     this.photoIndexLabel.style.display = "none";
@@ -9207,11 +11489,11 @@ var KASClient;
                 this.header = header;
             }
             KASInputView.prototype.getView = function () {
-                var headerDiv = UI.getLabel(this.header, {
+                var headerDiv = UI.getLabel(this.header, Object.assign({
                     "font-size": KASClient.UI.getScaledFontSize("12px"),
                     "font-weight": "600",
                     "color": "#32485f",
-                });
+                }, KASClient.UI.getMediumFontAttributes()));
                 UI.setAccessibilityBasic(headerDiv, false /*isHidden*/);
                 return UI.getVerticalDiv([headerDiv, UI.getSpace("12px"), this.getInputView()], {
                     "position": "relative",
@@ -9245,6 +11527,8 @@ var KASClient;
                 var _this = _super.call(this, header) || this;
                 _this.date = null;
                 _this.placeHolder = null;
+                _this.showYear = false;
+                _this.allowPastDate = false;
                 _this.date = date;
                 _this.placeHolder = placeHolder;
                 _this.dateChangeCallback = dateChangeCallback;
@@ -9259,7 +11543,7 @@ var KASClient;
                 });
                 var dateText;
                 if (this.date != null) {
-                    dateText = KASClient.getDateString(this.date, true, false);
+                    dateText = KASClient.getDateString(this.date, true, false, this.showYear);
                 }
                 else if (this.placeHolder != null) {
                     dateText = this.placeHolder;
@@ -9267,7 +11551,7 @@ var KASClient;
                 else {
                     var date = new Date();
                     date.setUTCHours(0, 0, 0, 0);
-                    dateText = KASClient.getDateString(date, true, false);
+                    dateText = KASClient.getDateString(date, true, false, this.showYear);
                 }
                 var dateTextLabel = KASClient.UI.getLabel(dateText, {
                     "flex": "1",
@@ -9290,7 +11574,7 @@ var KASClient;
                         this.datePicker.valueAsNumber = new Date().getTime();
                     }
                     this.date = new Date(this.datePicker.valueAsNumber);
-                    KASClient.UI.setText(dateTextLabel, KASClient.getDateString(this.date, true, false));
+                    KASClient.UI.setText(dateTextLabel, KASClient.getDateString(this.date, true, false, this.showYear));
                     if (this.dateChangeCallback) {
                         this.dateChangeCallback(this.datePicker.valueAsNumber);
                     }
@@ -9309,7 +11593,7 @@ var KASClient;
             };
             KASDateInputView.prototype.invalidDate = function () {
                 return (this.datePicker.value == null || this.datePicker.value == "" ||
-                    this.datePicker.valueAsNumber < this.getCurrentDateWithoutTime());
+                    (!this.allowPastDate && this.datePicker.valueAsNumber < this.getCurrentDateWithoutTime()));
             };
             KASDateInputView.prototype.getDate = function () {
                 if (this.invalidDate()) {
@@ -9325,6 +11609,361 @@ var KASClient;
             return KASDateInputView;
         }(UI.KASInputView));
         UI.KASDateInputView = KASDateInputView;
+    })(UI = KASClient.UI || (KASClient.UI = {}));
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var UI;
+    (function (UI) {
+        var KASImageGridAlbumView = (function (_super) {
+            __extends(KASImageGridAlbumView, _super);
+            function KASImageGridAlbumView(header, imageAttachments, previewMode, props, pickAttachmentsCallback) {
+                var _this = _super.call(this, header) || this;
+                _this.imageAttachments = [];
+                _this.previewMode = false;
+                _this.maxImageCount = -1;
+                _this.imagePickerSource = KASClient.ImagePickerSource.All;
+                _this.props = JSON.parse("{}");
+                _this.attachmentsAdded = 0;
+                if (imageAttachments != null) {
+                    _this.imageAttachments = imageAttachments;
+                }
+                _this.previewMode = previewMode;
+                _this.props = props;
+                _this.pickAttachmentsCallback = pickAttachmentsCallback;
+                _this.gridContainer = UI.getElement("div", _this.getGridContainerStyleAttributes());
+                return _this;
+            }
+            KASImageGridAlbumView.prototype.getInputView = function () {
+                UI.clearElement(this.gridContainer);
+                this.populateGrid();
+                return this.gridContainer;
+            };
+            KASImageGridAlbumView.prototype.populateGrid = function () {
+                UI.addCSS(this.gridContainer, this.getGridContainerStyleAttributes());
+                var cellCount = this.imageAttachments.length + (this.shouldShowAddImageButton() ? 1 : 0);
+                for (var attachmentIndex = 0; attachmentIndex < cellCount; attachmentIndex++) {
+                    var cellView = UI.getElement("div");
+                    if (attachmentIndex < this.imageAttachments.length) {
+                        var imageAttachment = this.imageAttachments[attachmentIndex];
+                        var image = this.getImageViewForGrid(attachmentIndex, imageAttachment);
+                        UI.addElement(image, cellView);
+                        this.attachmentsAdded++;
+                    }
+                    else if (attachmentIndex == this.imageAttachments.length && this.shouldShowAddImageButton()) {
+                        UI.addElement(this.getAddImageButtonView((this.imagePickerSource == KASClient.ImagePickerSource.CameraBack) || (this.imagePickerSource == KASClient.ImagePickerSource.CameraFront)), cellView);
+                    }
+                    UI.addElement(cellView, this.gridContainer);
+                }
+            };
+            KASImageGridAlbumView.prototype.setMaxImageCount = function (maxImageCount) {
+                this.maxImageCount = maxImageCount;
+            };
+            KASImageGridAlbumView.prototype.setImagePickerSource = function (imagePickerSource) {
+                this.imagePickerSource = imagePickerSource;
+            };
+            KASImageGridAlbumView.prototype.getSelectedAttachments = function () {
+                return this.imageAttachments;
+            };
+            KASImageGridAlbumView.prototype.shouldShowAddImageButton = function () {
+                if (this.previewMode) {
+                    return false;
+                }
+                else {
+                    if (this.imageAttachments.length == this.maxImageCount) {
+                        return false;
+                    }
+                    else if (this.imageAttachments.length < this.maxImageCount) {
+                        return true;
+                    }
+                    else {
+                        //possible?
+                    }
+                }
+            };
+            KASImageGridAlbumView.prototype.getAddImageButtonView = function (cameraOnly) {
+                if (cameraOnly === void 0) { cameraOnly = false; }
+                var addImageButtonContainer = UI.getElement("div", { "position": "relative" });
+                var addImageButton;
+                if (this.imageAttachments.length > 0) {
+                    addImageButton = UI.getBase64Image(UI.Assets.addImageGridAlbum, this.getAddImageButtonStyleAttributes());
+                    UI.addCSS(addImageButtonContainer, { "width": "84px", "height": "84px" });
+                    KASClient.UI.setAccessibilityBasic(addImageButtonContainer, false, KASClient.UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString("AddMoreImages"));
+                }
+                else {
+                    if (cameraOnly) {
+                        addImageButton = UI.getBase64Image(UI.Assets.addCameraImageEmptyGridAlbum, { "width": "84px", "height": "77px" });
+                        KASClient.UI.setAccessibilityBasic(addImageButtonContainer, false, KASClient.UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString("CameraPicker"));
+                    }
+                    else {
+                        addImageButton = UI.getBase64Image(UI.Assets.addImageEmptyGridAlbum, { "width": "84px", "height": "77px" });
+                        KASClient.UI.setAccessibilityBasic(addImageButtonContainer, false, KASClient.UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString("ImagePicker"));
+                    }
+                    UI.addCSS(addImageButtonContainer, { "width": "84px", "height": "77px" });
+                }
+                var self = this;
+                UI.addClickEvent(addImageButton, function () {
+                    self.props[KASClient.KASAttachmentListQuestionConfig.MAX_IMAGE_COUNT_KEY] = self.maxImageCount - self.imageAttachments.length;
+                    KASClient.App.showAttachmentPickerAsync([KASClient.KASAttachmentType.Image], self.props, function (selectedAttachments, error) {
+                        if (error != null) {
+                            return;
+                        }
+                        self.imageAttachments = self.imageAttachments.concat(selectedAttachments);
+                        self.imagePickerSource = self.props[KASClient.KASAttachmentListQuestionConfig.IMAGE_SOURCE_KEY];
+                        self.getInputView();
+                        self.pickAttachmentsCallback(self.imageAttachments);
+                    });
+                });
+                UI.addElement(addImageButton, addImageButtonContainer);
+                return addImageButtonContainer;
+            };
+            KASImageGridAlbumView.prototype.getImageViewForGrid = function (attachmentIndex, imageAttachment) {
+                var path = imageAttachment.localPath;
+                if (KASClient.isEmptyString(path)) {
+                    path = imageAttachment.thumbnailServerUrl;
+                }
+                if (KASClient.isEmptyString(path)) {
+                    path = imageAttachment.serverPath;
+                }
+                var image = UI.getImage(path, this.previewMode ? this.getPreviewImageStyleAttributes() : this.getImageStyleAttributes());
+                image.onclick = function (index, e) {
+                    var urlList = [];
+                    for (var i = 0; i < this.imageAttachments.length; i++) {
+                        var path = this.imageAttachments[i].localPath;
+                        if (KASClient.isEmptyString(path)) {
+                            path = this.imageAttachments[i].serverPath;
+                        }
+                        urlList.push(path);
+                    }
+                    KASClient.App.showImageImmersiveView(urlList, index);
+                }.bind(this, attachmentIndex);
+                if (!this.previewMode) {
+                    var removeImageIcon = UI.getBase64Image(UI.Assets.removeImageGridAlbum, { "height": "14px", "width": "14px", "position": "absolute", "left": "70px", "top": "5px" });
+                    removeImageIcon.onclick = function (attachmentIndex, e) {
+                        this.imageAttachments.splice(attachmentIndex, 1);
+                        this.getInputView();
+                        this.pickAttachmentsCallback(this.imageAttachments);
+                    }.bind(this, attachmentIndex);
+                    KASClient.UI.setAccessibilityBasic(removeImageIcon, false, KASClient.UI.KASFormAccessibilityRole.Button, KASClient.Internal.getKASClientString("RemoveImage") + (attachmentIndex + 1));
+                    UI.addCSS(image, { "position": "absolute", "left": "0px", "top": "7px" });
+                    var imageContainer = UI.getElement("div", { "height": "84px", "width": "84px", "position": "relative" });
+                    UI.addElement(image, imageContainer);
+                    KASClient.UI.setAccessibilityBasic(image, false, KASClient.UI.KASFormAccessibilityRole.Image, KASClient.Internal.getKASClientString("Image") + (attachmentIndex + 1));
+                    UI.addElement(removeImageIcon, imageContainer);
+                    return imageContainer;
+                }
+                else {
+                    KASClient.UI.setAccessibilityBasic(image, false, KASClient.UI.KASFormAccessibilityRole.Image, KASClient.Internal.getKASClientString("Image") + (attachmentIndex + 1));
+                    return image;
+                }
+            };
+            KASImageGridAlbumView.prototype.getGridContainerStyleAttributes = function () {
+                if (this.previewMode) {
+                    return {
+                        "grid-template-columns": "repeat(auto-fit, 77px)",
+                        "display": "grid",
+                        "grid-gap": "0px",
+                        "grid-auto-rows": "77px"
+                    };
+                }
+                else {
+                    if (this.imageAttachments.length == 0) {
+                        return {
+                            "grid-template-columns": "repeat(auto-fit, 84px)",
+                            "display": "grid",
+                            "grid-gap": "0px",
+                            "grid-auto-rows": "77px"
+                        };
+                    }
+                    else {
+                        return {
+                            "grid-template-columns": "repeat(auto-fit, 84px)",
+                            "display": "grid",
+                            "grid-gap": "0px",
+                            "grid-auto-rows": "84px"
+                        };
+                    }
+                }
+            };
+            KASImageGridAlbumView.prototype.getPreviewImageStyleAttributes = function () {
+                return {
+                    "width": "72px",
+                    "height": "72px",
+                    "object-fit": "cover",
+                    "border-radius": "8px",
+                    "margin-left": "5px",
+                    "margin-top": "5px"
+                };
+            };
+            KASImageGridAlbumView.prototype.getImageStyleAttributes = function () {
+                return {
+                    "width": "68px",
+                    "height": "68px",
+                    "object-fit": "cover",
+                    "border-radius": "8px",
+                    "border": "2px solid #e0e3e7",
+                    "margin-left": "5px",
+                    "margin-top": "5px"
+                };
+            };
+            KASImageGridAlbumView.prototype.getAddImageButtonStyleAttributes = function () {
+                return {
+                    "width": "72px",
+                    "height": "72px",
+                    "object-fit": "cover",
+                    "border-radius": "8px",
+                    "position": "absolute",
+                    "left": "5px",
+                    "top": "12px"
+                };
+            };
+            return KASImageGridAlbumView;
+        }(UI.KASInputView));
+        UI.KASImageGridAlbumView = KASImageGridAlbumView;
+    })(UI = KASClient.UI || (KASClient.UI = {}));
+})(KASClient || (KASClient = {}));
+/// <reference path="./KASInputView.ts" />
+var KASClient;
+(function (KASClient) {
+    var UI;
+    (function (UI) {
+        var KASPhoneNumberInputView = (function (_super) {
+            __extends(KASPhoneNumberInputView, _super);
+            function KASPhoneNumberInputView(header, countryPhoneCode, phoneNumber) {
+                var _this = _super.call(this, header) || this;
+                _this.countryPhoneCode = 0;
+                _this.phoneNumber = "";
+                _this.countryPhoneCodesList = [];
+                _this.countryPhoneCode = countryPhoneCode;
+                _this.phoneNumber = phoneNumber;
+                _this.countryPhoneCodesList = KASClient.KASCountryPhoneCode.getAllCountryPhoneCodes();
+                return _this;
+            }
+            KASPhoneNumberInputView.prototype.getSelectedCountryCode = function () {
+                return this.countryPhoneCode;
+            };
+            KASPhoneNumberInputView.prototype.getPhoneNumber = function () {
+                return this.phoneNumber;
+            };
+            KASPhoneNumberInputView.prototype.getInputView = function () {
+                var phoneNumberInputViewContainerAttrs = {
+                    "display": "flex",
+                };
+                var phoneNumberInputViewContainer = KASClient.UI.getElement("div", phoneNumberInputViewContainerAttrs);
+                var countryPhoneCodeContainerAttrs = {
+                    "width": "80px",
+                    "border-bottom": "1px solid #e0e3e7",
+                    "display": "flex",
+                    "justify-content": "space-around"
+                };
+                var countryPhoneCodeContainer = KASClient.UI.getElement("div", countryPhoneCodeContainerAttrs);
+                var countryCodeInputAttrs = {
+                    "color": "#32495f",
+                    "font-size": KASClient.UI.getScaledFontSize("16px")
+                };
+                var countryPhoneCodeInput = KASClient.UI.getLabel("", countryCodeInputAttrs);
+                countryPhoneCodeInput.id = "countryPhoneCodeInputDiv";
+                if (this.countryPhoneCode > 0) {
+                    countryPhoneCodeInput.innerHTML = KASClient.KASCountryPhoneCode.getFormattedCountryPhoneCodeForCountry(this.countryPhoneCode, false);
+                }
+                else {
+                    countryPhoneCodeInput.innerText = "+91";
+                    this.countryPhoneCode = 91;
+                }
+                countryPhoneCodeContainer.onclick = function () {
+                    var countryPhoneCodeSelectionPopup = KASClient.UI.getAlertDialogWithDiv(this.getCountryCodeDropdown(), true, null);
+                    countryPhoneCodeSelectionPopup.id = "countryPhoneCodeSelectionPopup";
+                    countryPhoneCodeSelectionPopup.style.display = "block";
+                    this.setBasePageAccessibilityHidden(true);
+                    KASClient.UI.addElement(countryPhoneCodeSelectionPopup, document.body);
+                    KASClient.Internal.screenChanged("");
+                    countryPhoneCodeSelectionPopup.onclick = function () {
+                        var viewTapped = (event.target);
+                        var dropDownView = this.countryCodeDropDown.getView();
+                        if (!dropDownView.contains(viewTapped)) {
+                            countryPhoneCodeSelectionPopup.remove();
+                            this.setBasePageAccessibilityHidden(false);
+                            KASClient.Internal.screenChanged("");
+                        }
+                    }.bind(this);
+                }.bind(this);
+                KASClient.UI.addElement(countryPhoneCodeInput, countryPhoneCodeContainer);
+                var dropDownOpenButton = KASClient.UI.getBase64Image(KASClient.UI.Assets.dropDownExpand, { "width": "10px", "object-fit": "contain" });
+                UI.setAccessibilityBasic(dropDownOpenButton, true);
+                UI.setAccessibilityBasic(countryPhoneCodeContainer, false, UI.KASFormAccessibilityRole.Text, KASClient.Internal.getKASClientString("CountryCodeAccessibilityLabel", "+" + this.countryPhoneCode));
+                KASClient.UI.addElement(dropDownOpenButton, countryPhoneCodeContainer);
+                KASClient.UI.addElement(countryPhoneCodeContainer, phoneNumberInputViewContainer);
+                var phoneNumberInputAttrs = {
+                    "margin-left": "10px",
+                    "-webkit-appearance": "none",
+                    "border-radius": "0px",
+                    "border": "none",
+                    "border-bottom": "solid 1px #006ff1",
+                    "margin-bottom": "0px",
+                    "margin-top": "0px",
+                    "width": "100%",
+                    "color": "#32495f",
+                    "font-size": KASClient.UI.getScaledFontSize("18px"),
+                    "padding": "0px"
+                };
+                var phoneNumberInput = document.createElement("input");
+                KASClient.UI.addCSS(phoneNumberInput, phoneNumberInputAttrs);
+                phoneNumberInput.type = "tel";
+                phoneNumberInput.maxLength = 32;
+                if (!KASClient.isEmptyString(this.phoneNumber)) {
+                    phoneNumberInput.value = this.phoneNumber;
+                }
+                phoneNumberInput.oninput = function () {
+                    if (!KASClient.isEmptyString(phoneNumberInput.value)) {
+                        this.phoneNumber = phoneNumberInput.value;
+                    }
+                    else {
+                        this.phoneNumber = "";
+                    }
+                    if (this.onChangeCallback) {
+                        this.onChangeCallback(new KASClient.KASPhoneNumber(this.countryPhoneCode, this.phoneNumber));
+                    }
+                }.bind(this);
+                UI.setAccessibilityBasic(phoneNumberInput, false, UI.KASFormAccessibilityRole.None, KASClient.Internal.getKASClientString("PhoneNumberAccessibilityLabel"));
+                KASClient.UI.addElement(phoneNumberInput, phoneNumberInputViewContainer);
+                return phoneNumberInputViewContainer;
+            };
+            KASPhoneNumberInputView.prototype.setBasePageAccessibilityHidden = function (hidden) {
+                for (var i = 0; i < document.body.childElementCount; i++) {
+                    UI.setAccessibilityBasic(document.body.children.item(i), hidden);
+                }
+            };
+            KASPhoneNumberInputView.prototype.countryPhoneCodeSelected = function (index, optionText, isUnSelect) {
+                this.countryPhoneCode = this.countryPhoneCodesList[index];
+                var countryPhoneCodeInputDiv = document.getElementById("countryPhoneCodeInputDiv");
+                countryPhoneCodeInputDiv.innerText = KASClient.KASCountryPhoneCode.getFormattedCountryPhoneCodeForCountry(this.countryPhoneCode, false);
+                UI.setAccessibilityBasic(countryPhoneCodeInputDiv.parentElement, false, UI.KASFormAccessibilityRole.Text, KASClient.Internal.getKASClientString("CountryCodeAccessibilityLabel", "+" + this.countryPhoneCode));
+                var countryPhoneCodeSelectionPopup = document.getElementById("countryPhoneCodeSelectionPopup");
+                countryPhoneCodeSelectionPopup.remove();
+                this.setBasePageAccessibilityHidden(false);
+                KASClient.Internal.screenChanged("");
+                if (this.onChangeCallback) {
+                    this.onChangeCallback(new KASClient.KASPhoneNumber(this.countryPhoneCode, this.phoneNumber));
+                }
+            };
+            KASPhoneNumberInputView.prototype.getCountryCodeDropdown = function () {
+                var headerView = UI.getLabel(KASClient.Internal.getKASClientString("CountryCodeDropdownTitle"), {
+                    "padding-bottom": "9px",
+                    "padding-left": "12px",
+                    "padding-top": "8px",
+                    "font-size": "12px",
+                    "color": "#727d88",
+                    "height": "14px"
+                });
+                this.countryCodeDropDown = new KASClient.UI.KASFormDropDown(new KASClient.KASDropDownModel(KASClient.KASCountryPhoneCode.getAllFormattedCountryPhoneCodes(), [], false, false), headerView);
+                this.countryCodeDropDown.rowSelectCallBack = function (index, optionText, isUnSelect) {
+                    this.countryPhoneCodeSelected(index, optionText, isUnSelect);
+                }.bind(this);
+                return this.countryCodeDropDown.getView();
+            };
+            return KASPhoneNumberInputView;
+        }(UI.KASInputView));
+        UI.KASPhoneNumberInputView = KASPhoneNumberInputView;
     })(UI = KASClient.UI || (KASClient.UI = {}));
 })(KASClient || (KASClient = {}));
 /// <reference path="./KASInputView.ts" />
@@ -9674,17 +12313,19 @@ var KASClient;
                 this.placeHolderLabel = UI.getLabel(this.placeHolderText, { "padding-top": "10px", "color": "#98a3af", "font-size": "15px" });
                 this.containerView.onclick = function () {
                     this.populateEditView();
-                    this.showEmptyOptionsList();
                 }.bind(this);
                 UI.addElement(this.placeHolderLabel, this.containerView);
             };
             KASDropDownOptionsInputView.prototype.populateEditView = function () {
                 if (!this.optionsListOL) {
                     UI.removeElement(this.placeHolderLabel, this.containerView);
-                    this.optionsListOL = UI.getElement('ol', { "-webkit-user-select": "text" });
+                    this.optionsListOL = UI.getElement('ol', { "-webkit-user-select": "text", "min-height": "150px" });
                     this.optionsListOL.contentEditable = "true";
                     UI.addElement(this.optionsListOL, this.containerView);
+                    this.showEmptyOptionsList();
                 }
+                else if (this.optionsListOL.childNodes.length == 0)
+                    this.showEmptyOptionsList();
             };
             KASDropDownOptionsInputView.prototype.showEmptyOptionsList = function () {
                 this.showDefaultOption();
@@ -9812,6 +12453,7 @@ var KASClient;
                 this.dropDownModel = dropDownModel;
                 this.headerView = headerView;
                 this.footerView = footerView;
+                this.refreshFooter();
             }
             KASFormDropDown.prototype.getView = function () {
                 if (this.view == null) {
@@ -9886,6 +12528,7 @@ var KASClient;
                     this.dropDownModel.selectedOptionIndexes.push(index);
                     selectedRow.showSelectedState();
                 }
+                this.refreshFooter();
                 this.rowSelectCallBack(index, this.dropDownModel.optionsAsStrings[index], !selectedRow.isSelected);
             };
             KASFormDropDown.prototype.resetSelections = function () {
@@ -9901,9 +12544,207 @@ var KASClient;
             KASFormDropDown.prototype.getSelectedOptions = function () {
                 return this.dropDownModel.selectedOptionIndexes;
             };
+            KASFormDropDown.prototype.refreshFooter = function () {
+                if (!this.footerView) {
+                    return;
+                }
+                if (!this.dropDownModel.selectedOptionIndexes || this.dropDownModel.selectedOptionIndexes.length === 0) {
+                    this.footerView.style.display = "none";
+                }
+                else {
+                    this.footerView.style.display = "block";
+                }
+            };
             return KASFormDropDown;
         }());
         UI.KASFormDropDown = KASFormDropDown;
+    })(UI = KASClient.UI || (KASClient.UI = {}));
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var UI;
+    (function (UI) {
+        var KASVideoView = (function (_super) {
+            __extends(KASVideoView, _super);
+            function KASVideoView() {
+                var _this = _super.call(this) || this;
+                _this.videoContainer = null;
+                _this.showingThumbnail = false;
+                _this.view.style.position = "relative";
+                _this.videoContainer = KASClient.UI.getElement("div", _this.getVideoContainerAttributes());
+                KASClient.UI.addElement(_this.videoContainer, _this.view);
+                return _this;
+            }
+            KASVideoView.prototype.refreshView = function () {
+                KASClient.UI.removeElement(this.blurView, this.view);
+                KASClient.UI.clearElement(this.videoContainer);
+                this.loadVideoWithLocalPath(this.videoLocalPath);
+            };
+            KASVideoView.prototype.showViewForLocalVideo = function () {
+                this.loadVideoWithLocalPath(this.videoLocalPath);
+            };
+            KASVideoView.prototype.showThumbnail = function () {
+                if (!KASClient.isEmptyString(this.thumbnailBase64)) {
+                    this.showingThumbnail = true;
+                    var image = KASClient.UI.getBase64Image(this.thumbnailBase64, { "width": "100%", "height": "100%", "object-fit": "cover" });
+                    KASClient.UI.addElement(image, this.videoContainer);
+                }
+            };
+            KASVideoView.prototype.showTapToDownloadView = function () {
+                this.addTapToDownloadButtonToDiv(this.view);
+            };
+            KASVideoView.prototype.hideTapToDownloadView = function () {
+                KASClient.UI.removeElement(this.blurView, this.view);
+            };
+            KASVideoView.prototype.loadVideoWithLocalPath = function (localPath) {
+                this.showingThumbnail = false;
+                KASClient.UI.clearElement(this.videoContainer);
+                if (this.tapEnabled) {
+                    this.view.onclick = function () {
+                        if (this.onVideoTappedCallback)
+                            this.onVideoTappedCallback();
+                    }.bind(this);
+                }
+                if (!KASClient.isEmptyString(this.thumbnailBase64)) {
+                    var videoThumbnail = KASClient.UI.getImage(KASClient.UI.getBase64Src(this.thumbnailBase64), { "width": "100%" });
+                    KASClient.UI.addElement(videoThumbnail, this.videoContainer);
+                }
+                var videoPlayIcon = KASClient.UI.getBase64Image(KASClient.UI.Assets.videoPlayIcon, { "position": "absolute", "width": "50px", "height": "50px", "left": "calc(50% - 25px)", "top": "calc(50% - 25px)", "background-color": "#d3d3d3", "border-radius": "50%" });
+                KASClient.UI.addElement(videoPlayIcon, this.videoContainer);
+            };
+            KASVideoView.prototype.getVideoContainerAttributes = function () {
+                return {
+                    "display": "flex",
+                    "background-color": "#d3d3d3",
+                    "padding": "0",
+                    "position": "relative",
+                    "width": "100%",
+                    "height": "100%"
+                };
+            };
+            return KASVideoView;
+        }(UI.KASAttachmentView));
+        UI.KASVideoView = KASVideoView;
+    })(UI = KASClient.UI || (KASClient.UI = {}));
+})(KASClient || (KASClient = {}));
+var KASClient;
+(function (KASClient) {
+    var UI;
+    (function (UI) {
+        var KASVideoViewHandler = (function () {
+            function KASVideoViewHandler(videoViewModel) {
+                this.model = videoViewModel;
+                this.view = new UI.KASVideoView();
+                this.view.retryButtonCallback = function () { this.retryButtonTapped(); }.bind(this);
+                // Currently video playing is taken care of native player. So tap event is required on video view to 
+                // launch native video player. This can be driven through the model when other options like Azure
+                // Media Player or HTML5Video+http_source_path combination is used.
+                this.view.tapEnabled = true;
+                this.view.onVideoTappedCallback = function () { this.onVideoTapped(); }.bind(this);
+                this.view.shouldShowRemoveButton = this.model.showRemoveButton;
+                this.view.thumbnailBase64 = this.model.thumbnailBase64; // thumbnail should be populated before this object is created
+                this.view.videoStreamingPath = this.model.videoStreamingPath;
+            }
+            KASVideoViewHandler.prototype.setVideoLocalPathInModel = function (videoViewModel) {
+                if (!this.model.hasStaticContent) {
+                    this.model.videoLocalPath = this.model.videoObject.localPath;
+                }
+                this.model.thumbnailBase64 = this.model.videoObject.thumbnail;
+            };
+            KASVideoViewHandler.prototype.refreshData = function (model) {
+                this.setVideoLocalPathInModel(model);
+                this.view.videoLocalPath = this.model.videoLocalPath;
+                this.view.thumbnailBase64 = this.model.thumbnailBase64;
+            };
+            KASVideoViewHandler.prototype.getVideoView = function () {
+                this.refreshData(this.model);
+                if (this.model.allLocalPathsAvailable) {
+                    this.view.showViewForLocalVideo();
+                    if (!this.model.hasStaticContent) {
+                        if (this.model.isOutgoing) {
+                            if (this.model.allServerPathsAvailable && this.model.messageSendStatus != 2) {
+                                // video upload complete. do nothing.
+                            }
+                            else {
+                                if (this.model.showLoadingWhileUploads)
+                                    this.view.showLoadingIndicator();
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (!this.model.isOutgoing) {
+                        this.view.showThumbnail();
+                        if (this.model.isAutoDownloadEnabled) {
+                            this.onDownloadTriggered();
+                        }
+                        else {
+                            // read isDownloading from native
+                            if (this.model.isDownloading) {
+                                this.onDownloadTriggered();
+                            }
+                            else {
+                                this.view.showTapToDownloadView();
+                            }
+                        }
+                    }
+                }
+                return this.view.getView();
+            };
+            KASVideoViewHandler.prototype.onDownloadFinished = function (downloadedAttachment, error) {
+                if (error) {
+                    this.view.showRetryButton();
+                }
+                else {
+                    KASClient.logToReportNative("Logging from onDownloadFinished, serverPath - " + downloadedAttachment.serverPath + ", localPath - " + downloadedAttachment.localPath);
+                    this.model.videoObject.localPath = downloadedAttachment.localPath;
+                    this.model.videoObject.thumbnail = downloadedAttachment.thumbnail;
+                    this.model.allLocalPathsAvailable = true;
+                    this.refreshData(this.model);
+                    this.view.refreshView();
+                    if (this.downloadFinishedCallback) {
+                        this.downloadFinishedCallback();
+                    }
+                }
+            };
+            KASVideoViewHandler.prototype.onUploadFinished = function () {
+            };
+            KASVideoViewHandler.prototype.onUploadFailed = function () {
+            };
+            KASVideoViewHandler.prototype.onDownloadStopped = function () {
+                KASClient.App.cancelAttachmentDownloadAsync(this.model.videoObject, null);
+            };
+            KASVideoViewHandler.prototype.onDownloadFailed = function () {
+                this.view.showRetryButton();
+            };
+            KASVideoViewHandler.prototype.retryButtonTapped = function () {
+                this.onDownloadTriggered();
+            };
+            KASVideoViewHandler.prototype.onDownloadTriggered = function () {
+                KASClient.App.hasStorageAccessForAttachmentType(KASClient.KASAttachmentType.Video, function (hasAccess, error) {
+                    if (hasAccess) {
+                        this.view.showLoadingIndicator();
+                        this.startVideoDownloadForAttachment(null);
+                    }
+                }.bind(this));
+            };
+            KASVideoViewHandler.prototype.startVideoDownloadForAttachment = function (callback) {
+                var downloadCallBack = callback;
+                if (callback == null || callback == undefined) {
+                    downloadCallBack = function (downloadedAttachment, error) {
+                        this.onDownloadFinished(downloadedAttachment, error);
+                    }.bind(this);
+                }
+                if (this.model.videoObject.localPath == "" && this.model.videoObject.serverPath != "") {
+                    KASClient.App.downloadAttachmentAsync(this.model.videoObject, downloadCallBack);
+                }
+            };
+            KASVideoViewHandler.prototype.onVideoTapped = function () {
+                KASClient.App.openAttachmentImmersiveView(this.model.videoObject);
+            };
+            return KASVideoViewHandler;
+        }());
+        UI.KASVideoViewHandler = KASVideoViewHandler;
     })(UI = KASClient.UI || (KASClient.UI = {}));
 })(KASClient || (KASClient = {}));
 // Below lines will be executed after loading of KASClient SDK.

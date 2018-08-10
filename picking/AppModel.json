@@ -1,25 +1,72 @@
 {
-    "title": "Picking Details",
+    "title": "Livestock Alert",
     "visibility": "All",
     "expiry": 0,
     "isAnonymous": false,
     "isResponseAppended": true,
     "isLocationRequested": false,
-    "questions": [{
-            "title": "Bed Number",
+    "questions": [
+<<<<<<< HEAD
+        {
+            "title": "Livestock Number",
             "type": "Text"
         },
+        {
+            "title": "Livestock Location",
+            "type": "Number"
+        },
+        {
+            "title": "Livestock Date",
+            "type": "DateTime"
+        },
+        {
+            "title": "Measures Taken",
+            "type": "Text"
+=======
         {
             "title": "Pick Number",
+            "type": "Number"
+        },
+        {
+            "title": "Bed Number",
+            "type": "Number"
+>>>>>>> 087912b52ae05840a92c19808e4de3efec1921e3
+        },
+        {
+            "title": "Livestock Image",
+            "type": "Image"
+        },
+        {
+            "title": "Herders Number",
             "type": "Text"
         },
         {
-            "title": "Pick Date",
-            "type": "Datetime"
+            "title": "Herders Attitude",
+            "type": "Text"
         },
         {
-            "title": "Flower Pack Image",
-            "type": "Image"
+            "title": "Herders Equipment",
+            "type": "Text"
+        },
+        {
+            "title": "Region",
+            "type": "SingleSelect",
+            "options": [{
+                    "title": "Nanyuki"
+                },
+                {
+                    "title": "Meru"
+                },
+                {
+                    "title": "Karatina"
+                },
+                {
+                    "title": "Nyeri"
+                },
+                {
+                    "title": "Embu"
+                }
+            ]
         },
         {
             "title": "Name",
@@ -28,8 +75,14 @@
         {
             "title": "Phone",
             "type": "Text"
+        },
+        {
+          "title": "Location",
+          "type": "Location"
+        },
+        {
+          "title": "Response Time",
+          "type": "DateTime"
         }
-
     ]
-
 }

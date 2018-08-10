@@ -1,20 +1,9 @@
 {
-<<<<<<< HEAD
     "strMiniAppTitle": "Livestock Alert",
-    "Livestock Number": "Livestock Number",
-    "Livestock Location": "Livestock Location",
-    "Livestock Date": "Livestock Date",
-=======
-    "strMiniAppTitle": "Picking Details",
-    "Pick Number": "Pick Number",
-    "Bed Number": "Bed Number",
-    "FlowerPack Image": "Add Image",
->>>>>>> 087912b52ae05840a92c19808e4de3efec1921e3
+    "Box Number": "Box Number",
+    "Location Friendly Name": "Location Friendly Name",
     "strTapToEnter": "Tap to enter",
     "Pick Date": "Pick Date",
-    "Measures Taken": "Measures Taken",
-    "Livestock Image": "Livestock Image",
-    "MultiSelect Question": "Sample Multi Select Question",
     "Flower Pack Image": "Picture of a Flower",
     "Name": "Name",
     "Phone": "Phone Number",
