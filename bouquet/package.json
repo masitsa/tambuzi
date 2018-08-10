@@ -1,8 +1,8 @@
 {
 	"id": "com.tambuziprovenance.bouquet1", 
 	"schemaVersion": 1, 
-	"version": "4",
-	"minorVersion": 47,
+	"version": "5",
+	"minorVersion": 1,
 	"providerName": "TambuziProvenance",
 	"displayName": "Bouquet",
 	"description": "Update your flower bouquet details", 

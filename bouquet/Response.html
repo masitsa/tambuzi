@@ -1,74 +1,125 @@
 <html>
 
-<head>
-	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-	<title></title>
-	<script type="text/javascript" src="KASClient.js"></script>
-	<link rel="stylesheet" href="style.css">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<title></title>
+		<script type="text/javascript" src="KASClient.js"></script>
+		<link rel="stylesheet" href="style.css">
 
-</head>
+	</head>
 
-<body onload="onPageLoad()">
-	<div id="header">
-		<div id="mainText" style="font-size:12pt;color: #32495f; max-width: 300pt; font-weight: 500"></div>
-	</div>
-	<div id="body-container">
-		<div id="page1">
-			<div class="section">
-				<div id="bouquetNumberTitle" class="question-title" style="margin-top: 10%"></div>
-				<input type="number" id="bouquetNumber" class="comment-input" placeholder="Tap to enter" style="padding-left: 13pt">
-			</div>
-			<div class="section">
-				<div id="bouquetPacksTitle" class="question-title"></div>
-				<input type="text" id="bouquetPacks" class="comment-input" placeholder="Comma Separated" style="border-bottom: none">
-			</div>
+	<body onload="onPageLoad()">
+		<div id="header">
+			<div id="mainText" style="font-size:12pt;color: #32495f; max-width: 300pt; font-weight: 500"></div>
 		</div>
-		<div id="page2">
-			<div class="section">
-				<div id="showDetailsViewNameHeader" class="question-title" style="margin-top: 10%"></div>
-				<input type="text" id="showDetailsViewNameInput" class="comment-input" style="padding-left: 13pt">
+		<div id="body-container">
+			<div id="page1">
+				<div class="section">
+					<div id="bouquetNumberTitle" class="question-title" style="margin-top: 10%"></div>
+					<input type="number" id="bouquetNumber" class="comment-input" placeholder="Tap to enter" style="padding-left: 13pt">
+				</div>
+				<div class="section">
+					<div id="bouquetPacksTitle" class="question-title"></div>
+					<input type="text" id="bouquetPacks" class="comment-input" placeholder="Comma Separated" style="border-bottom: none">
+				</div>
+				<footer class="footer">
+					<table style="width: 100%">
+						<tr>
+							<!-- <div style="width: 30%;"> -->
+							<td style="width: 30%">
+								<input type="submit" name="submit" value="" class="prev1" id="btn" disabled/>
+							</td>
+							<td style="width: 30%">
+								<div class="progressDiv">
+									<div class="progressInnerDiv">
+										<div class="progressText">
+											<label>1 of 3</label>
+										</div>
+										<div class="progressBarOuterDiv">
+											<div class="progressBarInnerDiv">
+											</div>
+										</div>
+									</div>
+								</div>
+							</td>
+							<td style="width: 30%">
+								<input type="submit" name="submit" value="" onclick="pageTwo()" class="next1" id="btn2" />
+							</td>
+						</tr>
+					</table>
+				</footer>
 			</div>
-			<div class="section">
-				<div id="showDetailsViewPhoneHeader" class="question-title"></div>
-				<input type="tel" id="showDetailsViewPhoneInput" class="comment-input" style="border-bottom: none">
-			</div>
-			<div id="locationDetailsDiv" style="background-color:white; color: #32485f;
-						font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
-						border-radius: 4px">
-				<div id="locationDetailsHeader" class="comment-header" style="padding: 14px; padding-bottom: 0pt"></div>
-				<img id="locationMapView" class="location-image">
-				<div id="locationAddressRefreshDiv" style="display: inline-flex">
-					<div id="locationAddressDiv" style="float: left; display: flex; flex-direction: column; width: 100%">
-						<label id="location-address" class="location-address" style="padding-top:12p "></label>
+			<div id="page2">
+				<div class="section">
+					<div id="showDetailsViewNameHeader" class="question-title" style="margin-top: 10%"></div>
+					<input type="text" id="showDetailsViewNameInput" class="comment-input" style="padding-left: 13pt">
+				</div>
+				<div class="section">
+					<div id="showDetailsViewPhoneHeader" class="question-title"></div>
+					<input type="tel" id="showDetailsViewPhoneInput" class="comment-input" style="border-bottom: none">
+				</div>
+				<div id="locationDetailsDiv" class="section">
+					<div id="locationDetailsHeader" class="comment-header" style="padding: 14px; padding-bottom: 0pt"></div>
+					<img id="locationMapView" class="location-image">
+					<div id="locationAddressRefreshDiv" style="display: inline-flex">
+						<div id="locationAddressDiv" style="float: left; display: flex; flex-direction: column; width: 100%">
+							<div id="locationAddress" class="location-address" style="padding-top:12p "></div>
+						</div>
 					</div>
 				</div>
+				<div class="section" id="locationViewDiv" style="border-bottom: none"></div>
+				<footer class="footer">
+					<table style="width: 100%">
+						<tr>
+							<!-- <div style="width: 30%;"> -->
+							<td style="width: 30%">
+								<input type="submit" name="submit" value="" class="prev1" id="btn" onclick="pageOne()" />
+							</td>
+							<td style="width: 30%">
+								<div class="progressDiv">
+									<div class="progressInnerDiv">
+										<div class="progressText">
+											<label>2 of 3</label>
+										</div>
+										<div class="progressBarOuterDiv">
+											<div class="progressBarInnerDiv2">
+											</div>
+										</div>
+									</div>
+								</div>
+							</td>
+							<td style="width: 30%">
+								<input type="submit" name="submit" value="" onclick="pageThree()" class="next1" id="btn2" />
+							</td>
+						</tr>
+					</table>
+				</footer>
 			</div>
-			<div class="section" id="locationViewDiv" style="border-bottom: none"></div>
-		</div>
-		<div id="page3">
-			<div class="section">
+			<div id="page3">
+				<div class="section">
+					<div id="details" style="padding-top: 50px">
 						<!-- display bouquet packs number -->
 						<div id="bouquetNumberDetailsDiv" style="background-color:white; color: #32485f;
-                                  font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
-                                  border-radius: 4px">
+												font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
+												border-radius: 4px">
 							<div id="bouquetNumberDetailsHeader" class="comment-header" style="padding: 14px; padding-bottom: 0pt"></div>
 							<div id="bouquetNumberDetailsView" style="padding: 14px; padding-top:5pt">
-								<div id="bouquetNumber" style="color: #32485f; font-size: 12pt; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word"></div>
+								<div id="bouquetNumberDetails" style="color: #32485f; font-size: 12pt; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word"></div>
 							</div>
 						</div>
 						<!-- display bouquet packs -->
 						<div id="bouquetPacksDiv" style="background-color:white; color: #32485f;
-                                  font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
-                                  border-radius: 4px">
-							<div id="bouquetPacksHeader" class="comment-header" style="padding: 14px; padding-bottom: 0pt"></div>
-							<div id="bouquetPacksView" style="padding: 14px; padding-top:5pt">
-								<div id="bouquetPacks" style="color: #32485f; font-size: 12pt; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word"></div>
+												font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
+												border-radius: 4px">
+							<div id="bouquetPacksDetailsHeader" class="comment-header" style="padding: 14px; padding-bottom: 0pt"></div>
+							<div id="bouquetPacksDetailsView" style="padding: 14px; padding-top:5pt">
+								<div id="bouquetPacksDetails" style="color: #32485f; font-size: 12pt; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word"></div>
 							</div>
 						</div>
 						<!-- display persons details -->
 						<div id="detailsDiv" style="background-color:white; color: #32485f;
-                                  font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
-                                  border-radius: 4px">
+												font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
+												border-radius: 4px">
 							<div id="detailsView" style="padding: 14px; padding-top:5pt">
 								<div id="nameDetails" style="color: #32485f; font-size: 12pt; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word"></div>
 								<div id="nameDetailsValue" style="color: #32485f; font-size: 12pt; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word"></div>
@@ -76,301 +127,431 @@
 								<div id="phoneDetailsValue" style="color: #32485f; font-size: 12pt; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word"></div>
 							</div>
 						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<footer class="footer">
-		<table style="width: 100%">
-			<tr>
-				<!-- <div style="width: 30%;"> -->
-				<td style="width: 30%">
-					<input type="submit" name="submit" value="" class="prev1" id="btn" disabled/>
-				</td>
-				<td style="width: 30%">
-					<div class="progressDiv">
-						<div class="progressInnerDiv">
-							<div class="progressText">
-								<label>2 of 3</label>
-							</div>
-							<div class="progressBarOuterDiv">
-								<div class="progressBarInnerDiv2">
+						<div id="detailsDiv1" style="background-color:white; color: #32485f;
+												font-size: 13.5pt; margin: 16px; margin-top: 8px; margin-bottom: 8px; box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.12);
+												border-radius: 4px">
+							<div id="locationDetailsHeader1" class="comment-header" style="padding: 14px; padding-bottom: 0pt"></div>
+							<img id="locationMapView1" class="location-image">
+							<div id="locationAddressRefreshDiv1" style="display: inline-flex">
+								<div id="locationAddressDiv1" style="float: left; display: flex; flex-direction: column; width: 100%">
+									<label id="locationAddress1" class="location-address" style="padding-top:12p "></label>
 								</div>
 							</div>
 						</div>
 					</div>
-				</td>
-				<td style="width: 30%">
-					<input type="submit" name="submit" value="" onclick="pageThree()" class="next1" id="btn2" />
-				</td>
-			</tr>
-		</table>
+				</div>
+				<footer class="footer">
+					<table style="width: 100%">
+						<tr>
+							<!-- <div style="width: 30%;"> -->
+							<td style="width: 30%">
+								<input type="submit" name="submit2" value="" class="prev1" onclick="pageTwo()" id="btn2" />
+							</td>
+							<td style="width: 30%">
+								<div class="progressDiv">
+									<div class="progressInnerDiv">
+										<div class="progressText">
+											<label>3 of 3</label>
+										</div>
+										<div class="progressBarOuterDiv">
+											<div class="progressBarInnerDiv3">
+											</div>
+										</div>
+									</div>
+								</div>
+							</td>
+							<td style="width: 30%">
+								<input type="submit" name="submit" value="SUBMIT" onclick="submitFormResponse()" class="next2"/>
+							</td>
+						</tr>
+					</table>
+				</footer>
+			</div>
+		</div>
+			<script type="text/javascript">
+				// Type aliases (short names)
+				var printf = KASClient.App.printf;
 
-	</footer>
-	</div>
-	<script type="text/javascript">
-		// Type aliases (short names)
-		var printf = KASClient.App.printf;
+				var _form; // type: KASForm
 
-		var _form; // type: KASForm
+				var _bouquetNumberQuestion = "";
+				var _bouquetPacksQuestion = "";
+				var _name = "";
+				var _phoneNumber = "";
+				var _currentLocation = {};
 
-		var _bouquetNumberQuestion = "";
-		var _bouquetPacksQuestion = "";
-		var _name = "";
-		var _phoneNumber = "";
-		var _currentLocation = {};
+				var _isLocationRefreshing = false;
+				var _strings = null;
+				var _currentUserInfo = null;
+				var _longAddress = "";
+				var _shortAddress = "";
+				var _isLocationNotFetched = true;
 
-		var _isLocationRefreshing = false;
-		var _strings = null;
-		var _currentUserInfo = null;
-		var _longAddress = "";
-		var _shortAddress = "";
-		var _isLocationNotFetched = true;
+				// constants
+				var LOCATION_TIMEOUT = 10000;
 
-		// constants
-		var LOCATION_TIMEOUT = 10000;
+				// Question index
+				var BOUQUET_NUMBER = 0;
+				var BOUQUET_PACKS = 1;
+				var NAME = 2;
+				var PHONE_NUMBER = 3;
+				var LOCATION = 4;
+				var TIME = 5;
 
-		// Question index
-		var BOUQUET_NUMBER = 0;
-		var BOUQUET_PACKS = 1;
-		var NAME = 2;
-		var PHONE_NUMBER = 3;
-		var LOCATION = 4;
-		var TIME = 5;
+				function onPageLoad() {
+					// Register for Android h/w back press event
+					KASClient.App.registerHardwareBackPressCallback(function () {
+						KASClient.App.dismissCurrentScreen();
+					});
 
-		function onPageLoad() {
-			// Register for Android h/w back press event
-			KASClient.App.registerHardwareBackPressCallback(function () {
-				KASClient.App.dismissCurrentScreen();
-			});
-
-			KASClient.App.getLocalizedStringsAsync(function (strings, error) {
-				if (error != null) {
-					showAlert("Error:GetFormAsync:" + error);
-					return;
-				}
-				_strings = strings;
-				KASClient.Form.getFormAsync(function (form, error) {
-					if (error != null) {
-						showAlert("Error:GetFormAsync:" + error);
-						return;
-					}
-					_form = form;
-					inflateHeader()
-					inflateQuestions()
-					KASClient.App.getCurrentUserIdAsync(function (userId, error) {
+					KASClient.App.getLocalizedStringsAsync(function (strings, error) {
 						if (error != null) {
-							handleError(error);
+							showAlert("Error:GetFormAsync:" + error);
 							return;
 						}
-						KASClient.App.getUsersDetailsAsync([userId], function (users, error) {
+						_strings = strings;
+						KASClient.Form.getFormAsync(function (form, error) {
 							if (error != null) {
-								handleError(error);
+								showAlert("Error:GetFormAsync:" + error);
 								return;
 							}
-							_currentUserInfo = users[userId];
-							_name = _currentUserInfo.originalName;
-							_phoneNumber = _currentUserInfo.phoneNumber;
-							inflateDetailsView();
-						});
-						
-						KASClient.App.getCurrentDeviceLocationAsync(function (location, error) {
-							if (error != null) {
-								alert("error");
-								return;
-							}
+							_form = form;
+							inflateHeader()
+							inflateQuestions()
+							KASClient.App.getCurrentUserIdAsync(function (userId, error) {
+								if (error != null) {
+									handleError(error);
+									return;
+								}
+								KASClient.App.getUsersDetailsAsync([userId], function (users, error) {
+									if (error != null) {
+										handleError(error);
+										return;
+									}
+									_currentUserInfo = users[userId];
+									_name = _currentUserInfo.originalName;
+									_phoneNumber = _currentUserInfo.phoneNumber;
+									inflateDetailsView();
+								});
 
-							_currentLocation = JSON.parse(location);
-							showSummaryPage();
+								KASClient.App.getCurrentDeviceLocationAsync(function (location, error) {
+									if (error != null) {
+										alert("error");
+										return;
+									}
+
+									_currentLocation = JSON.parse(location);
+									showSummaryPage();
+								});
+							});
 						});
 					});
+					pageOne();
+				}
+
+				document.getElementById("bouquetNumber").addEventListener("input", function (event) {
+					_bouquetNumberQuestion = event.target.value;
 				});
-			});
-			document.getElementById("page1").style.display = "none";
-			document.getElementById("page2").style.display = "none";
-			document.getElementById("page3").style.display = "block";
 
-		}
-
-		function submitFormResponse() {
-			_bouquetNumberQuestion = document.getElementById("bouquetNumber").value;
-			_bouquetPacksQuestion = document.getElementById("bouquetPacks").value;
-			if ((_bouquetNumberQuestion == null || _bouquetNumberQuestion == "") || (_bouquetPacksQuestion == null || _bouquetPacksQuestion == "")) {
-				KASClient.App.showNativeErrorMessage("Kindly fill in all the fields");
-			}
-			else {
-				var questionToAnswerMap = JSON.parse("{}");
-
-				questionToAnswerMap[BOUQUET_NUMBER] = _bouquetNumberQuestion;
-				questionToAnswerMap[BOUQUET_PACKS] = _bouquetPacksQuestion;
-				questionToAnswerMap[NAME] = _name;
-				questionToAnswerMap[PHONE_NUMBER] = _phoneNumber;
-				questionToAnswerMap[LOCATION] = JSON.stringify(_currentLocation);
-				questionToAnswerMap[TIME] = (new Date()).getTime();
-				// Submit response
-				KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true /* showInChatCanvas */);
-			}
-		}
-		function inflateHeader() {
-			//populate header div
-			var navigationBar = new KASClient.UI.KASFormPageNavigationBar();
-			navigationBar.backAsset = "close.png";
-			mainText.innerText = _strings["strMiniAppTitle"];
-
-			navigationBar.title = mainText.outerHTML;
-
-			navigationBar.backAction = function () {
-				KASClient.App.dismissCurrentScreen();
-			};
-
-			KASClient.UI.addElement(navigationBar.getView(), header);
-		}
-
-		function inflateBouquetNumberDiv() {
-			//populate bouquetNumber div
-			var bouquetNumberTitle = document.getElementById("bouquetNumberTitle");
-			KASClient.UI.clearElement(bouquetNumberTitle);
-			bouquetNumberTitle.innerText = _strings[_form.questions[BOUQUET_NUMBER].title];
-
-			if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-				KASClient.UI.addCSS(bouquetNumberInput, {
-					"padding-left": "13pt"
+				document.getElementById("bouquetPacks").addEventListener("input", function (event) {
+					_bouquetPacksQuestion = event.target.value;
 				});
-			}
-		}
 
-		function inflateBouquetPacksDiv() {
-			//populate bouquetPacks div
-			var bouquetPacksTitle = document.getElementById("bouquetPacksTitle");
-			KASClient.UI.clearElement(bouquetPacksTitle);
-			bouquetPacksTitle.innerText = _strings[_form.questions[BOUQUET_PACKS].title];
+				function refreshLocation() {
+					if (_isLocationRefreshing == true)
+						return;
 
-			if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-				KASClient.UI.addCSS(bouquetPacksInput, {
-					"padding-left": "13pt"
-				});
-			}
-		}
+					_isLocationRefreshing = true
+					KASClient.App.getCurrentDeviceLocationAsync(function (location, error) {
+						if (error != null) {
+							_isLocationRefreshing = false;
+							inflateLocationView();
+							return;
+						}
 
-		function inflateQuestions() {
-			// alert(2);
-			//populate questions ffffff
-			inflateBouquetNumberDiv();
-			inflateBouquetPacksDiv();
+						_currentLocation = JSON.parse(location);
+						fetchAndPopulateAddress();
+					});
 
-		}
+					setTimeout(function () {
+						if (_isLocationRefreshing == true) {
+							_isLocationRefreshing = false;
+							inflateLocationView();
+						}
+					}, LOCATION_TIMEOUT);
+				}
 
-		function inflateDetailsView() {
-			// 2nd Page
-			// show details view
-			var showDetailsViewNameHeader = document.getElementById("showDetailsViewNameHeader");
-			showDetailsViewNameHeader.innerText = _strings[_form.questions[NAME].title];
+				function submitFormResponse() {
+					if (!_currentLocation.hasOwnProperty("lt")) {
+						_currentLocation["lt"] = 0.0;
+					}
 
-			var showDetailsViewNameInput = document.getElementById("showDetailsViewNameInput");
-			if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-				KASClient.UI.addCSS(showDetailsViewNameInput, {
-					"padding-left": "13pt"
-				});
-			}
-			showDetailsViewNameInput.value = _name;
+					if (!_currentLocation.hasOwnProperty("lg")) {
+						_currentLocation["lg"] = 0.0;
+					}
 
-			var showDetailsViewPhone = document.getElementById("showDetailsViewPhone");
+					if (!_currentLocation.hasOwnProperty("n")) {
+						_currentLocation["n"] = "";
+					}
+					var questionToAnswerMap = JSON.parse("{}");
 
-			var showDetailsViewPhoneHeader = document.getElementById("showDetailsViewPhoneHeader");
-			showDetailsViewPhoneHeader.innerText = _strings[_form.questions[PHONE_NUMBER].title];
+					questionToAnswerMap[BOUQUET_NUMBER] = _bouquetNumberQuestion;
+					questionToAnswerMap[BOUQUET_PACKS] = _bouquetPacksQuestion;
+					questionToAnswerMap[NAME] = _name;
+					questionToAnswerMap[PHONE_NUMBER] = _phoneNumber;
+					questionToAnswerMap[LOCATION] = JSON.stringify(_currentLocation);
+					questionToAnswerMap[TIME] = (new Date()).getTime();
+					// Submit response
+					KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true /* showInChatCanvas */);
+				}
 
-			var showDetailsViewPhoneInput = document.getElementById("showDetailsViewPhoneInput");
-			if (KASClient.getPlatform() == KASClient.Platform.iOS) {
-				KASClient.UI.addCSS(showDetailsViewPhoneInput, {
-					"padding-left": "13pt"
-				});
-			}
-			showDetailsViewPhoneInput.value = _phoneNumber;
-			showDetailsViewPhoneInput.readOnly = true;
-		}
-		//summary page
-		function inflateResponses() {
-			document.body.style.backgroundColor = "#f2f2f2";
-			// alert(hello1);
-			//Bouquet Number
-			var bouquetNumberDetailsHeader = document.getElementById("bouquetNumberDetailsHeader");
-			bouquetNumberDetailsHeader.innerText = _strings[_form.questions[BOUQUET_NUMBER].title];
+				function inflateHeader() {
+					//populate header div
+					var navigationBar = new KASClient.UI.KASFormPageNavigationBar();
+					navigationBar.backAsset = "close.png";
+					mainText.innerText = _strings["strMiniAppTitle"];
 
-			var bouquetNumber = document.getElementById("bouquetNumber");
-			bouquetNumber.innerHTML = _myFormResponses.questionToAnswerMap[BOUQUET_NUMBER];
+					navigationBar.title = mainText.outerHTML;
 
-			// Bouquet Packs
-			var bouquetPacksHeader = document.getElementById("bouquetPacksHeader");
-			bouquetPacksHeader.innerText = _strings[_form.questions[BOUQUET_PACKS].title];
+					navigationBar.backAction = function () {
+						KASClient.App.dismissCurrentScreen();
+					};
 
-			var bouquetPacks = document.getElementById("bouquetPacks");
-			bouquetPacks.innerHTML = _myFormResponses.questionToAnswerMap[BOUQUET_PACKS];
+					KASClient.UI.addElement(navigationBar.getView(), header);
+				}
 
-			// Personal Details Summary
-			var detailsHeader = document.getElementById("detailsHeader");
-			detailsHeader.innerText = _strings["strMiniAppYourDetails"];
+				function inflateBouquetNumberDiv() {
+					//populate bouquetNumber div
+					var bouquetNumberTitle = document.getElementById("bouquetNumberTitle");
+					KASClient.UI.clearElement(bouquetNumberTitle);
+					bouquetNumberTitle.innerText = _strings[_form.questions[BOUQUET_NUMBER].title];
 
-			var nameDetails = document.getElementById("nameDetails");
-			var phoneDetailsValue = document.getElementById("nameDetailsValue");
-			nameDetails.innerHTML = _strings[_form.questions[NAME].title];
-			nameDetailsValue.innerHTML = _myFormResponses.questionToAnswerMap[NAME];
+					if (KASClient.getPlatform() == KASClient.Platform.iOS) {
+						KASClient.UI.addCSS(bouquetNumberInput, {
+							"padding-left": "13pt"
+						});
+					}
+				}
 
-			var phoneDetails = document.getElementById("phoneDetails");
-			var phoneDetailsValue = document.getElementById("phoneDetailsValue");
-			phoneDetails.innerHTML = _strings[_form.questions[PHONE_NUMBER].title];
-			phoneDetailsValue.innerHTML = _myFormResponses.questionToAnswerMap[PHONE_NUMBER];
+				function inflateBouquetPacksDiv() {
+					//populate bouquetPacks div
+					var bouquetPacksTitle = document.getElementById("bouquetPacksTitle");
+					KASClient.UI.clearElement(bouquetPacksTitle);
+					bouquetPacksTitle.innerText = _strings[_form.questions[BOUQUET_PACKS].title];
 
-			var locationDetailsHeader = document.getElementById("locationDetailsHeader");
-			locationDetailsHeader.innerText = _strings[_form.questions[LOCATION].title];
-		}
+					if (KASClient.getPlatform() == KASClient.Platform.iOS) {
+						KASClient.UI.addCSS(bouquetPacksInput, {
+							"padding-left": "13pt"
+						});
+					}
+				}
 
-		function showSummaryPage() {
-			// alert("hello");
-			inflateResponses();
-			inflateLocation()
-			document.getElementById("page3").style.display = none;
-		}
+				function inflateQuestions() {
+					//populate questions ffffff
+					inflateBouquetNumberDiv();
+					inflateBouquetPacksDiv();
 
-		function inflateLocation() {
-			// alert(1);
+				}
 
-			//location map view
-			_currentLocation = JSON.parse(_myFormResponses.questionToAnswerMap[LOCATION]);
+				function inflateDetailsView() {
+					// page 2
+					var showDetailsViewNameHeader = document.getElementById("showDetailsViewNameHeader");
+					showDetailsViewNameHeader.innerText = _strings[_form.questions[NAME].title];
 
-			var locationMapView = document.getElementById("locationMapView");
-			if (!(_currentLocation["lt"] == 0.0 && _currentLocation["lg"] == 0.0)) {
-				locationMapView.src =
-					"https://maps.googleapis.com/maps/api/staticmap?zoom=18&size=360x170&maptype=roadmap&markers=color:blue%7C%7C" +
-					_currentLocation["lt"] + "," + _currentLocation["lg"];
-			} else {
-				locationMapView.style.display = "none";
-			}
-			locationMapView.onerror = function (event) {
-				event.target.style.display = "none";
-			}
-			var locationAddress = KASClient.UI.getElement("locationAddress");
-			locationAddress.innerText = _currentLocation["n"];
+					var showDetailsViewNameInput = document.getElementById("showDetailsViewNameInput");
+					if (KASClient.getPlatform() == KASClient.Platform.iOS) {
+						KASClient.UI.addCSS(showDetailsViewNameInput, {
+							"padding-left": "13pt"
+						});
+					}
+					showDetailsViewNameInput.value = _name;
 
-			var locationAddress = document.getElementById("locationAddress");
-			if (!(_currentLocation["lt"] == 0.0 && _currentLocation["lg"] == 0.0))
-				locationAddress.style.paddingTop = "12px";
+					var showDetailsViewPhone = document.getElementById("showDetailsViewPhone");
+					var showDetailsViewPhoneHeader = document.getElementById("showDetailsViewPhoneHeader");
+					showDetailsViewPhoneHeader.innerText = _strings[_form.questions[PHONE_NUMBER].title];
 
-			var locationAddressRefreshDiv = document.getElement("locationAddressRefreshDiv");
-			locationAddress.innerHTML = _currentLocation["n"];
+					var showDetailsViewPhoneInput = document.getElementById("showDetailsViewPhoneInput");
+					if (KASClient.getPlatform() == KASClient.Platform.iOS) {
+						KASClient.UI.addCSS(showDetailsViewPhoneInput, {
+							"padding-left": "13pt"
+						});
+					}
+					showDetailsViewPhoneInput.value = _phoneNumber;
+					showDetailsViewPhoneInput.readOnly = true;
+				}
+				//page 3
+				function inflateResponses() {
+					document.body.style.backgroundColor = "#f2f2f2";
+					//Bouquet Number
+					var bouquetNumberDetailsHeader = document.getElementById("bouquetNumberDetailsHeader");
+					bouquetNumberDetailsHeader.innerText = _strings[_form.questions[BOUQUET_NUMBER].title];
 
-			return locationViewDiv;
-		}
+					var bouquetNumberDetails = document.getElementById("bouquetNumberDetails");
+					bouquetNumberDetails.innerText = _bouquetNumberQuestion;
 
-		function showError(errorMsg) {
-			hideProgressBar();
-			KASClient.App.showNativeErrorMessage(errorMsg);
-		}
+					// Bouquet Packs
+					var bouquetPacksDetailsHeader = document.getElementById("bouquetPacksDetailsHeader");
+					bouquetPacksDetailsHeader.innerText = _strings[_form.questions[BOUQUET_PACKS].title];
 
-		function dismissCurrentScreen() {
-			KASClient.App.dismissCurrentScreen();
-		};
-	</script>
-</body>
+					var bouquetPacksDetails = document.getElementById("bouquetPacksDetails");
+					bouquetPacksDetails.innerText = _bouquetPacksQuestion;
+
+					// Personal Details Summary
+					// var detailsHeader = document.getElementById("detailsHeader");
+					// detailsHeader.innerText = _strings["strMiniAppYourDetails"];
+
+					var nameDetails = document.getElementById("nameDetails");
+					var nameDetailsValue = document.getElementById("nameDetailsValue");
+					nameDetails.innerText = _strings[_form.questions[NAME].title];
+					nameDetailsValue.innerText = _name;
+
+					var phoneDetails = document.getElementById("phoneDetails");
+					var phoneDetailsValue = document.getElementById("phoneDetailsValue");
+					phoneDetails.innerText = _strings[_form.questions[PHONE_NUMBER].title];
+					phoneDetailsValue.innerText = _phoneNumber;
+
+					var locationDetailsHeader = document.getElementById("locationDetailsHeader");
+					locationDetailsHeader.innerText = _strings[_form.questions[LOCATION].title];
+				}
+
+				function pageOne() {
+					document.getElementById("page1").style.display = "block";
+					document.getElementById("page2").style.display = "none";
+					document.getElementById("page3").style.display = "none";
+				}
+
+				function pageTwo() {
+					if ((_bouquetNumberQuestion == null || _bouquetNumberQuestion == "") || (_bouquetPacksQuestion == null || _bouquetPacksQuestion == "")) {
+						KASClient.App.showNativeErrorMessage("Kindly fill in all the fields");
+						return;
+					}
+					document.getElementById("page1").style.display = "none";
+					document.getElementById("page2").style.display = "block";
+					document.getElementById("page3").style.display = "none";
+					refreshLocation();
+				}
+
+				function pageThree() {
+					document.getElementById("page1").style.display = "none";
+					document.getElementById("page2").style.display = "none";
+					document.getElementById("page3").style.display = "block";
+					var locationMapView1 = document.getElementById("locationMapView1");
+					locationMapView1.style.display = "block";
+					locationMapView1.src =
+						"https://maps.googleapis.com/maps/api/staticmap?zoom=18&size=360x170&maptype=roadmap&markers=color:blue%7C%7C" +
+						_currentLocation["lt"] + "," + _currentLocation["lg"];
+					var locationAddress1 = document.getElementById("locationAddress1");
+					locationAddress1.innerText = _currentLocation["n"];
+					alert(locationAddress1.innerText);
+					var locationDetailsHeader1 = document.getElementById("locationDetailsHeader1");
+					locationDetailsHeader1.innerText = _strings[_form.questions[LOCATION].title];
+				}
+				function showSummaryPage() {
+					inflateResponses();
+					inflateLocation()
+				}
+
+				function inflateLocation() {
+					//location map view
+					_currentLocation = JSON.parse(JSON.stringify(_currentLocation));
+
+					var locationMapView = document.getElementById("locationMapView");
+					if (!(_currentLocation["lt"] == 0.0 && _currentLocation["lg"] == 0.0)) {
+						locationMapView.src =
+							"https://maps.googleapis.com/maps/api/staticmap?zoom=18&size=360x170&maptype=roadmap&markers=color:blue%7C%7C" +
+							_currentLocation["lt"] + "," + _currentLocation["lg"];
+					} else {
+						locationMapView.style.display = "none";
+					}
+					locationMapView.onerror = function (event) {
+						event.target.style.display = "none";
+					}
+					var locationAddress = document.getElementById("locationAddress");
+					locationAddress.innerText = _currentLocation["n"];
+		
+					if (!(_currentLocation["lt"] == 0.0 && _currentLocation["lg"] == 0.0))
+						locationAddress.style.paddingTop = "12px";
+
+					var locationAddressRefreshDiv = document.getElementById("locationAddressRefreshDiv");
+					locationAddressRefreshDiv.innerHTML = _currentLocation["n"];
+
+					return locationViewDiv;
+				}
+				function fetchAndPopulateAddress() {
+					if (_currentLocation.hasOwnProperty("lt") == true && _currentLocation.hasOwnProperty("lg") == true) {
+						var xhr = new XMLHttpRequest();
+						var url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + _currentLocation["lt"] + "," +
+							_currentLocation["lg"];
+						xhr.open("GET", url, true);
+						xhr.responseType = "json";
+						xhr.timeout = LOCATION_TIMEOUT;
+						xhr.onload = function () {
+							var status = this.status;
+							var response;
+							if (status == 200) {
+								try {
+									response = JSON.parse(this.response);
+								} catch (e) {
+									response = this.response;
+								}
+								populateAddress(response["results"][0]);
+							}
+							_isLocationRefreshing = false;
+							inflateLocationView();
+						};
+						xhr.onerror = function () {
+							_isLocationRefreshing = false;
+							inflateLocationView();
+						}
+						xhr.send();
+					} else {
+						_isLocationRefreshing = false;
+						inflateLocationView();
+					}
+				}
+
+				function populateAddress(address) {
+					_longAddress = address["formatted_address"];
+
+					var state = "";
+					_district = "";
+					_postalCode = "";
+					var address_components = address["address_components"];
+					for (var component in address_components) {
+						var types = address_components[component]["types"];
+						for (var type in types) {
+							if (types[type] == "administrative_area_level_2") {
+								_district = address_components[component]["long_name"];
+							} else if (types[type] == "administrative_area_level_1") {
+								state = address_components[component]["long_name"];
+							} else if (types[type] == "postal_code") {
+								_postalCode = address_components[component]["long_name"];
+							}
+						}
+					}
+
+					_shortAddress = "";
+					if (_postalCode != "") {
+						_shortAddress += _postalCode + ", ";
+					}
+					if (_district != "") {
+						_shortAddress += _district + ", ";
+					}
+					if (state != "") {
+						_shortAddress += state;
+					}
+				}
+
+				function showError(errorMsg) {
+					hideProgressBar();
+					KASClient.App.showNativeErrorMessage(errorMsg);
+				}
+
+				function dismissCurrentScreen() {
+					KASClient.App.dismissCurrentScreen();
+				};
+
+			</script>
+	</body>
 
 </html>
