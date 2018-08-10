@@ -1,36 +1,35 @@
-{ 
-    "id": "tambuziNelly.Sample.ticketing", 
-    "schemaVersion": 1, 
-    "version": "2",
-    "minorVersion":48,
-    "providerName": "NanyukiAf Tambuzi", 
-    "displayName": "Tracking01", 
-    "description": "Custom action to collect feedback.", 
-    "icon": "icon.png", 
+{
+    "id": "com.nanyukicustomers.tracking",
+    "schemaVersion": 1,
+    "version": "6",
+    "minorVersion": 2,
+    "providerName": "NanyukiAF",
+    "displayName": "Tracking",
+    "description": "Tracking",
+    "icon": "tracking.png",
     "appModel": "AppModel.json",
+    "dials": {
+        "isLocalised": false,
+        "isPinned": false
+    },
     "actionScope": "Group",
     "views": {
         "CreationView": {
-            "labelHeader": "Feedback requested",
-            "sourceLocation": "ResponseView.html",
-            "showNativeToolbar": true,
-            "backDialogTitle": "Confirmation",
-            "backDialogDescription": "Are you sure you want to discard?"
+            "sourceLocation": "Response.html",
+            "showNativeToolbar": false
         },
         "ChatCanvasCardView": {
-            "showHeader": true,
-            "labelResponseSending": "Submitting your feedback",
-            "labelResponded": "You have provided feedback",
-            "labelResponseFailed": "Feedback submission failed",
-            "labelRespondToForm": "CONFIRM FEEDBACK",
-            "isResponseEditable": false,
-			"showLikes" : false,
-			"showComments": false
+            "showReceipts": false,
+            "showLikes": false,
+            "showComments": false,
+            "labelResponseSending": "Submitting your details",
+            "labelResponded": "Livestock alert provided",
+            "labelResponseFailed": "Livestock alert submission failed",
+            "isResponseEditable": false
         },
         "ResponseResultsView": {
-            "labelPageHeader": "Feedback summary",
-            "sourceLocation": "SummaryView.html",
-            "showNativeToolbar": true
+            "sourceLocation": "ResponseSummary.html",
+            "showNativeToolbar": false
         }
     }
 }

@@ -1,12 +1,17 @@
 {
+    "title": "Livestock Alert",
+    "visibility": "All",
+    "expiry": 0,
+    "isAnonymous": false,
+    "isResponseAppended": true,
+    "isLocationRequested": false,
     "questions": [
-        
         {
             "title": "Box Number",
-            "type": "Text"
+            "type": "Number"
         },
         {
-            "title": "Place Name",
+            "title": "Location Friendly Name",
             "type": "Text"
         },
         {
@@ -18,12 +23,12 @@
             "type": "Text"
         },
         {
-            "title": "Location",
-            "type": "Text"
+          "title": "Location",
+          "type": "Location"
+        },
+        {
+          "title": "Response Time",
+          "type": "DateTime"
         }
-    ],
-    "title": "Ask for feedback",
-    "visibility": "All",
-    "isAnonymous": false,
-    "isResponseAppended": false
+    ]
 }
