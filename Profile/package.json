@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
     "id": "com.nanyukicustomers.profile",
     "schemaVersion": 1,
     "version": "9",
@@ -12,31 +11,6 @@
     "dials": {
         "isLocalised": false,
         "isPinned": false
-=======
-	"id": "com.tambuzi.profileCarolineT", 
-	"schemaVersion": 1, 
-	"version": "3",
-	"minorVersion": 21,
-	"providerName": "TambuziApp",
-	"displayName": "Tambuzi Profile",
-	"description": "Enter your company details", 
-  "icon": "profile.png",
-  "appModel": "AppModel.json",
-  "dials": {
-    "isLocalised": false,
-    "isPinned": false
-  },
-  "actionScope": "Group",
-  "views": {
-    "ChatCanvasCardView": {
-      "showReceipts": false,
-      "showLikes": false,
-      "showComments": false,
-      "labelResponseSending": "Updating your profile",
-      "labelResponseFailed": "Failed to update your profile",
-      "labelResponded": "Profile updated",
-      "isResponseEditable": false
->>>>>>> 5e85181b434260406ef6e0fdd481be2ae0d70089
     },
     "actionScope": "Group",
     "views": {
