@@ -28,76 +28,101 @@
             <!-- Employee's bio is displayed here -->
             <div style="margin:5%;">
                 <input type="text" id="employeeBio" placeholder="My Information" style="border-color:rgb;" onfocus="this.placeholder=''">
+                <br><br>
+                <button class="btns disabled" disabled>Previous</button>
+                <button class="btn">
+                    <span id="page">page:</span>
+                </button>
+                <button onclick="nextPage()" id="btnNext" class="btns">Next</button>
             </div>
+            <!-- <div class="footer" style="margin:7%;">
+                <button class="btns" disabled>Previous</button>
+                <button class="btns">
+                    <span id="page">page:</span>
+                </button>
+                <button onclick="nextPage()" id="btnNext" class="btns">Next</button>
+            </div> -->
         </div>
         <div id="page2">
-            <div id="details" style="padding-top: 50pt">
-                <!-- div containing profileImage -->
-                <div id="profileImages">
+            <!-- div containing profileImage -->
+            <div id="profileImages" style="margin:7%;">
 
-                </div>
-                <!-- Start of employeeIdDetails -->
-                <div class="divAttributes">
-                    <div id="employeeIdHeaders" class="employeeHeader allHeaders">Employee Number</div>
-                    <div id="employeeIdDetails" class="allDetails">
-                        <div id="employeeIds" class="worker">
-                            <p id="employeeIds1"></p>
-                        </div>
+            </div>
+            <!-- Start of employeeIdDetails -->
+            <div class="divAttributes">
+                <div id="employeeIdHeaders" class="employeeHeader allHeaders">Employee Number</div>
+                <div id="employeeIdDetails" class="allDetails">
+                    <div id="employeeIds" class="worker">
+                        <p id="employeeIds1"></p>
                     </div>
-                </div>
-                <!-- End of employeeIdDetails -->
-
-                <!-- Start of PreferredName Details -->
-                <div class="divAttributes">
-                    <div id="preferredNameHeaders" class="employeeHeader allHeaders">Preferred Name</div>
-                    <div id="preferredNameDetails" class="allDetails">
-                        <div id="preferredNames" class="worker">
-
-                        </div>
-                    </div>
-                </div>
-                <!-- End of PreferredName Details -->
-
-                <!-- Start of employeeBio  Details -->
-                <div class="divAttributes">
-                    <div id="employeeBioHeaders" class="employeeHeader allHeaders">My Information</div>
-                    <div id="employeeBioDetails" class="allDetails">
-                        <div id="employeeBios" class="worker">
-
-                        </div>
-                    </div>
-                </div>
-                <!-- End of employeeBio Details -->
-
-                <!-- Start of user  Details -->
-                <div class="divAttributes">
-                    <div id="userNames" class="employeeHeader allHeaders">Name</div>
-                    <div id="userDetails" class="allDetails">
-                        <div id="names" class="worker">
-
-                        </div>
-                    </div>
-                    <div id="userPhones" class="employeeHeader allHeaders">Phone No</div>
-                    <div id="userDetails" class="allDetails">
-                        <div id="phoneNumbers" class="worker">
-
-                        </div>
-                    </div>
-                </div>
-                <!-- End of user Details -->
-                <!-- The user submits their responses by clicking this button -->
-                <div style="margin:5%;">
-                    <button type="submit" name="submit" value="Submit" onclick="submitData()" class="btn btn-lg" id="btn">SUBMIT</button>
                 </div>
             </div>
+            <!-- End of employeeIdDetails -->
+
+            <!-- Start of PreferredName Details -->
+            <div class="divAttributes">
+                <div id="preferredNameHeaders" class="employeeHeader allHeaders">Preferred Name</div>
+                <div id="preferredNameDetails" class="allDetails">
+                    <div id="preferredNames" class="worker">
+
+                    </div>
+                </div>
+            </div>
+            <!-- End of PreferredName Details -->
+
+            <!-- Start of employeeBio  Details -->
+            <div class="divAttributes">
+                <div id="employeeBioHeaders" class="employeeHeader allHeaders">My Information</div>
+                <div id="employeeBioDetails" class="allDetails">
+                    <div id="employeeBios" class="worker">
+
+                    </div>
+                </div>
+            </div>
+            <!-- End of employeeBio Details -->
+
+            <!-- Start of user  Details -->
+            <div class="divAttributes">
+                <div id="userNames" class="employeeHeader allHeaders">Name</div>
+                <div id="userDetails" class="allDetails">
+                    <div id="names" class="worker">
+
+                    </div>
+                </div>
+                <div id="userPhones" class="employeeHeader allHeaders">Phone No</div>
+                <div id="userDetails" class="allDetails">
+                    <div id="phoneNumbers" class="worker">
+
+                    </div>
+                </div>
+
+            </div>
+            <br>
+                <button onclick="prevPage()" id="btnPrev" class="btns">Previous</button>
+                <button class="btn">
+                    <span id="pages">page:</span>
+                </button>
+                <button type="submit" name="submit" value="Submit" onclick="submitData()" id="btnSubmit" class="btns">Submit</button>
+
+            <!-- End of user Details -->
+            <!-- <div class="footer" style="margin:7%;">
+                <button onclick="prevPage()" id="btnPrev" class="btns">Previous</button>
+                <button class="btns">
+                    <span id="pages">page:</span>
+                </button>
+                <button type="submit" name="submit" value="Submit" onclick="submitData()" id="btnSubmit" class="btns">Submit</button>
+            </div> -->
         </div>
-        <a href="javascript:prevPage()" id="btn_prev">Previous</a>
+        <!-- The user submits their responses by clicking this button -->
+
+
+        <!-- <a href="javascript:prevPage()" id="btnPrev">Previous</a>
         <br>
         <br>
-        <a href="javascript:nextPage()" id="btn_next">Next</a>
+        <a href="javascript:nextPage()" id="btnNext">Next</a>
         <p>page:
             <span id="page"></span>
-        </p>
+        </p> -->
         <!-- end of body container -->
     </div>
 
@@ -192,16 +217,17 @@
             navigationBar.backAsset = "close.png";
             var myAttr = {
                 "background-color": "#2d8280",
-                "text-color": "white",
                 "align-items": "center",
-                "padding-left": "41%"
+
             }
             navigationBar.attributes = myAttr;
             var mainText = KASClient.UI.getElement("div", {
                 "font-size": "12pt",
-                "color": "#32495f",
+                "color": "white",
                 "max-width": "300pt",
-                "font-weight": "500"
+                "font-weight": "350",
+                "font-size": "15pt"
+
             });
             mainText.innerText = _strings["strMiniAppTitle"];
 
@@ -337,17 +363,18 @@
             if (current_page < 2) {
                 current_page++;
                 changePage(current_page);
-                alert("yeey");
 
             }
         }
 
         function changePage(page) {
-            var btn_next = document.getElementById("btn_next");
-            var btn_prev = document.getElementById("btn_prev");
+            var btnNext = document.getElementById("btnNext");
+            var btnPrev = document.getElementById("btnPrev");
             var page1 = document.getElementById("page1");
             var page2 = document.getElementById("page2");
             var page_span = document.getElementById("page");
+            var page_spans = document.getElementById("pages");
+
 
             // Validate page
             if (page < 2) {
@@ -360,7 +387,7 @@
                 page = 2;
                 page2.style.display = "block";
                 page1.style.display = "none";
-                page_span.innerHTML = page + "/" + 2;
+                page_spans.innerHTML = page + "/" + 2;
                 showSummary();
             }
         }
