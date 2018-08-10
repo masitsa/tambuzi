@@ -1,5 +1,6 @@
 <html>
 
+<<<<<<< HEAD
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title></title>
@@ -70,6 +71,124 @@
 
             function showError(errorMsg) {
                 KASClient.App.showNativeErrorMessage(errorMsg);
+=======
+  <head>
+    <title></title>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body onload="onSummaryPageLoad()">
+    <div id="header">
+    </div>
+    <div class="section">
+      <div class="body-container">
+          <!-- div containing profileImage -->
+          <div id="profileImage" style="margin:7%;">
+
+          </div>
+          <!-- Start of employeeIdDetails -->
+          <div class="divAttributes">
+            <div id="employeeIdHeader" class="employeeHeader allHeaders"></div>
+            <div id="employeeIdDetails" class="allDetails">
+              <div id="employeeId" class="worker">
+
+              </div>
+            </div>
+          </div>
+          <!-- End of employeeIdDetails -->
+
+          <!-- Start of PreferredName Details -->
+          <div class="divAttributes">
+            <div id="preferredNameHeader" class="employeeHeader allHeaders"></div>
+            <div id="preferredNameDetails" class="allDetails">
+              <div id="preferredName" class="worker">
+
+              </div>
+            </div>
+          </div>
+          <!-- End of PreferredName Details -->
+
+          <!-- Start of employeeBio  Details -->
+          <div class="divAttributes">
+            <div id="employeeBioHeader" class="employeeHeader allHeaders"></div>
+            <div id="employeeBioDetails" class="allDetails">
+              <div id="employeeBio" class="worker">
+
+              </div>
+            </div>
+          </div>
+          <!-- End of employeeBio Details -->
+
+          <!-- Start of user  Details -->
+          <div class="divAttributes">
+            <div id="userName" class="employeeHeader allHeaders"></div>
+            <div id="userDetails" class="allDetails">
+              <div id="name" class="worker">
+
+              </div>
+            </div>
+            <div id="userPhone" class="employeeHeader allHeaders"></div>
+            <div id="userDetails" class="allDetails">
+              <div id="phoneNumber" class="worker">
+
+              </div>
+            </div>
+          </div>
+          <!-- End of user Details -->
+      <!-- end of bodycontainer -->
+      </div>
+    </div>
+    <script type="text/javascript"> 
+      // Globals 
+      var _form; // type: KASForm 
+      var _myFormResponses;
+      var _creatorInfo; // type: KASUser
+      var _conversationName; // type: string
+      var _currentUserId; // type: string
+      var _pageNavigator = null; // type: KASFormPageNavigator
+      var _strings = null;
+
+      //Question Indexes
+      var EMPLOYEE_ID = 0;
+      var PREFERRED_NAME = 1;
+      var EMPLOYEE_BIO = 2;
+      var PROFILE_IMAGE = 3;
+      var NAME = 4;
+      var PHONE_NO = 5;
+
+      // Below will be called on onload of SummaryView.html 
+      function onSummaryPageLoad() {
+        //1. Show progress bar
+        KASClient.App.showProgressBar("Fetching Results");
+
+        KASClient.App.registerHardwareBackPressCallback(function () {
+          KASClient.App.dismissCurrentScreen();
+        });
+        window.onerror = function (msg, url, line, col, error) {
+          // col & error are new to the HTML 5, so handling for them
+          var extra = (!col && col !== undefined) ? "" : "#column:" + col;
+          extra += (!error && error !== undefined) ? "" : "#error:" + error.stack;
+          var error = "Error:" + msg + "#url:" + url + "#line:" + line + extra;
+          KASClient.App.logError(error);
+        };
+
+        // Remove any existing pages, if any
+        if (_pageNavigator) {
+          _pageNavigator.popAllPages();
+          _pageNavigator = null;
+        }
+        KASClient.App.getLocalizedStringsAsync(function (strings, error) {
+          if (error != null) {
+            showAlert("Error:GetFormAsync:" + error);
+            return;
+          }
+          _strings = strings;
+          KASClient.Form.getFormAsync(function (form, error) {
+            if (error != null) {
+              handleError(error);
+              return;
+>>>>>>> 5e85181b434260406ef6e0fdd481be2ae0d70089
             }
 
             function onPageLoad() {
@@ -283,6 +402,7 @@
                     "padding": "14px",
                     "padding-bottom": "0pt"
                 });
+<<<<<<< HEAD
                 detailsHeader.className = "comment-header";
                 detailsHeader.innerText = _strings["strMiniAppYourDetails"];
                 KASClient.UI.addElement(detailsHeader, detailsDiv);
@@ -395,4 +515,116 @@
             };
 		</script>
 	</body>
+=======
+              });
+            });
+          });
+        });
+        KASClient.App.hideProgressBar();
+      }
+      function inflateHeader() {
+        var header = document.getElementById("header");
+            KASClient.UI.clearElement(header);
+
+            var navigationBar = new KASClient.UI.KASFormPageNavigationBar();
+            navigationBar.backAsset = "close.png";
+            var myAttr = {
+                "background-color": "#2d8280",
+                "align-items": "center",
+                
+            }
+            navigationBar.attributes = myAttr;
+            var mainText = KASClient.UI.getElement("div", {
+                "font-size": "12pt",
+                "color": "white",
+                "max-width": "300pt",
+                "font-weight": "350",
+                "font-size" : "15pt"
+
+            });
+            mainText.innerText = _strings["strMiniAppTitle"];
+
+            navigationBar.title = mainText.outerHTML;
+
+            navigationBar.backAction = function () {
+                KASClient.App.dismissCurrentScreen();
+            };
+
+            KASClient.UI.addElement(navigationBar.getView(), header);
+      }
+  
+      function getSummary(){
+        var profileImage = document.getElementById("profileImage");
+        KASClient.UI.clearElement(profileImage);
+
+        var imgQuestion = KASClient.UI.getElement("img", {
+          "width": "45%",
+          "height": "160px",
+          "display": "block",
+          "margin-left": "auto",
+          "margin-right": "auto",
+          "border-radius": "90%"
+        });
+        imgQuestion.src = _myFormResponses.questionToAnswerMap[PROFILE_IMAGE];
+
+        KASClient.UI.addElement(imgQuestion, profileImage);
+        // end of Profile image 
+
+        //start of employee id
+        var employeeIdHeader = document.getElementById("employeeIdHeader");
+        KASClient.UI.clearElement(employeeIdHeader);
+
+        var employeeId = document.getElementById("employeeId");
+        KASClient.UI.clearElement(employeeId);
+
+        employeeIdHeader.innerText = _strings[_form.questions[EMPLOYEE_ID].title];
+        employeeId.innerHTML = _myFormResponses.questionToAnswerMap[EMPLOYEE_ID];
+        //end of employee id
+
+        //start of preferred name
+        var preferredNameHeader = document.getElementById("preferredNameHeader");
+        KASClient.UI.clearElement(preferredNameHeader);
+
+        var preferredName = document.getElementById("preferredName");
+        KASClient.UI.clearElement(preferredName);
+
+        preferredNameHeader.innerText = _strings[_form.questions[PREFERRED_NAME].title];
+        preferredName.innerHTML = _myFormResponses.questionToAnswerMap[PREFERRED_NAME];
+        //end of preferred name
+
+        //start of employeebio
+        var employeeBioHeader = document.getElementById("employeeBioHeader");
+        KASClient.UI.clearElement(employeeBioHeader);
+
+        var employeeBio = document.getElementById("employeeBio");
+        KASClient.UI.clearElement(employeeBio);
+
+        employeeBioHeader.innerText = _strings[_form.questions[EMPLOYEE_BIO].title];
+        employeeBio.innerHTML = _myFormResponses.questionToAnswerMap[EMPLOYEE_BIO];
+        //end of employeebio
+
+         //name title
+         var userName = document.getElementById("userName");
+        KASClient.UI.clearElement(userName);
+        userName.innerText = _strings[_form.questions[NAME].title];
+
+        var name = document.getElementById("name");
+        KASClient.UI.clearElement(name);
+        name.innerHTML = _myFormResponses.questionToAnswerMap[NAME];
+
+        //phonenumber title
+        var userPhone = document.getElementById("userPhone");
+        KASClient.UI.clearElement(userPhone);
+        userPhone.innerText = _strings[_form.questions[PHONE_NO].title];
+
+        var phoneNumber = document.getElementById("phoneNumber");
+        KASClient.UI.clearElement(phoneNumber);
+        phoneNumber.innerHTML = _myFormResponses.questionToAnswerMap[PHONE_NO];
+      }//end of getSummary function
+      function dismissCurrentScreen() {
+        KASClient.App.dismissCurrentScreen();
+      };
+    </script>
+  </body>
+>>>>>>> 5e85181b434260406ef6e0fdd481be2ae0d70089
 </html>

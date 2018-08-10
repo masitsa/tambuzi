@@ -1,0 +1,399 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="KASClient.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+
+</head>
+
+<body onload="onResponsePageLoad()">
+    <!-- Profile Title is displayed here -->
+    <div id="header"></div>
+    <div class="body-container">
+        <div id="page1">
+            <!-- Employees image goes here -->
+            <div id="profileImage" style="margin:7%;">
+            </div>
+            <!-- Employee is greeted here -->
+            <div id="usersDetails" style="margin:5%;">
+            </div>
+            <!-- Employee's id is displayed here -->
+            <div style="margin:5%;">
+                <input type="text" id="employeeId" placeholder="Employee Number" style="border-color:rgb;" onfocus="this.placeholder=''">
+            </div>
+            <!-- Employee's preferred name is displayed here -->
+            <div style="margin:5%;">
+                <input type="text" id="preferredName" placeholder="Preferred Name" style="border-color:rgb;" onkeyup="greetings()" onfocus="this.placeholder=''">
+            </div>
+            <!-- Employee's bio is displayed here -->
+            <div style="margin:5%;">
+                <input type="text" id="employeeBio" placeholder="My Information" style="border-color:rgb;" onfocus="this.placeholder=''">
+                <br><br>
+                <button class="btns disabled" disabled>Previous</button>
+                <button class="btn">
+                    <span id="page">page:</span>
+                </button>
+                <button onclick="nextPage()" id="btnNext" class="btns">Next</button>
+            </div>
+            <!-- <div class="footer" style="margin:7%;">
+                <button class="btns" disabled>Previous</button>
+                <button class="btns">
+                    <span id="page">page:</span>
+                </button>
+                <button onclick="nextPage()" id="btnNext" class="btns">Next</button>
+            </div> -->
+        </div>
+        <div id="page2">
+            <!-- div containing profileImage -->
+            <div id="profileImages" style="margin:7%;">
+
+            </div>
+            <!-- Start of employeeIdDetails -->
+            <div class="divAttributes">
+                <div id="employeeIdHeaders" class="employeeHeader allHeaders">Employee Number</div>
+                <div id="employeeIdDetails" class="allDetails">
+                    <div id="employeeIds" class="worker">
+                        <p id="employeeIds1"></p>
+                    </div>
+                </div>
+            </div>
+            <!-- End of employeeIdDetails -->
+
+            <!-- Start of PreferredName Details -->
+            <div class="divAttributes">
+                <div id="preferredNameHeaders" class="employeeHeader allHeaders">Preferred Name</div>
+                <div id="preferredNameDetails" class="allDetails">
+                    <div id="preferredNames" class="worker">
+
+                    </div>
+                </div>
+            </div>
+            <!-- End of PreferredName Details -->
+
+            <!-- Start of employeeBio  Details -->
+            <div class="divAttributes">
+                <div id="employeeBioHeaders" class="employeeHeader allHeaders">My Information</div>
+                <div id="employeeBioDetails" class="allDetails">
+                    <div id="employeeBios" class="worker">
+
+                    </div>
+                </div>
+            </div>
+            <!-- End of employeeBio Details -->
+
+            <!-- Start of user  Details -->
+            <div class="divAttributes">
+                <div id="userNames" class="employeeHeader allHeaders">Name</div>
+                <div id="userDetails" class="allDetails">
+                    <div id="names" class="worker">
+
+                    </div>
+                </div>
+                <div id="userPhones" class="employeeHeader allHeaders">Phone No</div>
+                <div id="userDetails" class="allDetails">
+                    <div id="phoneNumbers" class="worker">
+
+                    </div>
+                </div>
+
+            </div>
+            <br>
+                <button onclick="prevPage()" id="btnPrev" class="btns">Previous</button>
+                <button class="btn">
+                    <span id="pages">page:</span>
+                </button>
+                <button type="submit" name="submit" value="Submit" onclick="submitData()" id="btnSubmit" class="btns">Submit</button>
+
+            <!-- End of user Details -->
+            <!-- <div class="footer" style="margin:7%;">
+                <button onclick="prevPage()" id="btnPrev" class="btns">Previous</button>
+                <button class="btns">
+                    <span id="pages">page:</span>
+                </button>
+                <button type="submit" name="submit" value="Submit" onclick="submitData()" id="btnSubmit" class="btns">Submit</button>
+            </div> -->
+        </div>
+        <!-- The user submits their responses by clicking this button -->
+
+
+        <!-- <a href="javascript:prevPage()" id="btnPrev">Previous</a>
+        <br>
+        <br>
+        <a href="javascript:nextPage()" id="btnNext">Next</a>
+        <p>page:
+            <span id="page"></span>
+        </p> -->
+        <!-- end of body container -->
+    </div>
+
+
+    <script type="text/javascript"> 
+        var _form; // type: KASForm
+        var _myFormResponses; // type: KASFormResponse[]
+        let employeeId = "";
+        var preferredName = "";
+        var employeeBio = "";
+        var imageDiv;
+        var _profileImage = "";
+        var _name = "";
+        var _phoneNumber = "";
+        var _currentUserInfo = null;
+        var _strings = null;
+        var noConnectionMessage = "No internet connection.";
+        var current_page = 1;
+        var totalPages = 2;
+        var _strings = null;
+
+        //Question Indexes
+        var EMPLOYEE_ID = 0;
+        var PREFERRED_NAME = 1;
+        var EMPLOYEE_BIO = 2;
+        var PROFILE_IMAGE = 3;
+        var NAME = 4;
+        var PHONE_NO = 5;
+        //Checks for internet connectivity as it is a requirement for action to run
+        function checkInternetConnection() {
+            var isOnLine = navigator.onLine;
+            if (isOnLine) {
+
+            } else {
+                KASClient.App.showNativeErrorMessage(noConnectionMessage);
+            }
+        }
+        // window.onload = function () {
+        //     document.getElementById("page2").style.display = "none";
+        //     changePage(1);
+        // };
+        // Below will be called on onload of Responseview.html 
+        function onResponsePageLoad() {
+            document.getElementById("page2").style.display = "none";
+            changePage(1);
+            // Register for Android h/w back press event
+            KASClient.App.registerHardwareBackPressCallback(function () {
+                KASClient.App.dismissCurrentScreen();
+            });
+
+            KASClient.App.getLocalizedStringsAsync(function (strings, error) {
+                if (error != null) {
+                    showAlert("Error:GetFormAsync:" + error);
+                    return;
+                }
+                _strings = strings;
+                // alert(_strings);
+                KASClient.Form.getFormAsync(function (form, error) {
+                    if (error != null) {
+                        showAlert("Error:GetFormAsync:" + error);
+                        return;
+                    }
+                    _form = form;
+                    inflateHeader(); //Populates the main profile header
+                    // alert(JSON.stringify(_form))
+
+                    KASClient.App.getCurrentUserIdAsync(function (userId, error) {
+                        if (error != null) {
+                            handleError(error);
+                            return;
+                        }
+                        //Gets the name and phone number captured by kaizala when registering to use the app
+                        KASClient.App.getUsersDetailsAsync([userId], function (users, error) {
+                            if (error != null) {
+                                handleError(error);
+                                return;
+                            }
+                            _currentUserInfo = users[userId];
+                            _name = _currentUserInfo.originalName;
+                            _phoneNumber = _currentUserInfo.phoneNumber;
+                        });
+                    });
+                });
+            });
+        }
+        //Gives the header a name i.e PROFILE
+        function inflateHeader() {
+            var header = document.getElementById("header");
+            KASClient.UI.clearElement(header);
+
+            var navigationBar = new KASClient.UI.KASFormPageNavigationBar();
+            navigationBar.backAsset = "close.png";
+            var myAttr = {
+                "background-color": "#2d8280",
+                "align-items": "center",
+
+            }
+            navigationBar.attributes = myAttr;
+            var mainText = KASClient.UI.getElement("div", {
+                "font-size": "12pt",
+                "color": "white",
+                "max-width": "300pt",
+                "font-weight": "350",
+                "font-size": "15pt"
+
+            });
+            mainText.innerText = _strings["strMiniAppTitle"];
+
+            navigationBar.title = mainText.outerHTML;
+
+            navigationBar.backAction = function () {
+                KASClient.App.dismissCurrentScreen();
+            };
+
+            KASClient.UI.addElement(navigationBar.getView(), header);
+        }
+        function submitData() {
+            employeeId = document.getElementById("employeeId").value;
+            preferredName = document.getElementById("preferredName").value;
+            employeeBio = document.getElementById("employeeBio").value;
+            //Checks if all fields have been filled
+            if ((employeeId == null || employeeId == "") || (preferredName == null || preferredName == "") || (employeeBio == null || employeeBio == "")) {
+                KASClient.App.showNativeErrorMessage("Kindly fill in all the fields");
+            }
+            else {
+                submitFormResponse();
+            }
+
+        }
+        //This function submits the user's response to the kaizala server.
+        function submitFormResponse() {
+            //1. Show progress bar
+            KASClient.App.showProgressBar("Fetching Results");
+            // For submitting response a question-answer 
+            // map is required, lets create that! 
+            var questionToAnswerMap = JSON.parse("{}");
+            questionToAnswerMap[EMPLOYEE_ID] = employeeId;
+            questionToAnswerMap[PREFERRED_NAME] = preferredName;
+            questionToAnswerMap[EMPLOYEE_BIO] = employeeBio;
+            questionToAnswerMap[PROFILE_IMAGE] = _profileImage;
+            questionToAnswerMap[NAME] = _name;
+            questionToAnswerMap[PHONE_NO] = _phoneNumber;
+
+            //2. Finally submit the response 
+            KASClient.Form.sumbitFormResponse(questionToAnswerMap, null, false, true /* showInChatCanvas */);
+            //3. Hide progress bar
+            KASClient.App.hideProgressBar();
+        }
+
+        //Gets the div where the image will be placed
+        imageDiv = document.getElementById("profileImage");
+        KASClient.UI.clearElement(imageDiv);
+        //Creates an image that will be clicked and will be substituted by a user's image
+        var img = KASClient.UI.getElement("img", {
+            "width": "45%",
+            "height": "160px",
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            "border-radius": "90%",
+        });
+        img.setAttribute("src", "icon2.png");
+        //Onclick of the image a user's specified image will replace the already set image. i.e icon.png
+        img.onclick = function () {
+            KASClient.App.showImagePickerAsync(function (selectedImagePath, error) {
+                if (error != null) {
+                    return;
+                }
+                _profileImage = selectedImagePath;
+                img.setAttribute("src", selectedImagePath);
+            });
+        };
+        //Adds the image element to the imageDiv
+        KASClient.UI.addElement(img, imageDiv);
+
+        //Greets the user with the preferred name
+        function greetings() {
+            var details = document.getElementById("preferredName").value;
+            var changes = document.getElementById("usersDetails");
+            KASClient.UI.clearElement(changes);
+            changes.className = "details";
+            changes.innerHTML = "Hello " + details;
+        }
+        function showSummary() {
+            employeeId = document.getElementById("employeeId").value;
+            preferredName = document.getElementById("preferredName").value;
+            employeeBio = document.getElementById("employeeBio").value;
+
+            var profileImage = document.getElementById("profileImages");
+            KASClient.UI.clearElement(profileImage);
+
+            var imgQuestion = KASClient.UI.getElement("img", {
+                "width": "45%",
+                "height": "160px",
+                "display": "block",
+                "margin-left": "auto",
+                "margin-right": "auto",
+                "border-radius": "90%"
+            });
+            imgQuestion.src = _profileImage;
+            KASClient.UI.addElement(imgQuestion, profileImage);
+            // end of Profile image 
+            //start of employee id
+            var resp = document.getElementById("employeeIds");
+            resp.innerHTML = employeeId;
+            //end of employee id
+
+            //start of preferred name
+            var preferredNames = document.getElementById("preferredNames");
+            preferredNames.innerHTML = preferredName;
+            //end of preferred name
+
+            //start of employeebio
+            var employeeBios = document.getElementById("employeeBios");
+            // KASClient.UI.clearElement(employeeBios);
+            employeeBios.innerHTML = employeeBio;
+            //end of employeebio
+
+            //name title
+            var names = document.getElementById("names");
+            names.innerHTML = _name;
+
+            //phonenumber title
+            var phoneNumbers = document.getElementById("phoneNumbers");
+            phoneNumbers.innerHTML = _phoneNumber;
+        }
+        //Onclick of the submit button, this function gets a user's response and then calls the submitFormResponse function that submits the responses.
+
+        //changes the content of different pages
+        function prevPage() {
+            if (current_page > 1) {
+                current_page--;
+                changePage(current_page);
+            }
+        }
+
+        function nextPage() {
+            if (current_page < 2) {
+                current_page++;
+                changePage(current_page);
+
+            }
+        }
+
+        function changePage(page) {
+            var btnNext = document.getElementById("btnNext");
+            var btnPrev = document.getElementById("btnPrev");
+            var page1 = document.getElementById("page1");
+            var page2 = document.getElementById("page2");
+            var page_span = document.getElementById("page");
+            var page_spans = document.getElementById("pages");
+
+
+            // Validate page
+            if (page < 2) {
+                page = 1;
+                page1.style.display = "block";
+                page2.style.display = "none";
+                page_span.innerHTML = page + "/" + 2;
+            }
+            if (page > 1) {
+                page = 2;
+                page2.style.display = "block";
+                page1.style.display = "none";
+                page_spans.innerHTML = page + "/" + 2;
+                showSummary();
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
